@@ -30,6 +30,17 @@
 
 Старт: по одному блоку каждого типа на складе, $80 в кассе. Провода игрок тянет сам.
 
+## Проверка кода и AI-ревью
+
+В репозитории настроены GitHub Actions (Godot, GDScript lint, Semgrep, CodeQL) и конфиг **CodeRabbit**.  
+Полный список бесплатных AI и линтеров: [docs/CODE_REVIEW_TOOLS.md](docs/CODE_REVIEW_TOOLS.md).
+
+```powershell
+pip install -r requirements-dev.txt
+pre-commit install
+pre-commit run --all-files
+```
+
 ## Сборка под Windows
 
 1. **Project → Export…**
