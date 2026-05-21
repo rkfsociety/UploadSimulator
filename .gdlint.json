@@ -1,0 +1,3 @@
+{
+  "class-definitions-order": ["tools", "classnames", "extends", "docstrings", "signals", "consts", "enums", "exports", "pubvars", "prvvars", "onreadypubvars", "onreadyprvvars", "others", "pubfuncs", "prvfuncs", "staticfuncs", "onready", "oninit", "onterm"]
+}

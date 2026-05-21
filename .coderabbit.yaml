@@ -1,0 +1,25 @@
+# CodeRabbit — AI-ревью PR (бесплатный тариф: установить GitHub App на репозиторий)
+# https://github.com/apps/coderabbitai
+language: ru-RU
+enable_free_tier: true
+early_access: false
+reviews:
+  profile: assertive
+  high_level_summary: true
+  poem: false
+  auto_review:
+    enabled: true
+    drafts: false
+  path_filters:
+    - "!**/.godot/**"
+    - "!**/build/**"
+    - "!**/*.import"
+  path_instructions:
+    - path: "scripts/**"
+      instructions: >
+        Godot 4.6 GDScript. Игровая логика, UI, производительность _process.
+        Комментарии в коде — на русском. Не предлагать переписывать на C#.
+    - path: "scenes/**"
+      instructions: "Сцены Godot 4 — проверяй привязки узлов и %UniqueName."
+chat:
+  auto_reply: true
