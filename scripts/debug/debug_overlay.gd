@@ -1,0 +1,76 @@
+extends CanvasLayer
+## Отладочный оверлей: FPS и ключевые метрики GameState. Переключение — F3.
+
+const TOGGLE_KEY := KEY_F3
+
+var _panel: PanelContainer
+var _label: Label
+var _visible_debug := OS.is_debug_build()
+
+
+func _ready() -> void:
+	layer = 100
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	_build_ui()
+	_set_overlay_visible(_visible_debug)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		var key_event := event as InputEventKey
+		if key_event.keycode == TOGGLE_KEY:
+			_visible_debug = not _visible_debug
+			_set_overlay_visible(_visible_debug)
+			get_viewport().set_input_as_handled()
+
+
+func _process(_delta: float) -> void:
+	if not _visible_debug or _label == null:
+		return
+	_label.text = _build_stats_text()
+
+
+func _build_ui() -> void:
+	_panel = PanelContainer.new()
+	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_panel)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	_panel.add_child(margin)
+
+	_label = Label.new()
+	_label.add_theme_font_size_override("font_size", 11)
+	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	margin.add_child(_label)
+
+	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_panel.position = Vector2(8, 56)
+
+
+func _set_overlay_visible(show_overlay: bool) -> void:
+	if _panel:
+		_panel.visible = show_overlay
+
+
+func _build_stats_text() -> String:
+	var fps := Engine.get_frames_per_second()
+	var phase := GameState.get_phase()
+	var lines: PackedStringArray = PackedStringArray([
+		"[DEBUG] F3 — скрыть",
+		"FPS: %.0f" % fps,
+		"Касса: $%.0f | Аплоудер: $%.2f" % [GameState.get_money(), GameState.get_uploader_balance()],
+		"Фаза: %s | %s" % [phase, GameState.get_phase_label()],
+		"Очереди ↓%d ↑%d | Модули: %d | Провода: %d"
+		% [
+			GameState.get_download_queue().size(),
+			GameState.get_upload_queue().size(),
+			GameState.get_placed_blocks().size(),
+			GameState.get_wire_connections().size(),
+		],
+		"Диск: %.0f / %.0f МБ" % [GameState.get_storage_used_mb(), GameState.get_storage_capacity_mb()],
+	])
+	return "\n".join(lines)

@@ -34,6 +34,7 @@ func _ready() -> void:
 
 
 func _style_panel() -> void:
+	MinimalUI.attach_theme(self)
 	panel.add_theme_stylebox_override("panel", MinimalUI.shop_panel_style())
 	shop_title.add_theme_color_override("font_color", MinimalUI.NEON_MAGENTA)
 	shop_title.add_theme_font_size_override("font_size", 18)

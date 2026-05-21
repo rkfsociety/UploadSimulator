@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="MinimalUIColors" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/ui/minimal_ui_colors.gd" id="1_minimal_ui_colors"]
+
+[resource]
+script = ExtResource("1_minimal_ui_colors")

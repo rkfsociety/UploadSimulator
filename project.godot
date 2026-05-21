@@ -22,8 +22,9 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-GameState="*res://scripts/game_state.gd"
-BgmPlayer="*res://scripts/bgm_player.gd"
+GameState="*res://scripts/autoload/game_state.gd"
+BgmPlayer="*res://scripts/autoload/bgm_player.gd"
+DebugOverlay="*res://scripts/debug/debug_overlay.gd"
 
 [display]
 

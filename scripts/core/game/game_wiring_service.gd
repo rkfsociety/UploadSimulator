@@ -31,7 +31,7 @@ func can_connect_ports(
 	var types := _port_types(from_uid, from_port, to_uid, to_port)
 	if types[0] == "" or types[2] == "":
 		return false
-	if not _is_allowed_edge(types[0], types[1], types[2], types[3]):
+	if not BlockDefs.is_allowed_wire(types[0], types[1], types[2], types[3]):
 		return false
 	var from_def: Dictionary = BlockDefs.PORT_DEFS.get(types[0], {}).get(from_port, {})
 	var to_def: Dictionary = BlockDefs.PORT_DEFS.get(types[2], {}).get(to_port, {})
@@ -134,20 +134,6 @@ func _port_types(
 		_field.get_instance_type(to_uid),
 		to_port,
 	]
-
-
-func _is_allowed_edge(
-	from_type: String, from_port: String, to_type: String, to_port: String
-) -> bool:
-	for edge in BlockDefs.ALLOWED_WIRES:
-		if (
-			edge[0] == from_type
-			and edge[1] == from_port
-			and edge[2] == to_type
-			and edge[3] == to_port
-		):
-			return true
-	return false
 
 
 func _find_wired_pair(

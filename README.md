@@ -1,5 +1,12 @@
 # Upload Simulator
 
+## Дорожная карта
+
+- перевести размеры и скорости в UI полностью на **байты** (сейчас часть логики ещё в МБ);
+- сохранение прогресса;
+- перетаскивание и снятие модулей с поля;
+- новые типы текстовых файлов и лимиты канала.
+
 Казуальная игра про **передачу файлов в сети**: скачиваешь данные из интернета на диск, затем выгружаешь их обратно. Собираешь пайплайн из модулей на карте и зарабатываешь на выгрузке.
 
 **Базовый объект** — обычный **текстовый файл**.  
@@ -77,21 +84,26 @@ godot --headless --export-release "Windows Desktop" build/UploadSimulator.exe
 
 ## Структура
 
+Скрипты разложены по системам; подробнее — [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ```
-scenes/main.tscn         # главный экран (карта + HUD + магазин)
-scripts/game_state.gd    # очереди, файлы, деньги, провода (autoload)
-scripts/field_map.gd     # карта, камера, установка модулей
-scripts/placed_block.gd  # модуль на поле (6×4 клетки)
-scripts/block_defs.gd    # типы блоков и порты
-scripts/shop_menu.gd     # магазин
-export_presets.cfg       # пресеты Windows + Android
+scenes/main.tscn                    # главный экран
+scenes/blocks/placed_block.tscn     # модуль на поле (6×4)
+scripts/autoload/game_state.gd      # фасад состояния (autoload)
+scripts/core/game/                  # сервисы и модели
+scripts/core/defs/block_defs.gd     # типы блоков и порты
+scripts/systems/field/              # карта, камера, установка
+scripts/systems/blocks/             # PlacedBlock, порты
+scripts/systems/ui/                 # HUD и магазин
+scripts/debug/debug_overlay.gd      # отладка (F3)
+tests/unit/                         # unit-тесты
+export_presets.cfg                  # пресеты Windows + Android
 ```
 
-## Дальше по игре
+### Unit-тесты
 
-- перевести размеры и скорости в UI полностью на **байты** (сейчас часть логики ещё в МБ);
-- сохранение прогресса;
-- перетаскивание и снятие модулей с поля;
-- новые типы текстовых файлов и лимиты канала.
+```bash
+godot --headless --path . -s res://tests/test_runner.gd
+```
 
 Лицензия: уточни при публикации в сторах.

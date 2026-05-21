@@ -1,9 +1,9 @@
 [gd_scene load_steps=5 format=3 uid="uid://uploadsim_main"]
 
-[ext_resource type="Script" path="res://scripts/main_ui.gd" id="1_main"]
-[ext_resource type="Script" path="res://scripts/shop_menu.gd" id="2_shop"]
-[ext_resource type="Script" path="res://scripts/field_map.gd" id="3_field"]
-[ext_resource type="Script" path="res://scripts/grid_background.gd" id="5_grid"]
+[ext_resource type="Script" path="res://scripts/systems/ui/main_ui.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/systems/ui/shop_menu.gd" id="2_shop"]
+[ext_resource type="Script" path="res://scripts/systems/field/field_map.gd" id="3_field"]
+[ext_resource type="Script" path="res://scripts/systems/visual/grid_background.gd" id="5_grid"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
