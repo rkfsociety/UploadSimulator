@@ -93,14 +93,35 @@ func get_view_center_cell() -> Vector2i:
 
 
 func _on_field_changed() -> void:
+	var prev_uids: Array = _blocks.get_nodes().keys()
 	_blocks.sync_from_state()
-	_wiring.collect_ports()
-	_wiring.rebuild_wires()
+	var curr_uids: Array = _blocks.get_nodes().keys()
+	# Порты и координаты проводов — только при изменении набора/раскладки блоков
+	if _blocks_layout_changed(prev_uids, curr_uids):
+		_wiring.collect_ports()
+		_wiring.update_positions()
 
 
 func _on_wiring_changed() -> void:
 	_wiring.clear_pending()
 	_wiring.rebuild_wires()
+
+
+## Сравнивает uid и позиции блоков до/после sync_from_state.
+func _blocks_layout_changed(prev_uids: Array, curr_uids: Array) -> bool:
+	if prev_uids.size() != curr_uids.size():
+		return true
+	for uid in curr_uids:
+		if uid not in prev_uids:
+			return true
+	for uid in curr_uids:
+		var inst := GameState.field.get_instance(str(uid))
+		if not inst.is_valid():
+			continue
+		var block: PlacedBlock = _blocks.get_nodes()[uid] as PlacedBlock
+		if block.position != GridDefs.cell_to_pixel(inst.gx, inst.gy):
+			return true
+	return false
 
 
 func _on_placement_finished(type_id: String) -> void:

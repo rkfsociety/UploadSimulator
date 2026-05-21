@@ -92,12 +92,7 @@ func place_block(type_id: String, gx: int, gy: int) -> String:
 	if not can_place_block(type_id, gx, gy):
 		return ""
 	_data.add_block_stock(type_id, -1)
-	var inst := BlockInstance.new()
-	inst.uid = _data.next_uid()
-	inst.type_id = type_id
-	inst.gx = gx
-	inst.gy = gy
-	inst.level = 1
+	var inst := BlockInstance.create(type_id, gx, gy, _data.next_uid(), 1)
 	_data.get_placed_blocks().append(inst)
 	_host.log_message.emit("%s установлен на поле." % BlockDefs.TYPES[type_id]["name"])
 	_notify_stats_and_field()

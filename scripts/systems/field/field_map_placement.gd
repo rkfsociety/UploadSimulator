@@ -37,7 +37,7 @@ func update_preview(screen_pos: Vector2) -> void:
 	_preview.visible = true
 	_preview.position = GridDefs.cell_to_pixel(cell.x, cell.y)
 	_preview.size = GridDefs.block_pixel_size()
-	var occupied := not GameState.can_place_block(_selected_type, cell.x, cell.y)
+	var occupied := not GameState.field.can_place_block(_selected_type, cell.x, cell.y)
 	var accent := BlockDefs.get_block_color(_selected_type)
 	if occupied:
 		_preview.color = FieldMapConstants.PREVIEW_OCCUPIED_COLOR
@@ -61,10 +61,10 @@ func try_place_at_screen(screen_pos: Vector2) -> String:
 			"Край карты (%d…%d)." % [-GridDefs.GRID_HALF, GridDefs.GRID_HALF - 1]
 		)
 		return _selected_type
-	var uid := GameState.place_block(_selected_type, cell.x, cell.y)
+	var uid := GameState.field.place_block(_selected_type, cell.x, cell.y)
 	if uid == "":
 		return _selected_type
-	if GameState.get_block_stock(_selected_type) > 0:
+	if GameState.field.get_block_stock(_selected_type) > 0:
 		return _selected_type
 	return ""
 
@@ -77,7 +77,7 @@ func place_at_view_center(type_id: String, spawn_block: Callable) -> bool:
 	for cell in _cells_near(anchor, FieldMapConstants.PLACE_SEARCH_RADIUS):
 		if not GridDefs.is_in_bounds(cell.x, cell.y):
 			continue
-		var uid := GameState.place_block(type_id, cell.x, cell.y)
+		var uid := GameState.field.place_block(type_id, cell.x, cell.y)
 		if uid != "":
 			spawn_block.call(uid)
 			return true

@@ -73,7 +73,7 @@ func _build_icon_grid() -> void:
 	for child in icon_row.get_children():
 		child.queue_free()
 	_icon_buttons.clear()
-	for type_id in GameState.get_shop_block_types():
+	for type_id in GameState.field.get_shop_block_types():
 		var btn := _make_icon_button(type_id)
 		icon_row.add_child(btn)
 		_icon_buttons[type_id] = btn
@@ -122,10 +122,10 @@ func _show_detail(type_id: String) -> void:
 	detail_name.text = def.get("name", type_id)
 	detail_name.add_theme_color_override("font_color", BlockDefs.get_block_color(type_id))
 	detail_desc.text = def.get("desc", "")
-	var stock: int = GameState.get_block_stock(type_id)
+	var stock: int = GameState.field.get_block_stock(type_id)
 	detail_stock.text = "Не поставлен: %d" % stock if stock > 0 else "Купите и поставьте на карту"
 	buy_btn.text = "Купить · $%d" % int(def.get("shop_cost", 0))
-	buy_btn.disabled = not GameState.can_buy_block(type_id)
+	buy_btn.disabled = not GameState.field.can_buy_block(type_id)
 	place_btn.visible = stock > 0
 	place_btn.disabled = stock <= 0
 
@@ -146,7 +146,7 @@ func _hide_detail() -> void:
 func _on_buy_pressed() -> void:
 	if _selected_type == "":
 		return
-	if GameState.buy_block(_selected_type):
+	if GameState.field.buy_block(_selected_type):
 		close()
 
 

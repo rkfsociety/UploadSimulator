@@ -50,7 +50,7 @@ static func refresh_highlights(
 	for port: ConnectionPort in ports:
 		var can_connect := false
 		if pending_out != null and port.direction == ConnectionPort.Dir.IN:
-			can_connect = GameState.can_connect_ports(
+			can_connect = GameState.wiring.can_connect_ports(
 				pending_out.instance_uid,
 				pending_out.port_id,
 				port.instance_uid,
@@ -59,12 +59,12 @@ static func refresh_highlights(
 		port.set_highlight(port == pending_out, can_connect)
 
 
-static func wire_flow_speed(link: Dictionary) -> float:
-	var from_type: String = GameState.get_instance_type(str(link.get("from_uid", "")))
-	if from_type == "downloader" and not GameState.get_download_queue().is_empty():
+static func wire_flow_speed(link: WireLink) -> float:
+	var from_type: String = GameState.field.get_instance_type(link.from_uid)
+	if from_type == "downloader" and not GameState.access.get_download_queue().is_empty():
 		return FieldMapConstants.WIRE_FLOW_ACTIVE
-	if from_type == "storage" and not GameState.get_upload_queue().is_empty():
+	if from_type == "storage" and not GameState.access.get_upload_queue().is_empty():
 		return FieldMapConstants.WIRE_FLOW_ACTIVE
-	if from_type == "uploader" and GameState.get_uploader_balance() > 0.0:
+	if from_type == "uploader" and GameState.access.get_uploader_balance() > 0.0:
 		return FieldMapConstants.WIRE_FLOW_ACTIVE
 	return FieldMapConstants.WIRE_FLOW_IDLE

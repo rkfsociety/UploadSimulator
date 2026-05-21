@@ -58,19 +58,21 @@ func _set_overlay_visible(show_overlay: bool) -> void:
 
 func _build_stats_text() -> String:
 	var fps := Engine.get_frames_per_second()
-	var phase := GameState.get_phase()
+	var phase := GameState.access.get_phase()
 	var lines: PackedStringArray = PackedStringArray([
 		"[DEBUG] F3 — скрыть",
 		"FPS: %.0f" % fps,
-		"Касса: $%.0f | Аплоудер: $%.2f" % [GameState.get_money(), GameState.get_uploader_balance()],
-		"Фаза: %s | %s" % [phase, GameState.get_phase_label()],
+		"Касса: $%.0f | Аплоудер: $%.2f"
+		% [GameState.access.get_money(), GameState.access.get_uploader_balance()],
+		"Фаза: %s | %s" % [phase, GameState.pipeline.get_phase_label()],
 		"Очереди ↓%d ↑%d | Модули: %d | Провода: %d"
 		% [
-			GameState.get_download_queue().size(),
-			GameState.get_upload_queue().size(),
-			GameState.get_placed_blocks().size(),
-			GameState.get_wire_connections().size(),
+			GameState.access.get_download_queue().size(),
+			GameState.access.get_upload_queue().size(),
+			GameState.access.get_placed_blocks().size(),
+			GameState.access.get_wire_connections().size(),
 		],
-		"Диск: %.0f / %.0f МБ" % [GameState.get_storage_used_mb(), GameState.get_storage_capacity_mb()],
+		"Диск: %.0f / %.0f МБ"
+		% [GameState.storage.get_storage_used_mb(), GameState.storage.get_storage_capacity_mb()],
 	])
 	return "\n".join(lines)

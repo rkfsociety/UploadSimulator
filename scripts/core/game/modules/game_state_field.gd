@@ -1,0 +1,69 @@
+extends RefCounted
+class_name GameStateField
+## Поле: модули, склад, покупка, улучшения.
+
+var _svc: GameFieldService
+
+
+func _init(svc: GameFieldService) -> void:
+	_svc = svc
+
+
+func make_uid() -> String:
+	return _svc.make_uid()
+
+
+func get_instance(uid: String) -> BlockInstance:
+	return _svc.get_instance(uid)
+
+
+func get_instance_level(uid: String) -> int:
+	return _svc.get_instance_level(uid)
+
+
+func get_instance_type(uid: String) -> String:
+	return _svc.get_instance_type(uid)
+
+
+func has_block_on_field(type_id: String) -> bool:
+	return _svc.has_block_on_field(type_id)
+
+
+func get_block_stock(type_id: String) -> int:
+	return _svc.get_block_stock(type_id)
+
+
+func can_buy_block(type_id: String) -> bool:
+	return _svc.can_buy_block(type_id)
+
+
+func buy_block(type_id: String) -> bool:
+	return _svc.buy_block(type_id)
+
+
+func can_place_block(type_id: String, gx: int, gy: int) -> bool:
+	return _svc.can_place_block(type_id, gx, gy)
+
+
+func get_block_at(gx: int, gy: int) -> BlockInstance:
+	return _svc.get_block_at(gx, gy)
+
+
+func place_block(type_id: String, gx: int, gy: int) -> String:
+	return _svc.place_block(type_id, gx, gy)
+
+
+func get_instance_upgrade_cost(uid: String) -> int:
+	return _svc.get_instance_upgrade_cost(uid)
+
+
+func can_upgrade_instance(uid: String) -> bool:
+	return _svc.can_upgrade_instance(uid)
+
+
+func upgrade_instance(uid: String) -> bool:
+	return _svc.upgrade_instance(uid)
+
+
+func get_shop_block_types() -> Array[String]:
+	return _svc.get_shop_block_types()

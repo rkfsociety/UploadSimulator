@@ -36,22 +36,19 @@ func clear_pending() -> void:
 func rebuild_wires() -> void:
 	WirePool.release_segments(_segments)
 	_segments.clear()
-	for link: WireLink in GameState.get_wire_connections():
+	for link: WireLink in GameState.access.get_wire_connections():
 		var from_p := PortUtils.find_port(_ports, link.from_uid, link.from_port)
 		var to_p := PortUtils.find_port(_ports, link.to_uid, link.to_port)
 		if from_p == null or to_p == null:
 			continue
 		var kind: String = "money" if from_p.kind == ConnectionPort.Kind.MONEY else "file"
-		var link_dict := WirePool.acquire_link()
-		link_dict["from_uid"] = link.from_uid
-		link_dict["from_port"] = link.from_port
-		link_dict["to_uid"] = link.to_uid
-		link_dict["to_port"] = link.to_port
+		var pooled := WirePool.acquire_link()
+		pooled.copy_from(link)
 		var seg := WirePool.acquire_segment()
-		seg["link"] = link_dict
+		seg["link"] = pooled
 		seg["color"] = PortUtils.wire_color_for_kind(kind)
 		seg["animate"] = true
-		seg["speed"] = PortUtils.wire_flow_speed(link_dict)
+		seg["speed"] = PortUtils.wire_flow_speed(pooled)
 		_segments.append(seg)
 	update_positions()
 
@@ -59,10 +56,11 @@ func rebuild_wires() -> void:
 func update_positions() -> void:
 	for seg: Dictionary in _segments:
 		var link: Variant = seg.get("link", null)
-		if link == null:
+		if link is not WireLink:
 			continue
-		var from_p := PortUtils.find_port(_ports, str(link.get("from_uid", "")), str(link.get("from_port", "")))
-		var to_p := PortUtils.find_port(_ports, str(link.get("to_uid", "")), str(link.get("to_port", "")))
+		var wire: WireLink = link
+		var from_p := PortUtils.find_port(_ports, wire.from_uid, wire.from_port)
+		var to_p := PortUtils.find_port(_ports, wire.to_uid, wire.to_port)
 		if from_p == null or to_p == null:
 			continue
 		seg["from"] = PortUtils.port_center_in_local(from_p, _wires_root)
@@ -82,9 +80,9 @@ func set_cursor_screen(pos: Vector2) -> void:
 
 func _on_port_pressed(port: ConnectionPort) -> void:
 	if port.direction == ConnectionPort.Dir.OUT:
-		if GameState.port_has_output_link(port.instance_uid, port.port_id):
+		if GameState.wiring.port_has_output_link(port.instance_uid, port.port_id):
 			if _pending_out == port:
-				GameState.disconnect_output_port(port.instance_uid, port.port_id)
+				GameState.wiring.disconnect_output_port(port.instance_uid, port.port_id)
 				clear_pending()
 				return
 		_pending_out = port
@@ -94,7 +92,7 @@ func _on_port_pressed(port: ConnectionPort) -> void:
 	if _pending_out == null:
 		GameState.log_message.emit("Сначала выход.")
 		return
-	GameState.try_connect_ports(
+	GameState.wiring.try_connect_ports(
 		_pending_out.instance_uid,
 		_pending_out.port_id,
 		port.instance_uid,

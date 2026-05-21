@@ -16,10 +16,10 @@ func get_nodes() -> Dictionary:
 
 func sync_from_state() -> void:
 	for uid in _nodes.keys():
-		if not GameState.get_instance(uid).is_valid():
+		if not GameState.field.get_instance(uid).is_valid():
 			(_nodes[uid] as PlacedBlock).queue_free()
 			_nodes.erase(uid)
-	for inst: BlockInstance in GameState.get_placed_blocks():
+	for inst: BlockInstance in GameState.access.get_placed_blocks():
 		if not _nodes.has(inst.uid):
 			spawn(inst.uid)
 		else:
@@ -28,7 +28,7 @@ func sync_from_state() -> void:
 
 
 func spawn(uid: String) -> void:
-	var inst := GameState.get_instance(uid)
+	var inst := GameState.field.get_instance(uid)
 	if not inst.is_valid():
 		return
 	var block := PlacedBlock.instantiate_block()
@@ -47,7 +47,7 @@ func _relayout() -> void:
 	var sz := PlacedBlock.pixel_size()
 	for uid in _nodes.keys():
 		var block: PlacedBlock = _nodes[uid]
-		var inst := GameState.get_instance(uid)
+		var inst := GameState.field.get_instance(uid)
 		if not inst.is_valid():
 			continue
 		block.custom_minimum_size = sz
@@ -70,8 +70,8 @@ func update_visibility(visible_rect: Rect2) -> void:
 
 
 func _on_upgrade_requested(block: PlacedBlock) -> void:
-	GameState.upgrade_instance(block.instance_uid)
+	GameState.field.upgrade_instance(block.instance_uid)
 
 
 func _on_block_action(block: PlacedBlock) -> void:
-	GameState.run_block_action(block.instance_uid)
+	GameState.pipeline.run_block_action(block.instance_uid)

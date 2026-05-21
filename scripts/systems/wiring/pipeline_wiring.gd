@@ -18,10 +18,6 @@ func _ready() -> void:
 	_on_wiring_changed()
 
 
-func _process(_delta: float) -> void:
-	_redraw_wires()
-
-
 func _collect_ports() -> void:
 	_ports.clear()
 	_gather_ports(modules_host)
@@ -36,10 +32,10 @@ func _gather_ports(node: Node) -> void:
 
 func _on_port_pressed(port: ConnectionPort) -> void:
 	if port.direction == ConnectionPort.Dir.OUT:
-		if GameState.port_has_output_link(port.block_id, port.port_id):
+		if GameState.wiring.port_has_output_link(port.instance_uid, port.port_id):
 			if _pending_out == port:
-				GameState.disconnect_output_port(port.block_id, port.port_id)
-				GameState.log_message.emit("Отключено: %s" % port.block_id)
+				GameState.wiring.disconnect_output_port(port.instance_uid, port.port_id)
+				GameState.log_message.emit("Отключено: %s" % port.instance_uid)
 				_clear_pending()
 				return
 		_set_pending(port)
@@ -47,8 +43,11 @@ func _on_port_pressed(port: ConnectionPort) -> void:
 	if _pending_out == null:
 		GameState.log_message.emit("Сначала выберите выход (круг или квадрат справа).")
 		return
-	GameState.try_connect_ports(
-		_pending_out.block_id, _pending_out.port_id, port.block_id, port.port_id
+	GameState.wiring.try_connect_ports(
+		_pending_out.instance_uid,
+		_pending_out.port_id,
+		port.instance_uid,
+		port.port_id,
 	)
 	_clear_pending()
 
@@ -69,11 +68,10 @@ func _refresh_port_highlights() -> void:
 		var valid := false
 		if _pending_out != null and port.direction == ConnectionPort.Dir.IN:
 			valid = (
-				GameState
-				. can_connect_ports(
-					_pending_out.block_id,
+				GameState.wiring.can_connect_ports(
+					_pending_out.instance_uid,
 					_pending_out.port_id,
-					port.block_id,
+					port.instance_uid,
 					port.port_id,
 				)
 			)
@@ -90,9 +88,9 @@ func _redraw_wires() -> void:
 	for line: Line2D in _line_nodes:
 		line.queue_free()
 	_line_nodes.clear()
-	for link: Dictionary in GameState.wire_connections:
-		var from_port := _find_port(link["from_block"], link["from_port"])
-		var to_port := _find_port(link["to_block"], link["to_port"])
+	for link: WireLink in GameState.access.get_wire_connections():
+		var from_port := _find_port(link.from_uid, link.from_port)
+		var to_port := _find_port(link.to_uid, link.to_port)
 		if from_port == null or to_port == null:
 			continue
 		var line := Line2D.new()
@@ -109,16 +107,16 @@ func _redraw_wires() -> void:
 		_line_nodes.append(line)
 
 
-func _wire_color(link: Dictionary) -> Color:
-	var from_port := _find_port(link["from_block"], link["from_port"])
+func _wire_color(link: WireLink) -> Color:
+	var from_port := _find_port(link.from_uid, link.from_port)
 	if from_port and from_port.kind == ConnectionPort.Kind.MONEY:
 		return Color(0.95, 0.78, 0.25, 0.9)
 	return Color(0.45, 0.8, 1.0, 0.9)
 
 
-func _find_port(block_id: String, port_id: String) -> ConnectionPort:
+func _find_port(instance_uid: String, port_id: String) -> ConnectionPort:
 	for port: ConnectionPort in _ports:
-		if port.block_id == block_id and port.port_id == port_id:
+		if port.instance_uid == instance_uid and port.port_id == port_id:
 			return port
 	return null
 

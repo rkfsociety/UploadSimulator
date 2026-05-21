@@ -15,12 +15,7 @@ func _init(data: GameStateData, host: Node, field: GameFieldService) -> void:
 
 func is_wired(from_uid: String, from_port: String, to_uid: String, to_port: String) -> bool:
 	for link: WireLink in _data.get_wire_connections():
-		if (
-			link.from_uid == from_uid
-			and link.from_port == from_port
-			and link.to_uid == to_uid
-			and link.to_port == to_port
-		):
+		if link.matches(from_uid, from_port, to_uid, to_port):
 			return true
 	return false
 
@@ -75,12 +70,7 @@ func try_connect_ports(
 			_connection_error(_field.get_instance_type(from_uid), _field.get_instance_type(to_uid))
 		)
 		return false
-	var link := WireLink.new()
-	link.from_uid = from_uid
-	link.from_port = from_port
-	link.to_uid = to_uid
-	link.to_port = to_port
-	_data.get_wire_connections().append(link)
+	_data.get_wire_connections().append(WireLink.create(from_uid, from_port, to_uid, to_port))
 	_host.log_message.emit("Соединено: %s → %s" % [_type_name(from_uid), _type_name(to_uid)])
 	_host.wiring_changed.emit()
 	return true
@@ -97,13 +87,7 @@ func disconnect_output_port(uid: String, port_id: String) -> void:
 func disconnect_ports(from_uid: String, from_port: String, to_uid: String, to_port: String) -> void:
 	var links := _data.get_wire_connections()
 	for i in range(links.size() - 1, -1, -1):
-		var link: WireLink = links[i]
-		if (
-			link.from_uid == from_uid
-			and link.from_port == from_port
-			and link.to_uid == to_uid
-			and link.to_port == to_port
-		):
+		if links[i].matches(from_uid, from_port, to_uid, to_port):
 			links.remove_at(i)
 
 
