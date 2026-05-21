@@ -171,7 +171,7 @@ static func apply_block_upgrade_button(btn: Button, accent: Color) -> void:
 	btn.add_theme_color_override("font_hover_color", accent.lightened(0.2))
 	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
 	btn.add_theme_color_override("font_disabled_color", TEXT_DIM)
-	btn.add_theme_font_size_override("font_size", 10)
+	btn.add_theme_font_size_override("font_size", 12)
 
 
 static func apply_shop_icon_button(btn: Button) -> void:

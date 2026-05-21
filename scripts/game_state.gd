@@ -7,6 +7,7 @@ signal log_message(text: String)
 signal wiring_changed
 signal field_changed
 signal placement_requested(type_id: String)
+signal block_purchased(type_id: String)
 
 enum Phase { IDLE, RECORDING, UPLOADING, PUBLISHED }
 
@@ -97,8 +98,8 @@ func buy_block(type_id: String) -> bool:
 	var cost: float = float(BlockDefs.TYPES[type_id]["shop_cost"])
 	money -= cost
 	block_stock[type_id] = int(block_stock.get(type_id, 0)) + 1
-	log_message.emit("Куплен «%s» — тапните карту." % BlockDefs.TYPES[type_id]["name"])
-	placement_requested.emit(type_id)
+	log_message.emit("Куплен «%s»." % BlockDefs.TYPES[type_id]["name"])
+	block_purchased.emit(type_id)
 	stats_changed.emit()
 	field_changed.emit()
 	return true
@@ -107,20 +108,30 @@ func buy_block(type_id: String) -> bool:
 func can_place_block(type_id: String, gx: int, gy: int) -> bool:
 	if int(block_stock.get(type_id, 0)) <= 0:
 		return false
-	if not GridDefs.is_in_bounds(gx, gy):
+	if not GridDefs.footprint_in_bounds(gx, gy):
 		return false
-	return get_block_at(gx, gy).is_empty()
+	for cell in GridDefs.block_footprint_cells(gx, gy):
+		if not get_block_at(cell.x, cell.y).is_empty():
+			return false
+	return true
 
 
 func get_block_at(gx: int, gy: int) -> Dictionary:
 	for inst: Dictionary in placed_blocks:
-		if int(inst.get("gx", -1)) == gx and int(inst.get("gy", -1)) == gy:
+		var ax: int = int(inst.get("gx", -1))
+		var ay: int = int(inst.get("gy", -1))
+		if (
+			gx >= ax
+			and gx < ax + GridDefs.BLOCK_CELLS_W
+			and gy >= ay
+			and gy < ay + GridDefs.BLOCK_CELLS_H
+		):
 			return inst
 	return {}
 
 
 func place_block(type_id: String, gx: int, gy: int) -> String:
-	if not GridDefs.is_in_bounds(gx, gy):
+	if not GridDefs.footprint_in_bounds(gx, gy):
 		log_message.emit(
 			"За пределами карты (%d…%d)." % [-GridDefs.GRID_HALF, GridDefs.GRID_HALF - 1]
 		)

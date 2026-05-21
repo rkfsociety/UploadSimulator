@@ -3,6 +3,7 @@ extends Control
 
 @onready var money_label: Label = %MoneyLabel
 @onready var shop_icon_btn: Button = %ShopIconButton
+@onready var map_center_btn: Button = %MapCenterButton
 @onready var shop_menu: Control = %ShopMenu
 @onready var field_map: Control = %FieldMap
 
@@ -12,6 +13,7 @@ func _ready() -> void:
 	shop_menu.closed.connect(_refresh)
 	GameState.stats_changed.connect(_refresh)
 	GameState.placement_requested.connect(_on_placement_requested)
+	GameState.block_purchased.connect(_on_block_purchased)
 	field_map.placement_mode_changed.connect(_on_placement_mode_changed)
 	_refresh()
 
@@ -20,11 +22,19 @@ func _apply_cyber_theme() -> void:
 	MinimalUI.apply_balance_label(money_label)
 	MinimalUI.apply_icon_button(shop_icon_btn)
 	shop_icon_btn.tooltip_text = "Магазин"
+	MinimalUI.apply_icon_button(map_center_btn)
+	map_center_btn.tooltip_text = "В центр карты"
 
 
 func _refresh() -> void:
 	money_label.text = "$%.0f" % GameState.money
 	shop_icon_btn.disabled = shop_menu.visible
+
+
+func _on_block_purchased(type_id: String) -> void:
+	shop_menu.close()
+	if field_map.has_method("place_at_view_center"):
+		field_map.place_at_view_center(type_id)
 
 
 func _on_placement_requested(type_id: String) -> void:
@@ -46,3 +56,8 @@ func _on_shop_pressed() -> void:
 		field_map.cancel_placement_mode()
 	shop_menu.open()
 	_refresh()
+
+
+func _on_map_center_pressed() -> void:
+	if field_map.has_method("focus_map_center"):
+		field_map.focus_map_center()

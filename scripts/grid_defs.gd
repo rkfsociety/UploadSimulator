@@ -5,6 +5,8 @@ class_name GridDefs
 const CELL_SIZE := 80
 const GRID_CELLS := 100
 const GRID_HALF := GRID_CELLS / 2
+const BLOCK_CELLS_W := 6
+const BLOCK_CELLS_H := 4
 
 
 static func is_in_bounds(gx: int, gy: int) -> bool:
@@ -31,6 +33,31 @@ static func pixel_to_cell(world_px: Vector2) -> Vector2i:
 
 static func snap_cell_from_world(world_px: Vector2) -> Vector2i:
 	return pixel_to_cell(world_px)
+
+
+static func block_pixel_size() -> Vector2:
+	# Минимальный размер модуля на карте: 6×4 клеток (горизонтально)
+	return Vector2(BLOCK_CELLS_W * CELL_SIZE, BLOCK_CELLS_H * CELL_SIZE)
+
+
+static func block_footprint_cells(gx: int, gy: int) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for dx in range(BLOCK_CELLS_W):
+		for dy in range(BLOCK_CELLS_H):
+			cells.append(Vector2i(gx + dx, gy + dy))
+	return cells
+
+
+static func footprint_in_bounds(gx: int, gy: int) -> bool:
+	for cell in block_footprint_cells(gx, gy):
+		if not is_in_bounds(cell.x, cell.y):
+			return false
+	return true
+
+
+static func block_anchor_for_center(center: Vector2i) -> Vector2i:
+	# Якорь (левый верх) так, чтобы блок был по центру клетки center
+	return center - Vector2i(BLOCK_CELLS_W / 2, BLOCK_CELLS_H / 2)
 
 
 static func world_bounds_rect() -> Rect2:

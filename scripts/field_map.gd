@@ -94,6 +94,11 @@ func _start_at_origin() -> void:
 	_center_on_world_pixel(GridDefs.world_center_pixel())
 
 
+func focus_map_center() -> void:
+	# Переместить камеру в центр карты (0, 0)
+	_center_on_world_pixel(GridDefs.world_center_pixel())
+
+
 func _center_on_world_pixel(world_px: Vector2) -> void:
 	_pan = size * 0.5 - world_px * _zoom
 	_clamp_pan()
@@ -324,6 +329,42 @@ func _update_pinch() -> void:
 	_apply_camera()
 
 
+func get_view_center_cell() -> Vector2i:
+	# Клетка в центре текущего вида камеры
+	if size.x < 1.0 or size.y < 1.0:
+		return Vector2i.ZERO
+	return GridDefs.snap_cell_from_world(_screen_to_world(size * 0.5))
+
+
+func place_at_view_center(type_id: String) -> bool:
+	cancel_placement_mode()
+	var center := get_view_center_cell()
+	var anchor := GridDefs.block_anchor_for_center(center)
+	for cell in _cells_near(anchor, 10):
+		if not GridDefs.is_in_bounds(cell.x, cell.y):
+			continue
+		var uid := GameState.place_block(type_id, cell.x, cell.y)
+		if uid != "":
+			_spawn_block_node(uid)
+			return true
+	GameState.log_message.emit("Нет свободного места у центра карты.")
+	return false
+
+
+func _cells_near(origin: Vector2i, max_radius: int) -> Array[Vector2i]:
+	# Кольца вокруг origin: сначала центр, потом соседи
+	var cells: Array[Vector2i] = []
+	for r in range(max_radius + 1):
+		if r == 0:
+			cells.append(origin)
+			continue
+		for dx in range(-r, r + 1):
+			for dy in range(-r, r + 1):
+				if maxi(absi(dx), absi(dy)) == r:
+					cells.append(origin + Vector2i(dx, dy))
+	return cells
+
+
 func _try_place_at_screen(screen_pos: Vector2) -> void:
 	if _selected_type == "":
 		return
@@ -370,13 +411,13 @@ func _update_placement_preview(screen_pos: Vector2) -> void:
 		return
 	var cell := GridDefs.snap_cell_from_world(_screen_to_world(screen_pos))
 	_hover_cell = cell
-	if not GridDefs.is_in_bounds(cell.x, cell.y):
+	if not GridDefs.footprint_in_bounds(cell.x, cell.y):
 		_hide_placement_preview()
 		return
 	_place_preview.visible = true
 	_place_preview.position = GridDefs.cell_to_pixel(cell.x, cell.y)
-	_place_preview.size = Vector2(GridDefs.CELL_SIZE, GridDefs.CELL_SIZE)
-	var occupied := not GameState.get_block_at(cell.x, cell.y).is_empty()
+	_place_preview.size = GridDefs.block_pixel_size()
+	var occupied := not GameState.can_place_block(_selected_type, cell.x, cell.y)
 	var accent := BlockDefs.get_block_color(_selected_type)
 	if occupied:
 		_place_preview.color = Color(1.0, 0.2, 0.35, 0.22)
@@ -391,10 +432,8 @@ func _hide_placement_preview() -> void:
 
 
 func _block_position(gx: int, gy: int) -> Vector2:
-	# Модуль шире клетки — центрируем по горизонтали в ячейке
-	var cell_origin := GridDefs.cell_to_pixel(gx, gy)
-	var sz := PlacedBlock.pixel_size()
-	return cell_origin + Vector2((float(GridDefs.CELL_SIZE) - sz.x) * 0.5, 0.0)
+	# Якорь gx,gy — левый верхний угол модуля 4×6 клеток
+	return GridDefs.cell_to_pixel(gx, gy)
 
 
 func _on_field_changed() -> void:
@@ -439,10 +478,10 @@ func _spawn_block_node(uid: String) -> void:
 	block.custom_minimum_size = sz
 	block.size = sz
 	block.position = _block_position(gx, gy)
-	block.setup(uid, inst.get("type", ""))
 	block.upgrade_requested.connect(_on_upgrade_requested)
 	block.action_requested.connect(_on_block_action)
 	blocks_root.add_child(block)
+	block.setup(uid, inst.get("type", ""))
 	_block_nodes[uid] = block
 
 

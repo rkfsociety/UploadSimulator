@@ -123,6 +123,29 @@ layout_mode = 2
 focus_mode = 0
 text = "◈"
 
+[node name="MapCenterHUD" type="MarginContainer" parent="UILayer"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -64.0
+offset_top = -64.0
+offset_right = -16.0
+offset_bottom = -96.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="MapCenterButton" type="Button" parent="UILayer/MapCenterHUD"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "В центр карты"
+text = "◎"
+
 [node name="ShopMenu" type="Control" parent="."]
 unique_name_in_owner = true
 visible = false
@@ -230,5 +253,6 @@ custom_minimum_size = Vector2(100, 44)
 text = "Поставить"
 
 [connection signal="pressed" from="UILayer/BottomHUD/ShopCenter/ShopIconButton" to="." method="_on_shop_pressed"]
+[connection signal="pressed" from="UILayer/MapCenterHUD/MapCenterButton" to="." method="_on_map_center_pressed"]
 [connection signal="gui_input" from="ShopMenu/Dim" to="ShopMenu" method="_on_dim_clicked"]
 [connection signal="pressed" from="ShopMenu/Panel/PanelMargin/PanelVBox/ShopHeader/CloseButton" to="ShopMenu" method="_on_close_pressed"]
