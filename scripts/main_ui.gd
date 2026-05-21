@@ -27,7 +27,7 @@ func _apply_cyber_theme() -> void:
 
 
 func _refresh() -> void:
-	money_label.text = "$%.0f" % GameState.money
+	money_label.text = "$%.0f" % GameState.get_money()
 	shop_icon_btn.disabled = shop_menu.visible
 
 

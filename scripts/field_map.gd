@@ -438,12 +438,12 @@ func _block_position(gx: int, gy: int) -> Vector2:
 
 func _on_field_changed() -> void:
 	for uid in _block_nodes.keys():
-		if GameState.get_instance(uid).is_empty():
+		if not GameState.get_instance(uid).is_valid():
 			var node: PlacedBlock = _block_nodes[uid]
 			node.queue_free()
 			_block_nodes.erase(uid)
-	for inst: Dictionary in GameState.placed_blocks:
-		var uid: String = inst.get("uid", "")
+	for inst: BlockInstance in GameState.get_placed_blocks():
+		var uid: String = inst.uid
 		if not _block_nodes.has(uid):
 			_spawn_block_node(uid)
 		else:
@@ -458,10 +458,10 @@ func _relayout_blocks() -> void:
 	for uid in _block_nodes.keys():
 		var block: PlacedBlock = _block_nodes[uid]
 		var inst := GameState.get_instance(uid)
-		if inst.is_empty():
+		if not inst.is_valid():
 			continue
-		var gx: int = int(inst.get("gx", 0))
-		var gy: int = int(inst.get("gy", 0))
+		var gx: int = inst.gx
+		var gy: int = inst.gy
 		block.custom_minimum_size = sz
 		block.size = sz
 		block.position = _block_position(gx, gy)
@@ -469,10 +469,10 @@ func _relayout_blocks() -> void:
 
 func _spawn_block_node(uid: String) -> void:
 	var inst := GameState.get_instance(uid)
-	if inst.is_empty():
+	if not inst.is_valid():
 		return
-	var gx: int = int(inst.get("gx", 0))
-	var gy: int = int(inst.get("gy", 0))
+	var gx: int = inst.gx
+	var gy: int = inst.gy
 	var block := PlacedBlock.new()
 	var sz := PlacedBlock.pixel_size()
 	block.custom_minimum_size = sz
@@ -481,7 +481,7 @@ func _spawn_block_node(uid: String) -> void:
 	block.upgrade_requested.connect(_on_upgrade_requested)
 	block.action_requested.connect(_on_block_action)
 	blocks_root.add_child(block)
-	block.setup(uid, inst.get("type", ""))
+	block.setup(uid, inst.type_id)
 	_block_nodes[uid] = block
 
 
@@ -586,15 +586,21 @@ func _rebuild_wires() -> void:
 	for wire: DataWire in _wire_nodes:
 		wire.queue_free()
 	_wire_nodes.clear()
-	for link: Dictionary in GameState.wire_connections:
-		var from_p := _find_port(link.get("from_uid", ""), link.get("from_port", ""))
-		var to_p := _find_port(link.get("to_uid", ""), link.get("to_port", ""))
+	for link: WireLink in GameState.get_wire_connections():
+		var from_p := _find_port(link.from_uid, link.from_port)
+		var to_p := _find_port(link.to_uid, link.to_port)
 		if from_p == null or to_p == null:
 			continue
 		var wire := DataWire.new()
 		var kind: String = "money" if from_p.kind == ConnectionPort.Kind.MONEY else "file"
-		wire.configure(_wire_color_for_kind(kind), true, _wire_flow_speed(link))
-		wire.set_meta("link", link)
+		var link_dict := {
+			"from_uid": link.from_uid,
+			"from_port": link.from_port,
+			"to_uid": link.to_uid,
+			"to_port": link.to_port,
+		}
+		wire.configure(_wire_color_for_kind(kind), true, _wire_flow_speed(link_dict))
+		wire.set_meta("link", link_dict)
 		wires_root.add_child(wire)
 		_wire_nodes.append(wire)
 	_update_wire_positions()
@@ -603,11 +609,11 @@ func _rebuild_wires() -> void:
 func _wire_flow_speed(link: Dictionary) -> float:
 	# Быстрее, когда по цепочке реально идут данные
 	var from_type: String = GameState.get_instance_type(link.get("from_uid", ""))
-	if from_type == "downloader" and not GameState.download_queue.is_empty():
+	if from_type == "downloader" and not GameState.get_download_queue().is_empty():
 		return 2.0
-	if from_type == "storage" and not GameState.upload_queue.is_empty():
+	if from_type == "storage" and not GameState.get_upload_queue().is_empty():
 		return 2.0
-	if from_type == "uploader" and GameState.uploader_balance > 0.0:
+	if from_type == "uploader" and GameState.get_uploader_balance() > 0.0:
 		return 2.0
 	return 1.1
 
@@ -617,8 +623,8 @@ func _update_wire_positions() -> void:
 		var link: Variant = wire.get_meta("link", null)
 		if link == null:
 			continue
-		var from_p := _find_port(link.get("from_uid", ""), link.get("from_port", ""))
-		var to_p := _find_port(link.get("to_uid", ""), link.get("to_port", ""))
+		var from_p := _find_port(str(link.get("from_uid", "")), str(link.get("from_port", "")))
+		var to_p := _find_port(str(link.get("to_uid", "")), str(link.get("to_port", "")))
 		if from_p == null or to_p == null:
 			continue
 		wire.set_endpoints(_port_center(from_p), _port_center(to_p))
