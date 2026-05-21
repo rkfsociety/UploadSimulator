@@ -40,7 +40,11 @@ func _setup_border_layer() -> void:
 
 
 func _pin_border_back() -> void:
-	if _border_draw != null and is_instance_valid(_border_draw) and _border_draw.get_parent() == self:
+	if (
+		_border_draw != null
+		and is_instance_valid(_border_draw)
+		and _border_draw.get_parent() == self
+	):
 		move_child(_border_draw, 0)
 
 
@@ -57,10 +61,7 @@ func _draw() -> void:
 	if rect.size.x < 2.0 or rect.size.y < 2.0:
 		return
 	draw_rect(rect, Color(0.04, 0.04, 0.07, 0.94))
-	draw_rect(
-		rect,
-		Color(accent.r * 0.12, accent.g * 0.12, accent.b * 0.12, 0.55)
-	)
+	draw_rect(rect, Color(accent.r * 0.12, accent.g * 0.12, accent.b * 0.12, 0.55))
 
 
 func _viewport_scale() -> float:
@@ -81,10 +82,7 @@ func _draw_border() -> void:
 	var px := _screen_pixel_thickness()
 	var glow := Color(accent.r, accent.g, accent.b, 0.28)
 	var glow2 := Color(accent.r, accent.g, accent.b, 0.14)
-	_border_draw.draw_rect(
-		rect.grow_individual(px * 2.0, px * 2.0, px * 2.0, px * 2.0),
-		glow2
-	)
+	_border_draw.draw_rect(rect.grow_individual(px * 2.0, px * 2.0, px * 2.0, px * 2.0), glow2)
 	_border_draw.draw_rect(rect.grow_individual(px, px, px, px), glow)
 	_draw_border_rect_on(_border_draw, rect, accent, px)
 

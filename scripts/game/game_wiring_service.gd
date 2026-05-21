@@ -25,7 +25,9 @@ func is_wired(from_uid: String, from_port: String, to_uid: String, to_port: Stri
 	return false
 
 
-func can_connect_ports(from_uid: String, from_port: String, to_uid: String, to_port: String) -> bool:
+func can_connect_ports(
+	from_uid: String, from_port: String, to_uid: String, to_port: String
+) -> bool:
 	var types := _port_types(from_uid, from_port, to_uid, to_port)
 	if types[0] == "" or types[2] == "":
 		return false
@@ -60,7 +62,9 @@ func port_has_input_link(uid: String, port_id: String) -> bool:
 	return false
 
 
-func try_connect_ports(from_uid: String, from_port: String, to_uid: String, to_port: String) -> bool:
+func try_connect_ports(
+	from_uid: String, from_port: String, to_uid: String, to_port: String
+) -> bool:
 	if is_wired(from_uid, from_port, to_uid, to_port):
 		disconnect_ports(from_uid, from_port, to_uid, to_port)
 		_host.log_message.emit("Провод снят.")
@@ -121,7 +125,9 @@ func get_money_chain() -> Dictionary:
 	return _find_wired_pair("uploader", "money_out", "collector", "money_in")
 
 
-func _port_types(from_uid: String, from_port: String, to_uid: String, to_port: String) -> Array[String]:
+func _port_types(
+	from_uid: String, from_port: String, to_uid: String, to_port: String
+) -> Array[String]:
 	return [
 		_field.get_instance_type(from_uid),
 		from_port,
@@ -130,9 +136,16 @@ func _port_types(from_uid: String, from_port: String, to_uid: String, to_port: S
 	]
 
 
-func _is_allowed_edge(from_type: String, from_port: String, to_type: String, to_port: String) -> bool:
+func _is_allowed_edge(
+	from_type: String, from_port: String, to_type: String, to_port: String
+) -> bool:
 	for edge in BlockDefs.ALLOWED_WIRES:
-		if edge[0] == from_type and edge[1] == from_port and edge[2] == to_type and edge[3] == to_port:
+		if (
+			edge[0] == from_type
+			and edge[1] == from_port
+			and edge[2] == to_type
+			and edge[3] == to_port
+		):
 			return true
 	return false
 

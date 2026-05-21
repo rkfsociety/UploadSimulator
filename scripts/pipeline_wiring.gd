@@ -47,7 +47,9 @@ func _on_port_pressed(port: ConnectionPort) -> void:
 	if _pending_out == null:
 		GameState.log_message.emit("Сначала выберите выход (круг или квадрат справа).")
 		return
-	GameState.try_connect_ports(_pending_out.block_id, _pending_out.port_id, port.block_id, port.port_id)
+	GameState.try_connect_ports(
+		_pending_out.block_id, _pending_out.port_id, port.block_id, port.port_id
+	)
 	_clear_pending()
 
 
@@ -66,11 +68,14 @@ func _refresh_port_highlights() -> void:
 	for port: ConnectionPort in _ports:
 		var valid := false
 		if _pending_out != null and port.direction == ConnectionPort.Dir.IN:
-			valid = GameState.can_connect_ports(
-				_pending_out.block_id,
-				_pending_out.port_id,
-				port.block_id,
-				port.port_id,
+			valid = (
+				GameState
+				. can_connect_ports(
+					_pending_out.block_id,
+					_pending_out.port_id,
+					port.block_id,
+					port.port_id,
+				)
 			)
 		port.set_highlight(port == _pending_out, valid)
 
@@ -93,10 +98,12 @@ func _redraw_wires() -> void:
 		var line := Line2D.new()
 		line.width = 3.0
 		line.default_color = _wire_color(link)
-		line.points = PackedVector2Array([
-			_port_center_local(from_port),
-			_port_center_local(to_port),
-		])
+		line.points = PackedVector2Array(
+			[
+				_port_center_local(from_port),
+				_port_center_local(to_port),
+			]
+		)
 		line.antialiased = true
 		wires_root.add_child(line)
 		_line_nodes.append(line)
@@ -121,5 +128,9 @@ func _port_center_local(port: ConnectionPort) -> Vector2:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+	if (
+		event is InputEventMouseButton
+		and event.pressed
+		and event.button_index == MOUSE_BUTTON_RIGHT
+	):
 		_clear_pending()

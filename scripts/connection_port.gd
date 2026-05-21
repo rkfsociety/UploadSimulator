@@ -57,12 +57,14 @@ func _draw() -> void:
 			draw_rect(rect, fill)
 			draw_rect(rect, outline, false, 1.0)
 		else:
-			var pts := PackedVector2Array([
-				center + Vector2(0, -r),
-				center + Vector2(r, 0),
-				center + Vector2(0, r),
-				center + Vector2(-r, 0),
-			])
+			var pts := PackedVector2Array(
+				[
+					center + Vector2(0, -r),
+					center + Vector2(r, 0),
+					center + Vector2(0, r),
+					center + Vector2(-r, 0),
+				]
+			)
 			draw_colored_polygon(pts, fill)
 			draw_polyline(pts + PackedVector2Array([pts[0]]), outline, 1.0)
 

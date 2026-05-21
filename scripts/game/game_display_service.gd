@@ -77,7 +77,10 @@ func _fill_studio_display(target: Dictionary, uid: String) -> void:
 	target["action_text"] = "Записать"
 	target["action_visible"] = true
 	target["action_enabled"] = _pipeline.can_record_at(uid)
-	if _data.get_phase() == GameStateData.Phase.RECORDING and _data.get_recording_studio_uid() == uid:
+	if (
+		_data.get_phase() == GameStateData.Phase.RECORDING
+		and _data.get_recording_studio_uid() == uid
+	):
 		target["status"] = "Запись %d%%" % int(_data.get_phase_progress() * 100.0)
 		target["progress"] = _data.get_phase_progress()
 		target["action_enabled"] = false
@@ -132,6 +135,6 @@ func _fill_collector_display(target: Dictionary, uid: String, chain_money: Dicti
 	target["action_visible"] = not chain_money.is_empty()
 	target["action_enabled"] = _pipeline.can_collect_at(uid)
 	var inst := _field.get_instance(uid)
-	target["status"] = "Бонус +%.0f%%" % (
-		GameBonus.effect_at_level("collector", inst.level) * 100.0
+	target["status"] = (
+		"Бонус +%.0f%%" % (GameBonus.effect_at_level("collector", inst.level) * 100.0)
 	)

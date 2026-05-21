@@ -30,8 +30,7 @@ static func pixel_size() -> Vector2:
 
 static func _main_panel_size() -> Vector2:
 	return Vector2(
-		float(MAIN_CELLS_W * GridDefs.CELL_SIZE),
-		float(GridDefs.BLOCK_CELLS_H * GridDefs.CELL_SIZE)
+		float(MAIN_CELLS_W * GridDefs.CELL_SIZE), float(GridDefs.BLOCK_CELLS_H * GridDefs.CELL_SIZE)
 	)
 
 
@@ -160,7 +159,9 @@ func _make_port(port_id: String, def: Dictionary) -> ConnectionPort:
 	port.instance_uid = instance_uid
 	port.block_type = block_type
 	port.port_id = port_id
-	port.kind = ConnectionPort.Kind.MONEY if def.get("kind", "") == "money" else ConnectionPort.Kind.FILE
+	port.kind = (
+		ConnectionPort.Kind.MONEY if def.get("kind", "") == "money" else ConnectionPort.Kind.FILE
+	)
 	port.direction = ConnectionPort.Dir.IN if def.get("dir", "") == "in" else ConnectionPort.Dir.OUT
 	return port
 

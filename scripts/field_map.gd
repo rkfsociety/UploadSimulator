@@ -317,9 +317,7 @@ func _update_pinch() -> void:
 		return
 	var dist: float = pts[0].distance_to(pts[1])
 	var new_zoom: float = clampf(
-		_pinch_start_zoom * (dist / _pinch_start_dist),
-		_min_zoom(),
-		ZOOM_MAX
+		_pinch_start_zoom * (dist / _pinch_start_dist), _min_zoom(), ZOOM_MAX
 	)
 	var focal := _to_local_screen((pts[0] + pts[1]) * 0.5)
 	var map_point := (focal - _pan) / _pinch_start_zoom
@@ -522,11 +520,14 @@ func _on_port_pressed(port: ConnectionPort) -> void:
 	if _pending_out == null:
 		GameState.log_message.emit("Сначала выход.")
 		return
-	GameState.try_connect_ports(
-		_pending_out.instance_uid,
-		_pending_out.port_id,
-		port.instance_uid,
-		port.port_id,
+	(
+		GameState
+		. try_connect_ports(
+			_pending_out.instance_uid,
+			_pending_out.port_id,
+			port.instance_uid,
+			port.port_id,
+		)
 	)
 	_clear_pending()
 
@@ -541,11 +542,14 @@ func _refresh_port_highlights() -> void:
 	for port: ConnectionPort in _ports:
 		var ok := false
 		if _pending_out != null and port.direction == ConnectionPort.Dir.IN:
-			ok = GameState.can_connect_ports(
-				_pending_out.instance_uid,
-				_pending_out.port_id,
-				port.instance_uid,
-				port.port_id,
+			ok = (
+				GameState
+				. can_connect_ports(
+					_pending_out.instance_uid,
+					_pending_out.port_id,
+					port.instance_uid,
+					port.port_id,
+				)
 			)
 		port.set_highlight(port == _pending_out, ok)
 

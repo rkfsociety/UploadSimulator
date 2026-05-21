@@ -34,6 +34,7 @@ func _process(delta: float) -> void:
 
 # --- Доступ к состоянию (инкапсуляция) ---
 
+
 func get_money() -> float:
 	return _data.get_money()
 
@@ -63,6 +64,7 @@ func get_phase() -> Phase:
 
 
 # --- Поле и блоки ---
+
 
 func make_uid() -> String:
 	return _field.make_uid()
@@ -138,11 +140,14 @@ func get_shop_block_types() -> Array[String]:
 
 # --- Провода ---
 
+
 func is_wired(from_uid: String, from_port: String, to_uid: String, to_port: String) -> bool:
 	return _wiring.is_wired(from_uid, from_port, to_uid, to_port)
 
 
-func can_connect_ports(from_uid: String, from_port: String, to_uid: String, to_port: String) -> bool:
+func can_connect_ports(
+	from_uid: String, from_port: String, to_uid: String, to_port: String
+) -> bool:
 	return _wiring.can_connect_ports(from_uid, from_port, to_uid, to_port)
 
 
@@ -154,7 +159,9 @@ func port_has_input_link(uid: String, port_id: String) -> bool:
 	return _wiring.port_has_input_link(uid, port_id)
 
 
-func try_connect_ports(from_uid: String, from_port: String, to_uid: String, to_port: String) -> bool:
+func try_connect_ports(
+	from_uid: String, from_port: String, to_uid: String, to_port: String
+) -> bool:
 	return _wiring.try_connect_ports(from_uid, from_port, to_uid, to_port)
 
 
@@ -176,6 +183,7 @@ func get_money_chain() -> Dictionary:
 
 # --- Хранилище ---
 
+
 func get_storage_capacity_mb() -> float:
 	return _storage.get_storage_capacity_mb()
 
@@ -193,6 +201,7 @@ func get_storage_free_mb() -> float:
 
 
 # --- Пайплайн ---
+
 
 func can_record() -> bool:
 	return _pipeline.can_record()
@@ -251,6 +260,7 @@ func get_phase_label() -> String:
 
 
 # --- Константы UI (прокси) ---
+
 
 func get_pipeline_label() -> String:
 	return GameConstants.PIPELINE_LABEL

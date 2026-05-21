@@ -1,6 +1,7 @@
 extends ColorRect
 ## Неоновый фон: градиентные блики и лёгкие сканлайны.
 
+
 func _ready() -> void:
 	color = MinimalUI.BG_DARK
 	mouse_filter = Control.MOUSE_FILTER_IGNORE

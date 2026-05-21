@@ -45,9 +45,15 @@ static func apply_icon_button(btn: Button) -> void:
 	btn.custom_minimum_size = Vector2(44, 44)
 	btn.text = "◈"
 	btn.add_theme_stylebox_override("normal", icon_btn())
-	btn.add_theme_stylebox_override("hover", neon_box(Color(0.14, 0.06, 0.22, 1), NEON_MAGENTA, true))
-	btn.add_theme_stylebox_override("pressed", neon_box(Color(0.18, 0.08, 0.28, 1), NEON_CYAN, true))
-	btn.add_theme_stylebox_override("disabled", neon_box(Color(0.06, 0.03, 0.1, 1), TEXT_DIM, false))
+	btn.add_theme_stylebox_override(
+		"hover", neon_box(Color(0.14, 0.06, 0.22, 1), NEON_MAGENTA, true)
+	)
+	btn.add_theme_stylebox_override(
+		"pressed", neon_box(Color(0.18, 0.08, 0.28, 1), NEON_CYAN, true)
+	)
+	btn.add_theme_stylebox_override(
+		"disabled", neon_box(Color(0.06, 0.03, 0.1, 1), TEXT_DIM, false)
+	)
 	btn.add_theme_color_override("font_color", NEON_MAGENTA)
 	btn.add_theme_font_size_override("font_size", 20)
 
@@ -55,12 +61,18 @@ static func apply_icon_button(btn: Button) -> void:
 static func apply_action_button(btn: Button) -> void:
 	btn.flat = false
 	btn.custom_minimum_size = Vector2(0, 44)
-	var n := neon_box(Color(0.08, 0.05, 0.16, 1), Color(NEON_CYAN.r, NEON_CYAN.g, NEON_CYAN.b, 0.55), true)
+	var n := neon_box(
+		Color(0.08, 0.05, 0.16, 1), Color(NEON_CYAN.r, NEON_CYAN.g, NEON_CYAN.b, 0.55), true
+	)
 	var h := neon_box(Color(0.12, 0.07, 0.22, 1), NEON_CYAN, true)
 	btn.add_theme_stylebox_override("normal", n)
 	btn.add_theme_stylebox_override("hover", h)
-	btn.add_theme_stylebox_override("pressed", neon_box(Color(0.15, 0.08, 0.28, 1), NEON_MAGENTA, true))
-	btn.add_theme_stylebox_override("disabled", neon_box(Color(0.05, 0.03, 0.09, 1), TEXT_DIM, false))
+	btn.add_theme_stylebox_override(
+		"pressed", neon_box(Color(0.15, 0.08, 0.28, 1), NEON_MAGENTA, true)
+	)
+	btn.add_theme_stylebox_override(
+		"disabled", neon_box(Color(0.05, 0.03, 0.09, 1), TEXT_DIM, false)
+	)
 	btn.add_theme_color_override("font_color", TEXT)
 	btn.add_theme_color_override("font_disabled_color", TEXT_DIM)
 	btn.add_theme_font_size_override("font_size", 14)
@@ -110,7 +122,14 @@ static func apply_progress_bar(bar: ProgressBar, fill_color: Color = NEON_CYAN) 
 
 
 static func apply_log_panel(panel: PanelContainer) -> void:
-	panel.add_theme_stylebox_override("panel", neon_box(Color(0.05, 0.03, 0.1, 0.85), Color(NEON_PURPLE.r, NEON_PURPLE.g, NEON_PURPLE.b, 0.5), true))
+	panel.add_theme_stylebox_override(
+		"panel",
+		neon_box(
+			Color(0.05, 0.03, 0.1, 0.85),
+			Color(NEON_PURPLE.r, NEON_PURPLE.g, NEON_PURPLE.b, 0.5),
+			true
+		)
+	)
 
 
 static func block_panel_style() -> StyleBoxFlat:
@@ -154,7 +173,9 @@ static func shop_panel_style() -> StyleBoxFlat:
 
 
 static func shop_row_style() -> StyleBoxFlat:
-	return neon_box(Color(0.09, 0.05, 0.18, 1), Color(NEON_CYAN.r, NEON_CYAN.g, NEON_CYAN.b, 0.4), false)
+	return neon_box(
+		Color(0.09, 0.05, 0.18, 1), Color(NEON_CYAN.r, NEON_CYAN.g, NEON_CYAN.b, 0.4), false
+	)
 
 
 static func shop_icon_tile_style(accent: Color, selected: bool = false) -> StyleBoxFlat:

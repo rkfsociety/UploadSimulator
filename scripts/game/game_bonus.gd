@@ -5,9 +5,7 @@ class_name GameBonus
 
 static func effect_at_level(type_id: String, level: int) -> float:
 	var lvl := maxi(1, level)
-	var per_level: float = float(
-		BlockDefs.TYPES.get(type_id, {}).get("effect_per_level", 0.0)
-	)
+	var per_level: float = float(BlockDefs.TYPES.get(type_id, {}).get("effect_per_level", 0.0))
 	return float(lvl) * per_level
 
 
@@ -21,8 +19,8 @@ static func duration_scaled(base_duration: float, type_id: String, level: int) -
 
 static func storage_capacity_mb(level: int) -> float:
 	var lvl := maxi(1, level)
-	var extra_gb: float = float(lvl - 1) * float(
-		BlockDefs.TYPES["storage"]["capacity_gb_per_level"]
+	var extra_gb: float = (
+		float(lvl - 1) * float(BlockDefs.TYPES["storage"]["capacity_gb_per_level"])
 	)
 	return (GameConstants.BASE_STORAGE_GB + extra_gb) * GameConstants.MB_PER_GB
 

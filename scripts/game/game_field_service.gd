@@ -112,7 +112,9 @@ func get_instance_upgrade_cost(uid: String) -> int:
 
 
 func can_upgrade_instance(uid: String) -> bool:
-	return get_instance(uid).is_valid() and _data.get_money() >= float(get_instance_upgrade_cost(uid))
+	return (
+		get_instance(uid).is_valid() and _data.get_money() >= float(get_instance_upgrade_cost(uid))
+	)
 
 
 func upgrade_instance(uid: String) -> bool:

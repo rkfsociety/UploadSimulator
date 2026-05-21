@@ -34,16 +34,12 @@ func tick(delta: float) -> void:
 
 func download_speed_for(uid: String) -> float:
 	var inst := _field.get_instance(uid)
-	return GameBonus.speed_scaled(
-		GameConstants.BASE_DOWNLOAD_SPEED_MBPS, inst.type_id, inst.level
-	)
+	return GameBonus.speed_scaled(GameConstants.BASE_DOWNLOAD_SPEED_MBPS, inst.type_id, inst.level)
 
 
 func upload_speed_for(uid: String) -> float:
 	var inst := _field.get_instance(uid)
-	return GameBonus.speed_scaled(
-		GameConstants.BASE_UPLOAD_SPEED_MBPS, inst.type_id, inst.level
-	)
+	return GameBonus.speed_scaled(GameConstants.BASE_UPLOAD_SPEED_MBPS, inst.type_id, inst.level)
 
 
 func studio_duration_for(uid: String) -> float:
@@ -172,9 +168,10 @@ func enqueue_download() -> bool:
 	var assets_mb := _rng.randf_range(
 		GameConstants.DOWNLOAD_ASSETS_MB_MIN, GameConstants.DOWNLOAD_ASSETS_MB_MAX
 	)
-	var video_mb := _rng.randf_range(
-		GameConstants.DOWNLOAD_VIDEO_MB_MIN, GameConstants.DOWNLOAD_VIDEO_MB_MAX
-	) * quality
+	var video_mb := (
+		_rng.randf_range(GameConstants.DOWNLOAD_VIDEO_MB_MIN, GameConstants.DOWNLOAD_VIDEO_MB_MAX)
+		* quality
+	)
 	var total_mb := assets_mb + video_mb
 	if not _storage.has_storage_space(total_mb - GameConstants.RAW_FILE_MB):
 		_data.add_recorded_files(1)
@@ -232,16 +229,25 @@ func _regen_energy(delta: float) -> void:
 		return
 	if _data.get_energy() < _data.get_max_energy():
 		_data.set_energy(
-			minf(_data.get_energy() + GameConstants.ENERGY_REGEN_PER_SEC * delta, _data.get_max_energy())
+			minf(
+				_data.get_energy() + GameConstants.ENERGY_REGEN_PER_SEC * delta,
+				_data.get_max_energy()
+			)
 		)
 		_host.stats_changed.emit()
 
 
 func _tick_active_phase(delta: float) -> void:
-	if _data.get_phase() == GameStateData.Phase.IDLE or _data.get_phase() == GameStateData.Phase.PUBLISHED:
+	if (
+		_data.get_phase() == GameStateData.Phase.IDLE
+		or _data.get_phase() == GameStateData.Phase.PUBLISHED
+	):
 		return
 	_data.set_phase_progress(
-		_data.get_phase_progress() + delta / maxf(_data.get_phase_duration(), GameConstants.MIN_JOB_DURATION_SEC)
+		(
+			_data.get_phase_progress()
+			+ delta / maxf(_data.get_phase_duration(), GameConstants.MIN_JOB_DURATION_SEC)
+		)
 	)
 	_host.stats_changed.emit()
 	_host.field_changed.emit()
@@ -299,8 +305,10 @@ func apply_publish(job: FileTransferJob) -> void:
 	_data.add_published_files(1)
 	var views := int(
 		round(
-			_rng.randi_range(GameConstants.PUBLISH_VIEWS_MIN, GameConstants.PUBLISH_VIEWS_MAX)
-			* job.quality
+			(
+				_rng.randi_range(GameConstants.PUBLISH_VIEWS_MIN, GameConstants.PUBLISH_VIEWS_MAX)
+				* job.quality
+			)
 		)
 	)
 	var revenue := float(views) * GameConstants.REVENUE_PER_VIEW
@@ -324,10 +332,13 @@ func _any_studio_can_record() -> bool:
 func _random_title() -> String:
 	var topics: Array[String] = ["Обзор", "Гайд", "Влог", "Стрим"]
 	var things: Array[String] = ["игры", "патча", "сетапа", "мода"]
-	return "%s %s" % [
-		topics[_rng.randi_range(0, topics.size() - 1)],
-		things[_rng.randi_range(0, things.size() - 1)],
-	]
+	return (
+		"%s %s"
+		% [
+			topics[_rng.randi_range(0, topics.size() - 1)],
+			things[_rng.randi_range(0, things.size() - 1)],
+		]
+	)
 
 
 func _notify_field_and_stats() -> void:
