@@ -14,14 +14,15 @@ func run() -> Array[String]:
 		var sz := FileDefs.random_download_size_bytes(FileDefs.DEFAULT_TYPE, speed, rng)
 		if sz > cap + 0.01:
 			errors.append("размер %.0f превышает speed×50 (%.0f)" % [sz, cap])
-		if sz > GameConstants.TEXT_FILE_BYTES_MAX + 0.01:
-			errors.append("текстовый файл больше TEXT_FILE_BYTES_MAX")
-		if sz < GameConstants.TEXT_FILE_BYTES_MIN - 0.01:
-			errors.append("текстовый файл меньше TEXT_FILE_BYTES_MIN")
+		var text_def: Dictionary = FileDefs.TYPES["text"]
+		if sz > float(text_def["bytes_max"]) + 0.01:
+			errors.append("текстовый файл больше bytes_max типа")
+		if sz < float(text_def["bytes_min"]) - 0.01:
+			errors.append("текстовый файл меньше bytes_min типа")
 	var fast := 500.0
 	var big_cap := fast * GameConstants.DOWNLOAD_SIZE_SPEED_MULTIPLIER
 	var sz_fast := FileDefs.random_download_size_bytes(FileDefs.DEFAULT_TYPE, fast, rng)
-	if sz_fast > GameConstants.TEXT_FILE_BYTES_MAX + 0.01:
+	if sz_fast > float(FileDefs.TYPES["text"]["bytes_max"]) + 0.01:
 		errors.append("при высокой скорости текст всё равно ограничен абсолютным максимумом")
 	if sz_fast > big_cap + 0.01:
 		errors.append("размер превышает cap по скорости")

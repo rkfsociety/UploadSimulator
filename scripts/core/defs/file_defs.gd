@@ -1,15 +1,41 @@
 extends RefCounted
 class_name FileDefs
-## Типы передаваемых файлов (базовый — текстовый).
+## Типы файлов из интернета; у каждого — свой диапазон размера при скачивании.
 
 const DEFAULT_TYPE := "text"
 
+# weight — для будущего случайного выбора типа; bytes_* — лимиты размера
 const TYPES := {
 	"text":
 	{
 		"name": "Текстовый файл",
+		"weight": 1.0,
+		"bytes_min": 400.0,
+		"bytes_max": 3_200.0,
+	},
+	# Заготовки под будущие типы (пока не выпадают в pick_random_download_type)
+	"image":
+	{
+		"name": "Изображение",
+		"weight": 0.0,
+		"bytes_min": 8_000.0,
+		"bytes_max": 48_000.0,
+	},
+	"archive":
+	{
+		"name": "Архив",
+		"weight": 0.0,
+		"bytes_min": 12_000.0,
+		"bytes_max": 96_000.0,
 	},
 }
+
+
+static func _static_init() -> void:
+	for type_id in TYPES:
+		var def: Dictionary = TYPES[type_id]
+		if not def.has("name") or not def.has("bytes_min") or not def.has("bytes_max"):
+			push_error("FileDefs: тип «%s» должен иметь name, bytes_min, bytes_max." % type_id)
 
 
 # Человекочитаемое название типа для UI модуля
@@ -17,17 +43,38 @@ static func get_type_label(type_id: String) -> String:
 	return str(TYPES.get(type_id, TYPES[DEFAULT_TYPE]).get("name", "Файл"))
 
 
-# Случайный размер скачиваемого файла: текст небольшой, верх — speed_bps × 50 байт
+# Случайный тип для скачивания (сейчас только текст; позже — по weight)
+static func pick_random_download_type(rng: RandomNumberGenerator) -> String:
+	var pool: Array[String] = []
+	var weights: Array[float] = []
+	for type_id in TYPES:
+		var w: float = float(TYPES[type_id].get("weight", 0.0))
+		if w <= 0.0:
+			continue
+		pool.append(type_id)
+		weights.append(w)
+	if pool.is_empty():
+		return DEFAULT_TYPE
+	var total := 0.0
+	for w in weights:
+		total += w
+	var roll := rng.randf() * total
+	var acc := 0.0
+	for i in pool.size():
+		acc += weights[i]
+		if roll <= acc:
+			return pool[i]
+	return pool[pool.size() - 1]
+
+
+# Случайный размер: min/max типа и потолок speed_bps × множитель (≈ 50 с на линии)
 static func random_download_size_bytes(
 	file_type_id: String, speed_bps: float, rng: RandomNumberGenerator
 ) -> float:
+	var def: Dictionary = TYPES.get(file_type_id, TYPES[DEFAULT_TYPE])
 	var speed_cap := maxf(speed_bps * GameConstants.DOWNLOAD_SIZE_SPEED_MULTIPLIER, 1.0)
-	match file_type_id:
-		"text":
-			var max_b := minf(GameConstants.TEXT_FILE_BYTES_MAX, speed_cap)
-			var min_b := minf(GameConstants.TEXT_FILE_BYTES_MIN, max_b)
-			return rng.randf_range(min_b, max_b)
-		_:
-			return rng.randf_range(
-				minf(GameConstants.TEXT_FILE_BYTES_MIN, speed_cap), speed_cap
-			)
+	var type_max := float(def.get("bytes_max", GameConstants.TEXT_FILE_BYTES_MAX))
+	var type_min := float(def.get("bytes_min", GameConstants.TEXT_FILE_BYTES_MIN))
+	var max_b := minf(type_max, speed_cap)
+	var min_b := minf(type_min, max_b)
+	return rng.randf_range(min_b, max_b)

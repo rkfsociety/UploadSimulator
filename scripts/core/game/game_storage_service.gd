@@ -20,7 +20,10 @@ func get_storage_capacity_bytes() -> float:
 
 
 func storage_capacity_for(uid: String) -> float:
-	return GameBonus.storage_capacity_bytes(_field.get_instance_level(uid))
+	return (
+		GameBonus.storage_capacity_bytes(_field.get_instance_level(uid))
+		* _data.get_env_multiplier("storage_capacity")
+	)
 
 
 func get_storage_used_bytes() -> float:

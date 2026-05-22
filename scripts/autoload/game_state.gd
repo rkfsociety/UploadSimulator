@@ -17,6 +17,7 @@ var display: GameStateDisplay
 var wiring: GameStateWiring
 var storage: GameStateStorage
 var pipeline: GameStatePipeline
+var environment: GameStateEnvironment
 
 var _data: GameStateData
 var _field_svc: GameFieldService
@@ -24,6 +25,7 @@ var _wiring_svc: GameWiringService
 var _storage_svc: GameStorageService
 var _pipeline_svc: GamePipelineService
 var _display_svc: GameDisplayService
+var _environment_svc: GameEnvironmentService
 
 
 func _ready() -> void:
@@ -31,6 +33,7 @@ func _ready() -> void:
 	_field_svc = GameFieldService.new(_data, self)
 	_wiring_svc = GameWiringService.new(_data, self, _field_svc)
 	_storage_svc = GameStorageService.new(_data, _field_svc)
+	_environment_svc = GameEnvironmentService.new(_data, self)
 	_pipeline_svc = GamePipelineService.new(_data, self, _field_svc, _wiring_svc, _storage_svc)
 	_display_svc = GameDisplayService.new(_data, _field_svc, _wiring_svc, _storage_svc, _pipeline_svc)
 	access = GameStateAccess.new(_data)
@@ -39,6 +42,7 @@ func _ready() -> void:
 	wiring = GameStateWiring.new(_wiring_svc)
 	storage = GameStateStorage.new(_storage_svc)
 	pipeline = GameStatePipeline.new(_pipeline_svc)
+	environment = GameStateEnvironment.new(_environment_svc)
 
 
 func _process(delta: float) -> void:

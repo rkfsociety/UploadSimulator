@@ -5,7 +5,9 @@ class_name GameStateData
 enum Phase { IDLE, SETTLING }
 
 var _money: float = 0.0
+var _diamonds: int = GameConstants.START_DIAMONDS
 var _uploader_balance: float = 0.0
+var _env_upgrade_levels: Dictionary = {}
 
 var _block_stock: Dictionary = {}
 var _placed_blocks: Array[BlockInstance] = []
@@ -42,6 +44,41 @@ func try_spend_money(amount: float) -> bool:
 		return false
 	_money -= amount
 	return true
+
+
+func get_diamonds() -> int:
+	return _diamonds
+
+
+func add_diamonds(amount: int) -> void:
+	_diamonds += amount
+
+
+func try_spend_diamonds(amount: int) -> bool:
+	if _diamonds < amount:
+		return false
+	_diamonds -= amount
+	return true
+
+
+func get_env_upgrade_level(upgrade_id: String) -> int:
+	return int(_env_upgrade_levels.get(upgrade_id, 0))
+
+
+func set_env_upgrade_level(upgrade_id: String, level: int) -> void:
+	_env_upgrade_levels[upgrade_id] = level
+
+
+# Множитель от улучшений среды (download_speed, upload_speed, storage_capacity)
+func get_env_multiplier(effect_key: String) -> float:
+	var mult := 1.0
+	for upgrade_id in EnvironmentUpgradeDefs.UPGRADES:
+		var def: Dictionary = EnvironmentUpgradeDefs.UPGRADES[upgrade_id]
+		if str(def.get("effect_key", "")) != effect_key:
+			continue
+		var lvl: int = get_env_upgrade_level(upgrade_id)
+		mult += float(lvl) * float(def.get("effect_per_level", 0.0))
+	return mult
 
 
 func get_uploader_balance() -> float:

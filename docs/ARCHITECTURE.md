@@ -8,7 +8,7 @@
 scripts/
   autoload/          # GameState, BgmPlayer, DebugOverlay
   core/
-    defs/            # BlockDefs, GridDefs
+    defs/            # BlockDefs, GridDefs, FileDefs, EnvironmentUpgradeDefs
     game/            # состояние, сервисы, модели (RefCounted)
       modules/       # фасады API для autoload GameState
   systems/
@@ -60,6 +60,7 @@ Autoload `DebugOverlay` показывает FPS, кассу, фазы, очер
 | `wiring` | `game_state_wiring.gd` | соединения портов |
 | `storage` | `game_state_storage.gd` | диск |
 | `pipeline` | `game_state_pipeline.gd` | скачивание, выгрузка, сбор денег |
+| `environment` | `game_state_environment.gd` | улучшения среды за алмазы |
 
 Логика — в сервисах (`GameFieldService`, …); модули только делегируют. Пример: `GameState.field.place_block(...)`, `GameState.access.get_money()`.
 

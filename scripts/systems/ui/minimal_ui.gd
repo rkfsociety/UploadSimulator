@@ -251,6 +251,8 @@ static func apply_icon_button(btn: Button) -> void:
 static func apply_hud_icon_button(hit_btn: Button, icon_tex: TextureRect, texture: Texture2D) -> void:
 	# Иконка — TextureRect в сцене; Button — прозрачный слой клика (не дочерний узел Button)
 	var panel: PanelContainer = hit_btn.get_parent().get_parent() as PanelContainer
+	if panel == null:
+		panel = hit_btn.get_parent() as PanelContainer
 	var t := theme()
 	if panel:
 		panel.add_theme_stylebox_override("panel", t.get_stylebox("normal", &"icon"))

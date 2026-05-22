@@ -214,11 +214,12 @@ func _is_over_hud(screen_pos: Vector2) -> bool:
 	var main := _host.get_parent()
 	if main == null:
 		return false
-	var shop: CanvasItem = main.get_node_or_null("ShopMenu") as CanvasItem
-	if shop != null and shop.visible:
-		var shop_rect := Rect2(shop.get_global_position(), shop.size)
-		if shop_rect.has_point(screen_pos):
-			return true
+	for menu_name in ["ShopMenu", "UpgradeShopMenu"]:
+		var menu: CanvasItem = main.get_node_or_null(menu_name) as CanvasItem
+		if menu != null and menu.visible:
+			var menu_rect := Rect2(menu.get_global_position(), menu.size)
+			if menu_rect.has_point(screen_pos):
+				return true
 	var vp_size := _host.get_viewport().get_visible_rect().size
 	if screen_pos.y >= vp_size.y - 96.0:
 		return true

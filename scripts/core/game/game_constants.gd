@@ -19,10 +19,14 @@ const BASE_STORAGE_BYTES := 32.0 * 1024.0 * BYTE_SIZE_SCALE
 const RAW_FILE_BYTES := 18.0 * BYTE_SIZE_SCALE
 # Размер файла при скачивании: случайный, но не больше speed_bps × множитель (≈ 50 с на линии)
 const DOWNLOAD_SIZE_SPEED_MULTIPLIER := 50.0
-# Текстовые файлы — небольшие (абсолютный потолок ниже cap по скорости)
+# Лимиты по умолчанию для текстового типа (см. FileDefs.TYPES)
 const TEXT_FILE_BYTES_MIN := 400.0
 const TEXT_FILE_BYTES_MAX := 3_200.0
-const MIN_DOWNLOAD_RESERVE_BYTES := TEXT_FILE_BYTES_MAX
+const MIN_DOWNLOAD_RESERVE_BYTES := 96_000.0
+
+# Алмазы — валюта магазина улучшений среды
+const START_DIAMONDS := 5
+const DIAMONDS_PER_UPLOAD := 1
 const DEFAULT_STORED_FILE_BYTES := 1_000.0
 
 const MAX_QUEUE_JOBS := 5

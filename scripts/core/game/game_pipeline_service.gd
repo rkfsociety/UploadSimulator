@@ -32,12 +32,18 @@ func tick(delta: float) -> void:
 
 func download_speed_for(uid: String) -> float:
 	var inst := _field.get_instance(uid)
-	return GameBonus.speed_scaled(GameConstants.BASE_DOWNLOAD_SPEED_BPS, inst.type_id, inst.level)
+	return (
+		GameBonus.speed_scaled(GameConstants.BASE_DOWNLOAD_SPEED_BPS, inst.type_id, inst.level)
+		* _data.get_env_multiplier("download_speed")
+	)
 
 
 func upload_speed_for(uid: String) -> float:
 	var inst := _field.get_instance(uid)
-	return GameBonus.speed_scaled(GameConstants.BASE_UPLOAD_SPEED_BPS, inst.type_id, inst.level)
+	return (
+		GameBonus.speed_scaled(GameConstants.BASE_UPLOAD_SPEED_BPS, inst.type_id, inst.level)
+		* _data.get_env_multiplier("upload_speed")
+	)
 
 
 func can_download_at(uid: String) -> bool:
@@ -121,7 +127,7 @@ func enqueue_download() -> bool:
 		return false
 	var chain := _wiring.get_file_chain()
 	var dl_uid: String = chain.get("downloader", "")
-	var file_type_id := FileDefs.DEFAULT_TYPE
+	var file_type_id := FileDefs.pick_random_download_type(_rng)
 	var dl_level := _field.get_instance_level(dl_uid)
 	var quality := 1.0 + float(dl_level) * GameConstants.QUALITY_PER_DOWNLOADER_LEVEL
 	var speed_bps := download_speed_for(dl_uid)
@@ -218,12 +224,13 @@ func _tick_upload_queue(delta: float) -> void:
 
 func apply_publish(job: FileTransferJob) -> void:
 	_data.add_uploaded_files(1)
+	_data.add_diamonds(GameConstants.DIAMONDS_PER_UPLOAD)
 	var revenue := job.size_bytes * GameConstants.REVENUE_PER_BYTE * job.quality
 	_data.set_uploader_balance(_data.get_uploader_balance() + revenue)
 	_data.set_phase(GameStateData.Phase.SETTLING)
 	_host.log_message.emit(
-		"Выгружен %s: +$%.1f в аплоудер"
-		% [FileDefs.get_type_label(job.file_type_id), revenue]
+		"Выгружен %s: +$%.1f в аплоудер, +◆%d"
+		% [FileDefs.get_type_label(job.file_type_id), revenue, GameConstants.DIAMONDS_PER_UPLOAD]
 	)
 
 
