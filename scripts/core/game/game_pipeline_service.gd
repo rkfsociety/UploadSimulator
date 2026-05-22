@@ -162,7 +162,7 @@ func enqueue_download() -> bool:
 	var chain := _wiring.get_file_chain()
 	var dl_uid: String = chain.get("downloader", "")
 	_data.add_recorded_files(-1)
-	var title := _random_title()
+	var file_type_id := FileDefs.DEFAULT_TYPE
 	var dl_level := _field.get_instance_level(dl_uid)
 	var quality := 1.0 + float(dl_level) * GameConstants.QUALITY_PER_DOWNLOADER_LEVEL
 	var assets_bytes := _rng.randf_range(
@@ -179,14 +179,15 @@ func enqueue_download() -> bool:
 		_host.stats_changed.emit()
 		return false
 	var job := FileTransferJob.new()
-	job.title = title
+	job.file_type_id = file_type_id
+	job.title = FileDefs.get_type_label(file_type_id)
 	job.quality = quality
 	job.size_bytes = total_bytes
 	job.duration = assets_bytes / download_speed_for(dl_uid)
 	job.progress = 0.0
 	_data.get_download_queue().append(job)
 	_notify_queue_and_field()
-	_host.log_message.emit("Скачивание «%s»..." % title)
+	_host.log_message.emit("Скачивание: %s..." % job.title)
 	_host.stats_changed.emit()
 	return true
 
@@ -202,6 +203,7 @@ func enqueue_upload() -> bool:
 	job.size_bytes = entry.size_bytes
 	job.duration = entry.size_bytes / upload_speed_for(up_uid)
 	job.progress = 0.0
+	job.file_type_id = entry.file_type_id
 	job.title = entry.title
 	_data.get_upload_queue().append(job)
 	_notify_queue_and_field()
@@ -277,6 +279,7 @@ func _tick_download_queue(delta: float) -> void:
 	queue.pop_front()
 	var stored := StoredFileEntry.new()
 	stored.title = job.title
+	stored.file_type_id = job.file_type_id
 	stored.quality = job.quality
 	stored.size_bytes = job.size_bytes
 	_data.get_stored_files().append(stored)
@@ -327,18 +330,6 @@ func _any_studio_can_record() -> bool:
 		if inst.type_id == "studio" and can_record_at(inst.uid):
 			return true
 	return false
-
-
-func _random_title() -> String:
-	var topics: Array[String] = ["Обзор", "Гайд", "Влог", "Стрим"]
-	var things: Array[String] = ["игры", "патча", "сетапа", "мода"]
-	return (
-		"%s %s"
-		% [
-			topics[_rng.randi_range(0, topics.size() - 1)],
-			things[_rng.randi_range(0, things.size() - 1)],
-		]
-	)
 
 
 func _notify_field_and_stats() -> void:

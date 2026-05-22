@@ -54,15 +54,6 @@ func get_block_metric(uid: String) -> String:
 			)
 	return ""
 
-
-# Укорачивает длинные имена файлов для подписи на модуле
-static func _short_title(title: String, max_len: int = 22) -> String:
-	var t := title.strip_edges()
-	if t.length() <= max_len:
-		return t
-	return t.substr(0, max_len - 1) + "…"
-
-
 func get_block_display(uid: String) -> Dictionary:
 	var inst := _field.get_instance(uid)
 	var empty := {
@@ -115,12 +106,16 @@ func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dicti
 	if not queue.is_empty() and chain_file.get("downloader", "") == uid:
 		var job: FileTransferJob = queue[0]
 		target["status"] = (
-			"Качает: «%s» · %d%%" % [_short_title(job.title), int(job.progress * 100.0)]
+			"Качает: %s · %d%%"
+			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0)]
 		)
 		target["progress"] = job.progress
 		target["action_enabled"] = false
 	elif _data.get_recorded_files() > 0:
-		target["status"] = "В очереди на скачивание: %d файл." % _data.get_recorded_files()
+		target["status"] = (
+			"В очереди: %d × %s"
+			% [_data.get_recorded_files(), FileDefs.get_type_label(FileDefs.DEFAULT_TYPE)]
+		)
 	else:
 		target["status"] = "Ждёт запись в студии"
 
@@ -136,7 +131,8 @@ func _fill_storage_display(target: Dictionary) -> void:
 	if not dl_queue.is_empty():
 		var job: FileTransferJob = dl_queue[0]
 		target["status"] = (
-			"Принимает: «%s» · %d%%" % [_short_title(job.title), int(job.progress * 100.0)]
+			"Принимает: %s · %d%%"
+			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0)]
 		)
 		target["progress"] = job.progress
 
@@ -149,13 +145,14 @@ func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Diction
 	if not queue.is_empty() and chain_file.get("uploader", "") == uid:
 		var job: FileTransferJob = queue[0]
 		target["status"] = (
-			"Грузит: «%s» · %d%%" % [_short_title(job.title), int(job.progress * 100.0)]
+			"Грузит: %s · %d%%"
+			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0)]
 		)
 		target["progress"] = job.progress
 		target["action_enabled"] = false
 	elif not _data.get_stored_files().is_empty():
 		var next: StoredFileEntry = _data.get_stored_files()[0]
-		target["status"] = "На диске: «%s»" % _short_title(next.title)
+		target["status"] = "На диске: %s" % FileDefs.get_type_label(next.file_type_id)
 	else:
 		target["status"] = "Сейф: $%.0f" % _data.get_uploader_balance()
 

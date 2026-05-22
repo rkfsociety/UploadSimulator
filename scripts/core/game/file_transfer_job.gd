@@ -3,6 +3,7 @@ class_name FileTransferJob
 ## Задача скачивания или выгрузки файла.
 
 var title: String = ""
+var file_type_id: String = FileDefs.DEFAULT_TYPE
 var quality: float = 1.0
 var size_bytes: float = 0.0
 var duration: float = 1.0
@@ -19,6 +20,7 @@ static func _read_size_bytes(data: Dictionary) -> float:
 static func from_legacy_dict(data: Dictionary) -> FileTransferJob:
 	var job := FileTransferJob.new()
 	job.title = str(data.get("title", ""))
+	job.file_type_id = str(data.get("file_type_id", FileDefs.DEFAULT_TYPE))
 	job.quality = float(data.get("quality", 1.0))
 	job.size_bytes = _read_size_bytes(data)
 	job.duration = float(data.get("duration", 1.0))
