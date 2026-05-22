@@ -29,17 +29,26 @@ script = ExtResource("3_field")
 
 [node name="MapViewport" type="Control" parent="FieldMap"]
 unique_name_in_owner = true
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 clip_contents = true
 
-[node name="GridDraw" type="Control" parent="FieldMap/MapViewport"]
+[node name="MapContent" type="Control" parent="FieldMap/MapViewport"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="GridDraw" type="Control" parent="FieldMap/MapViewport/MapContent"]
 unique_name_in_owner = true
 layout_mode = 0
 mouse_filter = 2
 script = ExtResource("5_grid")
 
-[node name="WiresRoot" type="Control" parent="FieldMap/MapViewport"]
+[node name="WiresRoot" type="Control" parent="FieldMap/MapViewport/MapContent"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -49,7 +58,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="BlocksRoot" type="Control" parent="FieldMap/MapViewport"]
+[node name="BlocksRoot" type="Control" parent="FieldMap/MapViewport/MapContent"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15

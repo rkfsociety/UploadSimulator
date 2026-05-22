@@ -31,31 +31,34 @@ func _major_step() -> float:
 	return float(GridDefs.CELL_SIZE)
 
 
-func _map_viewport() -> Control:
+func _map_content() -> Control:
 	return get_parent() as Control
 
 
 func _field_map() -> Control:
-	var vp := _map_viewport()
-	if vp == null:
+	var content := _map_content()
+	if content == null:
 		return null
-	return vp.get_parent() as Control
+	var viewport := content.get_parent() as Control
+	if viewport == null:
+		return null
+	return viewport.get_parent() as Control
 
 
 func _zoom() -> float:
-	var vp := _map_viewport()
-	if vp == null:
+	var content := _map_content()
+	if content == null:
 		return 1.0
-	return maxf(vp.scale.x, 0.001)
+	return maxf(content.scale.x, 0.001)
 
 
 func _visible_world_rect() -> Rect2:
-	var vp := _map_viewport()
+	var content := _map_content()
 	var field := _field_map()
-	if vp == null or field == null or field.size.x < 1.0:
+	if content == null or field == null or field.size.x < 1.0:
 		return _world_bounds
 	var zoom := _zoom()
-	var pan := vp.position
+	var pan := content.position
 	var vs := field.size
 	var p0 := (Vector2.ZERO - pan) / zoom
 	var p1 := (vs - pan) / zoom

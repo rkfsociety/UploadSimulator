@@ -1,17 +1,17 @@
 extends RefCounted
 class_name FieldMapCamera
-## Камера карты: pan, zoom и MapViewport.
+## Камера карты: pan, zoom на MapContent; размер вида — FieldMap.
 
 var _host: Control
-var _map_viewport: Control
+var _map_content: Control
 
 var zoom: float = 1.0
 var pan: Vector2 = Vector2.ZERO
 
 
-func _init(host: Control, map_viewport: Control) -> void:
+func _init(host: Control, map_content: Control) -> void:
 	_host = host
-	_map_viewport = map_viewport
+	_map_content = map_content
 
 
 ## Размер области FieldMap на экране.
@@ -79,11 +79,11 @@ func set_pan(value: Vector2) -> void:
 
 ## Применить текущие zoom/pan к viewport и сетке.
 func apply() -> void:
-	if _map_viewport == null or not _host.is_node_ready():
+	if _map_content == null or not _host.is_node_ready():
 		return
 	_clamp_pan()
-	_map_viewport.scale = Vector2.ONE * zoom
-	_map_viewport.position = pan
+	_map_content.scale = Vector2.ONE * zoom
+	_map_content.position = pan
 
 
 func _clamp_pan() -> void:

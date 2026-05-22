@@ -4,9 +4,10 @@ extends Control
 signal placement_mode_changed(type_id: String)
 
 @onready var map_viewport: Control = $MapViewport
-@onready var grid_draw: Control = $MapViewport/GridDraw
-@onready var wires_root: Control = $MapViewport/WiresRoot
-@onready var blocks_root: Control = $MapViewport/BlocksRoot
+@onready var map_content: Control = $MapViewport/MapContent
+@onready var grid_draw: Control = $MapViewport/MapContent/GridDraw
+@onready var wires_root: Control = $MapViewport/MapContent/WiresRoot
+@onready var blocks_root: Control = $MapViewport/MapContent/BlocksRoot
 
 var _camera: FieldMapCamera
 var _blocks: FieldMapBlocks
@@ -19,18 +20,18 @@ func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	set_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	# Без stretch-anchors: position/scale MapViewport = pan/zoom (full_rect ломает сдвиг)
-	map_viewport.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	map_viewport.size = size
+	# MapViewport — клип на весь экран; pan/zoom только у MapContent (мир 0,0 в центр вида)
+	map_viewport.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	map_viewport.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	map_viewport.clip_contents = true
+	map_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for node in [wires_root, blocks_root]:
 		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Провода поверх блоков, чтобы линии были видны между портами
 	wires_root.z_index = FieldMapConstants.WIRES_Z_INDEX
-	_camera = FieldMapCamera.new(self, map_viewport)
+	_camera = FieldMapCamera.new(self, map_content)
 	_blocks = FieldMapBlocks.new(blocks_root)
-	_placement = FieldMapPlacement.new(map_viewport, _camera)
+	_placement = FieldMapPlacement.new(map_content, _camera)
 	_wiring = FieldMapWiring.new(self, wires_root, _blocks)
 	_map_input = FieldMapInput.new(self, _camera, _placement, _wiring)
 	_map_input.placement_finished.connect(_on_placement_finished)
@@ -41,14 +42,12 @@ func _ready() -> void:
 	GameState.queue_changed.connect(_on_field_changed)
 
 	await get_tree().process_frame
-	map_viewport.size = size
 	_camera.focus_world(GridDefs.world_center_pixel())
 	_on_field_changed()
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
-		map_viewport.size = size
 		_camera.apply()
 
 
