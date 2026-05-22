@@ -231,11 +231,26 @@ static func apply_icon_button(btn: Button) -> void:
 
 
 static func apply_shop_hud_button(btn: Button) -> void:
-	# Та же рамка, что у icon-кнопок, но с SVG вместо символа шрифта
+	# Рамка icon-кнопки + TextureRect: у Button.expand_icon SVG часто не рисуется
 	apply_icon_button(btn)
+	btn.custom_minimum_size = Vector2(56, 56)
 	btn.text = ""
-	btn.icon = shop_hud_icon()
-	btn.expand_icon = true
+	btn.icon = null
+	btn.expand_icon = false
+	var old_icon: Node = btn.get_node_or_null("ShopHudIcon")
+	if old_icon:
+		old_icon.queue_free()
+	var tex_rect := TextureRect.new()
+	tex_rect.name = "ShopHudIcon"
+	tex_rect.texture = shop_hud_icon()
+	tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex_rect.custom_minimum_size = Vector2(30, 30)
+	tex_rect.size = Vector2(30, 30)
+	tex_rect.modulate = NEON_CYAN
+	tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tex_rect.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	btn.add_child(tex_rect)
 
 
 static func apply_action_button(btn: Button) -> void:
