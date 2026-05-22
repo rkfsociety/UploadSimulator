@@ -32,6 +32,11 @@ window/size/viewport_width=720
 window/size/viewport_height=1280
 window/stretch/mode="canvas_items"
 
+[gui]
+
+theme/default_font_multichannel_signed_distance_field=true
+theme/default_font_generate_mipmaps=false
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

@@ -6,6 +6,7 @@ class_name PlacedBlockTheme
 static func build() -> Theme:
 	var c := MinimalUI.colors()
 	var theme := Theme.new()
+	UiFonts.apply_to_theme(theme, 16, 13, 11)
 	# Отступы основной панели
 	theme.set_constant("margin_left", "MarginContainer", 10)
 	theme.set_constant("margin_top", "MarginContainer", 8)
@@ -15,13 +16,13 @@ static func build() -> Theme:
 	theme.set_constant("separation", "HBoxContainer", 2)
 	theme.set_constant("separation", "VBoxContainer", 1)
 	# Заголовок модуля
-	theme.set_font_size("font_size", &"title", 14)
+	theme.set_font_size("font_size", &"title", 16)
 	theme.set_color("font_color", &"title", c.text)
 	# Метрика
-	theme.set_font_size("font_size", &"metric", 12)
+	theme.set_font_size("font_size", &"metric", 13)
 	theme.set_color("font_color", &"metric", c.text)
 	# Статус
-	theme.set_font_size("font_size", &"state", 11)
+	theme.set_font_size("font_size", &"state", 12)
 	theme.set_color("font_color", &"state", c.text_dim)
 	# Кнопка действия (кэш MinimalUI)
 	theme.set_stylebox("normal", "Button", MinimalUI.cached_action_normal())
@@ -34,7 +35,7 @@ static func build() -> Theme:
 	theme.set_stylebox("normal", &"action", MinimalUI.cached_action_normal())
 	theme.set_stylebox("hover", &"action", MinimalUI.cached_action_hover())
 	# Кнопка улучшения (плоская, цвет акцента задаётся во view)
-	theme.set_font_size("font_size", &"upgrade", 12)
+	theme.set_font_size("font_size", &"upgrade", 13)
 	theme.set_color("font_color", &"upgrade", c.text)
 	theme.set_color("font_hover_color", &"upgrade", c.text)
 	theme.set_color("font_pressed_color", &"upgrade", Color.WHITE)

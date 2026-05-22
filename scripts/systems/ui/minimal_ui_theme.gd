@@ -6,6 +6,7 @@ class_name MinimalUITheme
 static func build() -> Theme:
 	var c := MinimalUI.colors()
 	var theme := Theme.new()
+	UiFonts.apply_to_theme(theme, 24, 14, 12)
 	# Кнопка действия
 	theme.set_stylebox("normal", &"action", MinimalUI.cached_action_normal())
 	theme.set_stylebox("hover", &"action", MinimalUI.cached_action_hover())

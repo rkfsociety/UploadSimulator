@@ -71,9 +71,10 @@ static func instantiate_block() -> PlacedBlock:
 
 
 func _ready() -> void:
-	# Тема: отступы, шрифты и базовые стили (см. themes/placed_block_theme.tres)
+	# Тема: отступы, стили; шрифт — векторный SystemFont (см. themes/placed_block_theme.tres)
 	if theme == null:
 		theme = get_block_theme()
+	UiFonts.apply_to_theme(theme, 16, 13, 11)
 	_apply_root_layout()
 	_view = PlacedBlockView.new(
 		_main_panel,

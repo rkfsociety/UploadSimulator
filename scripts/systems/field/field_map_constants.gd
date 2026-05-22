@@ -3,7 +3,8 @@ class_name FieldMapConstants
 ## Константы поля карты (камера, ввод, провода, превью).
 
 const ZOOM_MIN := 0.2
-const ZOOM_MAX := 3.5
+# Максимальное приближение: иначе Control масштабируется растром и текст «сыпется»
+const ZOOM_MAX := 1.6
 const ZOOM_WHEEL_STEP := 1.12
 const DRAG_THRESHOLD := 6.0
 const PAN_CLAMP_MARGIN := 0.0

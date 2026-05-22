@@ -5,10 +5,10 @@
 [ext_resource type="Theme" path="res://themes/placed_block_theme.tres" id="3_theme"]
 
 [node name="PlacedBlock" type="Control"]
-custom_minimum_size = Vector2(480, 288)
+custom_minimum_size = Vector2(640, 384)
 layout_mode = 0
-offset_right = 480.0
-offset_bottom = 288.0
+offset_right = 640.0
+offset_bottom = 384.0
 mouse_filter = 2
 clip_contents = false
 theme = ExtResource("3_theme")
@@ -26,7 +26,7 @@ theme_override_constants/separation = 0
 
 [node name="MainPanel" type="Control" parent="RootVBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(480, 240)
+custom_minimum_size = Vector2(640, 320)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -103,7 +103,7 @@ theme_override_constants/separation = 2
 
 [node name="UpgradePanel" type="Control" parent="RootVBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(480, 48)
+custom_minimum_size = Vector2(640, 64)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8

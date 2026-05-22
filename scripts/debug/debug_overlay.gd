@@ -43,6 +43,7 @@ func _build_ui() -> void:
 	_panel.add_child(margin)
 
 	_label = Label.new()
+	_label.add_theme_font_override("font", UiFonts.default_font())
 	_label.add_theme_font_size_override("font_size", 11)
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	margin.add_child(_label)
