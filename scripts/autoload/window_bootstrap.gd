@@ -1,7 +1,7 @@
 extends Node
 ## Фиксированный размер окна: без ресайза, не больше рабочей области экрана.
 
-const DESIGN_SIZE := Vector2i(1080, 1920)
+const DESIGN_SIZE := Vector2i(720, 1280)
 
 
 func _ready() -> void:
@@ -19,7 +19,7 @@ func _apply_fixed_window() -> void:
 	var max_h: int = usable.size.y
 	var target_w: int = DESIGN_SIZE.x
 	var target_h: int = DESIGN_SIZE.y
-	# Пропорционально уменьшаем, если 1080×1920 не влезает (панель задач, малый монитор)
+	# Пропорционально уменьшаем, если 720×1280 не влезает (панель задач, малый монитор)
 	if target_w > max_w or target_h > max_h:
 		var scale: float = minf(
 			float(max_w) / float(DESIGN_SIZE.x),
