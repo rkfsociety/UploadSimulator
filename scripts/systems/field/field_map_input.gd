@@ -33,6 +33,9 @@ func _init(
 
 
 func handle_gui_input(event: InputEvent) -> void:
+	# Не перехватывать клики по HUD (магазин, центр карты) на слое UICanvas
+	if not _pointer_over_field_map():
+		return
 	if event is InputEventMouseButton:
 		_handle_mouse_button(event as InputEventMouseButton)
 	elif event is InputEventMouseMotion:
@@ -44,6 +47,8 @@ func handle_gui_input(event: InputEvent) -> void:
 
 func handle_input(event: InputEvent) -> void:
 	if not DisplayServer.is_touchscreen_available():
+		return
+	if _screen_event_over_ui(event):
 		return
 	if event is InputEventScreenTouch:
 		_handle_screen_touch(event as InputEventScreenTouch)
@@ -191,3 +196,43 @@ func _update_pinch() -> void:
 func _update_pointer_follow(local_pos: Vector2) -> void:
 	_wiring.set_cursor_screen(local_pos)
 	_placement.update_preview(local_pos)
+
+
+func _pointer_over_field_map() -> bool:
+	var vp := _host.get_viewport()
+	if vp == null:
+		return true
+	var hovered: Control = vp.gui_get_hovered_control()
+	if hovered == null:
+		return true
+	return hovered == _host or _host.is_ancestor_of(hovered)
+
+
+func _screen_event_over_ui(event: InputEvent) -> bool:
+	var screen_pos := Vector2.ZERO
+	if event is InputEventScreenTouch:
+		screen_pos = (event as InputEventScreenTouch).position
+	elif event is InputEventScreenDrag:
+		screen_pos = (event as InputEventScreenDrag).position
+	else:
+		return false
+	var main := _host.get_parent()
+	if main == null:
+		return false
+	var shop: CanvasItem = main.get_node_or_null("UICanvas/ShopMenu") as CanvasItem
+	if shop != null and shop.visible:
+		var shop_rect := Rect2(shop.get_global_position(), shop.size)
+		if shop_rect.has_point(screen_pos):
+			return true
+	var ui_layer: Control = main.get_node_or_null("UICanvas/UILayer") as Control
+	if ui_layer == null:
+		ui_layer = main.get_node_or_null("UILayer") as Control
+	if ui_layer == null:
+		return false
+	# Нижняя полоса HUD и кнопка «в центр» справа снизу
+	var vp_size := ui_layer.get_viewport().get_visible_rect().size
+	if screen_pos.y >= vp_size.y - 96.0:
+		return true
+	if screen_pos.x >= vp_size.x - 88.0 and screen_pos.y >= vp_size.y - 112.0:
+		return true
+	return false

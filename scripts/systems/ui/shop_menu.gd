@@ -55,8 +55,8 @@ func _style_detail() -> void:
 func open() -> void:
 	_selected_type = ""
 	_hide_detail()
-	_refresh()
 	show()
+	_refresh()
 
 
 func close() -> void:

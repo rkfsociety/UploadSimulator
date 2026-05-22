@@ -1,11 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://uploadsim_main"]
+[gd_scene load_steps=5 format=3 uid="uid://uploadsim_main"]
 
 [ext_resource type="Script" path="res://scripts/systems/ui/main_ui.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/systems/ui/shop_menu.gd" id="2_shop"]
 [ext_resource type="Script" path="res://scripts/systems/field/field_map.gd" id="3_field"]
 [ext_resource type="Script" path="res://scripts/systems/visual/grid_background.gd" id="5_grid"]
-[ext_resource type="Texture2D" uid="uid://bvdnnglp123in" path="res://assets/icons/shop.svg" id="6_shop_icon"]
-[ext_resource type="Texture2D" path="res://assets/icons/map_center.svg" id="7_map_center_icon"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -148,36 +146,14 @@ mouse_filter = 2
 [node name="MapCenterHud" type="PanelContainer" parent="UILayer/MapCenterHUD"]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
-
-[node name="MapCenterHudInner" type="Control" parent="UILayer/MapCenterHUD/MapCenterHud"]
-layout_mode = 2
-custom_minimum_size = Vector2(48, 48)
-
-[node name="MapCenterIconTex" type="TextureRect" parent="UILayer/MapCenterHUD/MapCenterHud/MapCenterHudInner"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = 10.0
-offset_right = -10.0
-offset_bottom = -10.0
-grow_horizontal = 2
-grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("7_map_center_icon")
-expand_mode = 1
-stretch_mode = 5
 
-[node name="MapCenterButton" type="Button" parent="UILayer/MapCenterHUD/MapCenterHud/MapCenterHudInner"]
+[node name="MapCenterButton" type="Button" parent="UILayer/MapCenterHUD/MapCenterHud"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 focus_mode = 0
 flat = true
 tooltip_text = "В центр карты"
@@ -289,7 +265,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(100, 44)
 text = "Поставить"
 
-[connection signal="pressed" from="UILayer/BottomHUD/ShopCenter/ShopHud/ShopHudInner/ShopIconButton" to="." method="_on_shop_pressed"]
-[connection signal="pressed" from="UILayer/MapCenterHUD/MapCenterHud/MapCenterHudInner/MapCenterButton" to="." method="_on_map_center_pressed"]
+[connection signal="pressed" from="UICanvas/UILayer/BottomHUD/ShopCenter/ShopHud/ShopIconButton" to="." method="_on_shop_pressed"]
+[connection signal="pressed" from="UICanvas/UILayer/MapCenterHUD/MapCenterHud/MapCenterButton" to="." method="_on_map_center_pressed"]
 [connection signal="gui_input" from="ShopMenu/Dim" to="ShopMenu" method="_on_dim_clicked"]
 [connection signal="pressed" from="ShopMenu/Panel/PanelMargin/PanelVBox/ShopHeader/CloseButton" to="ShopMenu" method="_on_close_pressed"]
