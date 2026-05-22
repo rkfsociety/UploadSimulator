@@ -221,7 +221,8 @@ func _is_over_hud(screen_pos: Vector2) -> bool:
 	if main == null:
 		return false
 	for menu_name in ["ShopMenu", "UpgradeShopMenu"]:
-		var menu: CanvasItem = main.get_node_or_null(menu_name) as CanvasItem
+		# Меню в ModalLayer — get_node("ShopMenu") не сработает
+		var menu: CanvasItem = main.find_child(menu_name, true, false) as CanvasItem
 		if menu != null and menu.visible:
 			var menu_rect := Rect2(menu.get_global_position(), menu.size)
 			if menu_rect.has_point(screen_pos):

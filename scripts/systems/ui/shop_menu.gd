@@ -20,6 +20,7 @@ const PANEL_H_DETAIL := -340.0
 
 var _selected_type: String = ""
 var _icon_buttons: Dictionary = {}
+var _dim_ignore_until_msec: int = 0
 
 
 func _ready() -> void:
@@ -56,8 +57,11 @@ func open() -> void:
 	_selected_type = ""
 	_hide_detail()
 	show()
+	z_index = 10
 	move_to_front()
-	_refresh()
+	# Не закрывать Dim тем же кликом, что открыл магазин
+	_dim_ignore_until_msec = Time.get_ticks_msec() + 250
+	call_deferred("_refresh")
 
 
 func close() -> void:
@@ -66,6 +70,8 @@ func close() -> void:
 
 
 func _on_dim_clicked(event: InputEvent) -> void:
+	if Time.get_ticks_msec() < _dim_ignore_until_msec:
+		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		close()
 
@@ -164,7 +170,9 @@ func _on_place_pressed() -> void:
 func _refresh() -> void:
 	if not visible:
 		return
-	_build_icon_grid()
+	# Полная пересборка только если сетка ещё пуста (не каждый stats_changed)
+	if _icon_buttons.is_empty():
+		_build_icon_grid()
 	if _selected_type != "":
 		_show_detail(_selected_type)
 	else:

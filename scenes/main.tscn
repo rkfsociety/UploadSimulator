@@ -132,6 +132,7 @@ theme_override_constants/separation = 0
 [node name="HudLeftSpacer" type="Control" parent="UILayer/BottomHUD/HudButtonsRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 
 [node name="ShopHud" type="PanelContainer" parent="UILayer/BottomHUD/HudButtonsRow"]
 custom_minimum_size = Vector2(56, 56)
@@ -173,6 +174,7 @@ mouse_default_cursor_shape = 2
 [node name="HudRightSpacer" type="Control" parent="UILayer/BottomHUD/HudButtonsRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 
 [node name="MapCenterHUD" type="MarginContainer" parent="UILayer"]
 layout_mode = 1
@@ -271,15 +273,19 @@ flat = true
 tooltip_text = "Улучшения среды (алмазы)"
 mouse_default_cursor_shape = 2
 
-[node name="ShopMenu" type="Control" parent="."]
+[node name="ModalLayer" type="CanvasLayer" parent="."]
+layer = 50
+
+[node name="ShopMenu" type="Control" parent="ModalLayer"]
 unique_name_in_owner = true
 visible = false
-layout_mode = 1
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 0
 script = ExtResource("2_shop")
 
 [node name="Dim" type="ColorRect" parent="ShopMenu"]
@@ -377,16 +383,16 @@ layout_mode = 2
 custom_minimum_size = Vector2(100, 44)
 text = "Поставить"
 
-[node name="UpgradeShopMenu" type="Control" parent="."]
+[node name="UpgradeShopMenu" type="Control" parent="ModalLayer"]
 unique_name_in_owner = true
 visible = false
-layout_mode = 1
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
+mouse_filter = 0
 script = ExtResource("8_upgrade_shop")
 
 [connection signal="pressed" from="UILayer/MapCenterHUD/RightHudColumn/UpgradeShopHud/UpgradeShopHudInner/UpgradeShopButton" to="." method="_on_upgrade_shop_pressed"]

@@ -38,6 +38,8 @@ func _apply_cyber_theme() -> void:
 	diamonds_label.add_theme_color_override("font_color", MinimalUI.NEON_PURPLE)
 	diamonds_label.add_theme_font_size_override("font_size", 22)
 	MinimalUI.apply_shop_hud_button(shop_icon_btn, shop_icon_tex)
+	# Открытие по нажатию, не по отпусканию — иначе клик «съедает» только что показанный Dim
+	shop_icon_btn.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	shop_icon_btn.tooltip_text = "Магазин модулей ($)"
 	MinimalUI.apply_upgrade_shop_hud_button(upgrade_shop_btn, upgrade_shop_tex)
 	upgrade_shop_btn.tooltip_text = "Улучшения среды (◆)"
@@ -83,8 +85,9 @@ func _on_shop_pressed() -> void:
 	if field_map.has_method("cancel_placement_mode"):
 		field_map.cancel_placement_mode()
 	upgrade_shop_menu.close()
-	shop_menu.open()
-	_refresh()
+	# На следующий кадр — после обработки клика по HUD
+	shop_menu.call_deferred("open")
+	call_deferred("_refresh")
 
 
 func _on_upgrade_shop_pressed() -> void:
