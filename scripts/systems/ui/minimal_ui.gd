@@ -210,10 +210,17 @@ static func icon_btn() -> StyleBoxFlat:
 
 
 static func shop_hud_icon() -> Texture2D:
-	# Кэш текстуры корзины, чтобы не грузить SVG при каждом вызове
+	# Кэш SVG-корзины (preload + load на случай горячей перезагрузки)
 	if _shop_hud_icon == null:
-		_shop_hud_icon = load(SHOP_HUD_ICON_PATH) as Texture2D
+		if ResourceLoader.exists(SHOP_HUD_ICON_PATH):
+			_shop_hud_icon = load(SHOP_HUD_ICON_PATH) as Texture2D
 	return _shop_hud_icon
+
+
+static func _transparent_button_style() -> StyleBoxEmpty:
+	# Пустой стиль — кликабельная область без заливки поверх иконки
+	var s := StyleBoxEmpty.new()
+	return s
 
 
 static func apply_icon_button(btn: Button) -> void:
@@ -230,27 +237,26 @@ static func apply_icon_button(btn: Button) -> void:
 	btn.add_theme_font_size_override("font_size", 20)
 
 
-static func apply_shop_hud_button(btn: Button) -> void:
-	# Рамка icon-кнопки + TextureRect: у Button.expand_icon SVG часто не рисуется
-	apply_icon_button(btn)
-	btn.custom_minimum_size = Vector2(56, 56)
-	btn.text = ""
-	btn.icon = null
-	btn.expand_icon = false
-	var old_icon: Node = btn.get_node_or_null("ShopHudIcon")
-	if old_icon:
-		old_icon.queue_free()
-	var tex_rect := TextureRect.new()
-	tex_rect.name = "ShopHudIcon"
-	tex_rect.texture = shop_hud_icon()
-	tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	tex_rect.custom_minimum_size = Vector2(30, 30)
-	tex_rect.size = Vector2(30, 30)
-	tex_rect.modulate = NEON_CYAN
-	tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tex_rect.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	btn.add_child(tex_rect)
+static func apply_shop_hud_button(hit_btn: Button, icon_tex: TextureRect) -> void:
+	# Иконка — сосед TextureRect; Button только ловит клики (дети Button под фоном)
+	var panel: PanelContainer = hit_btn.get_parent().get_parent() as PanelContainer
+	var t := theme()
+	if panel:
+		panel.add_theme_stylebox_override("panel", t.get_stylebox("normal", &"icon"))
+	var tex := shop_hud_icon()
+	if tex and icon_tex.texture == null:
+		icon_tex.texture = tex
+	icon_tex.modulate = Color.WHITE
+	icon_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var empty := _transparent_button_style()
+	hit_btn.flat = true
+	hit_btn.text = ""
+	hit_btn.icon = null
+	hit_btn.add_theme_stylebox_override("normal", empty)
+	hit_btn.add_theme_stylebox_override("hover", empty)
+	hit_btn.add_theme_stylebox_override("pressed", empty)
+	hit_btn.add_theme_stylebox_override("disabled", empty)
+	hit_btn.add_theme_stylebox_override("focus", empty)
 
 
 static func apply_action_button(btn: Button) -> void:
