@@ -22,6 +22,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+WindowBootstrap="*res://scripts/autoload/window_bootstrap.gd"
 GameState="*res://scripts/autoload/game_state.gd"
 BgmPlayer="*res://scripts/autoload/bgm_player.gd"
 DebugOverlay="*res://scripts/debug/debug_overlay.gd"
@@ -30,6 +31,8 @@ DebugOverlay="*res://scripts/debug/debug_overlay.gd"
 
 window/size/viewport_width=1080
 window/size/viewport_height=1920
+window/size/resizable=false
+window/size/maximize_disabled=true
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
 
