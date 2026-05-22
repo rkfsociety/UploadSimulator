@@ -15,6 +15,13 @@ extends Control
 
 func _ready() -> void:
 	_apply_cyber_theme()
+	# Дублируем связи на случай сбоя connection в .tscn
+	if not shop_icon_btn.pressed.is_connected(_on_shop_pressed):
+		shop_icon_btn.pressed.connect(_on_shop_pressed)
+	if not upgrade_shop_btn.pressed.is_connected(_on_upgrade_shop_pressed):
+		upgrade_shop_btn.pressed.connect(_on_upgrade_shop_pressed)
+	if not map_center_btn.pressed.is_connected(_on_map_center_pressed):
+		map_center_btn.pressed.connect(_on_map_center_pressed)
 	shop_menu.closed.connect(_refresh)
 	upgrade_shop_menu.closed.connect(_refresh)
 	GameState.stats_changed.connect(_refresh)
@@ -40,12 +47,13 @@ func _apply_cyber_theme() -> void:
 func _refresh() -> void:
 	money_label.text = "$%.0f" % GameState.access.get_money()
 	diamonds_label.text = "◆ %d" % GameState.access.get_diamonds()
-	var shop_open := shop_menu.visible or upgrade_shop_menu.visible
-	shop_icon_btn.disabled = shop_open
-	upgrade_shop_btn.disabled = shop_open
-	var dim := Color(0.45, 0.55, 0.75, 0.55) if shop_open else Color.WHITE
-	shop_icon_tex.modulate = dim
-	upgrade_shop_btn.modulate = dim
+	var shop_open := shop_menu.visible
+	var upgrade_open := upgrade_shop_menu.visible
+	# Не блокируем кнопки disabled — иначе после сбоя видимости магазин «не открывается»
+	var dim_shop := Color(0.45, 0.55, 0.75, 0.55) if shop_open else Color.WHITE
+	var dim_upg := Color(0.45, 0.55, 0.75, 0.55) if upgrade_open else Color.WHITE
+	shop_icon_tex.modulate = dim_shop
+	upgrade_shop_btn.modulate = dim_upg
 
 
 func _on_block_purchased(type_id: String) -> void:

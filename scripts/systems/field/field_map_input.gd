@@ -33,6 +33,12 @@ func _init(
 
 
 func handle_gui_input(event: InputEvent) -> void:
+	# Клики по HUD не забираем картой (иначе кнопка магазина может не сработать)
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		var screen_pos := _host.get_global_transform() * mb.position
+		if _is_over_hud(screen_pos):
+			return
 	if event is InputEventMouseButton:
 		_handle_mouse_button(event as InputEventMouseButton)
 	elif event is InputEventMouseMotion:
@@ -221,8 +227,10 @@ func _is_over_hud(screen_pos: Vector2) -> bool:
 			if menu_rect.has_point(screen_pos):
 				return true
 	var vp_size := _host.get_viewport().get_visible_rect().size
+	# Нижняя полоса: магазин $ по центру
 	if screen_pos.y >= vp_size.y - 96.0:
 		return true
-	if screen_pos.x >= vp_size.x - 88.0 and screen_pos.y >= vp_size.y - 112.0:
+	# Правый столбец: «в центр» и магазин ◆ под ним
+	if screen_pos.x >= vp_size.x - 88.0 and screen_pos.y >= vp_size.y - 148.0:
 		return true
 	return false

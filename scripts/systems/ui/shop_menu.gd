@@ -56,6 +56,7 @@ func open() -> void:
 	_selected_type = ""
 	_hide_detail()
 	show()
+	move_to_front()
 	_refresh()
 
 

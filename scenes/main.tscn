@@ -15,6 +15,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("1_main")
 
 [node name="FieldMap" type="Control" parent="."]
@@ -125,42 +126,11 @@ theme_override_constants/margin_bottom = 20
 
 [node name="HudButtonsRow" type="HBoxContainer" parent="UILayer/BottomHUD"]
 layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 16
+theme_override_constants/separation = 0
 
-[node name="UpgradeShopHud" type="PanelContainer" parent="UILayer/BottomHUD/HudButtonsRow"]
-custom_minimum_size = Vector2(56, 56)
+[node name="HudLeftSpacer" type="Control" parent="UILayer/BottomHUD/HudButtonsRow"]
 layout_mode = 2
-
-[node name="UpgradeShopHudInner" type="Control" parent="UILayer/BottomHUD/HudButtonsRow/UpgradeShopHud"]
-layout_mode = 2
-custom_minimum_size = Vector2(56, 56)
-
-[node name="UpgradeShopIconLabel" type="Label" parent="UILayer/BottomHUD/HudButtonsRow/UpgradeShopHud/UpgradeShopHudInner"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_font_sizes/font_size = 26
-text = "◆"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="UpgradeShopButton" type="Button" parent="UILayer/BottomHUD/HudButtonsRow/UpgradeShopHud/UpgradeShopHudInner"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-focus_mode = 0
-flat = true
-tooltip_text = "Улучшения среды (алмазы)"
-mouse_default_cursor_shape = 2
+size_flags_horizontal = 3
 
 [node name="ShopHud" type="PanelContainer" parent="UILayer/BottomHUD/HudButtonsRow"]
 custom_minimum_size = Vector2(56, 56)
@@ -199,6 +169,10 @@ focus_mode = 0
 flat = true
 mouse_default_cursor_shape = 2
 
+[node name="HudRightSpacer" type="Control" parent="UILayer/BottomHUD/HudButtonsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
 [node name="MapCenterHUD" type="MarginContainer" parent="UILayer"]
 layout_mode = 1
 anchors_preset = 3
@@ -207,22 +181,28 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -72.0
-offset_top = -72.0
+offset_top = -132.0
 offset_right = -16.0
-offset_bottom = -96.0
+offset_bottom = -20.0
 grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
+theme_override_constants/margin_bottom = 0
 
-[node name="MapCenterHud" type="PanelContainer" parent="UILayer/MapCenterHUD"]
+[node name="RightHudColumn" type="VBoxContainer" parent="UILayer/MapCenterHUD"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="MapCenterHud" type="PanelContainer" parent="UILayer/MapCenterHUD/RightHudColumn"]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="MapCenterHudInner" type="Control" parent="UILayer/MapCenterHUD/MapCenterHud"]
+[node name="MapCenterHudInner" type="Control" parent="UILayer/MapCenterHUD/RightHudColumn/MapCenterHud"]
 layout_mode = 2
 custom_minimum_size = Vector2(48, 48)
 
-[node name="MapCenterIconTex" type="TextureRect" parent="UILayer/MapCenterHUD/MapCenterHud/MapCenterHudInner"]
+[node name="MapCenterIconTex" type="TextureRect" parent="UILayer/MapCenterHUD/RightHudColumn/MapCenterHud/MapCenterHudInner"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -239,7 +219,7 @@ texture = ExtResource("7_map_center_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="MapCenterButton" type="Button" parent="UILayer/MapCenterHUD/MapCenterHud/MapCenterHudInner"]
+[node name="MapCenterButton" type="Button" parent="UILayer/MapCenterHUD/RightHudColumn/MapCenterHud/MapCenterHudInner"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -250,6 +230,40 @@ grow_vertical = 2
 focus_mode = 0
 flat = true
 tooltip_text = "В центр карты"
+mouse_default_cursor_shape = 2
+
+[node name="UpgradeShopHud" type="PanelContainer" parent="UILayer/MapCenterHUD/RightHudColumn"]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+
+[node name="UpgradeShopHudInner" type="Control" parent="UILayer/MapCenterHUD/RightHudColumn/UpgradeShopHud"]
+layout_mode = 2
+custom_minimum_size = Vector2(56, 56)
+
+[node name="UpgradeShopIconLabel" type="Label" parent="UILayer/MapCenterHUD/RightHudColumn/UpgradeShopHud/UpgradeShopHudInner"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 26
+text = "◆"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UpgradeShopButton" type="Button" parent="UILayer/MapCenterHUD/RightHudColumn/UpgradeShopHud/UpgradeShopHudInner"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+flat = true
+tooltip_text = "Улучшения среды (алмазы)"
 mouse_default_cursor_shape = 2
 
 [node name="ShopMenu" type="Control" parent="."]
@@ -370,8 +384,8 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("8_upgrade_shop")
 
-[connection signal="pressed" from="UILayer/BottomHUD/HudButtonsRow/UpgradeShopHud/UpgradeShopHudInner/UpgradeShopButton" to="." method="_on_upgrade_shop_pressed"]
+[connection signal="pressed" from="UILayer/MapCenterHUD/RightHudColumn/UpgradeShopHud/UpgradeShopHudInner/UpgradeShopButton" to="." method="_on_upgrade_shop_pressed"]
 [connection signal="pressed" from="UILayer/BottomHUD/HudButtonsRow/ShopHud/ShopHudInner/ShopIconButton" to="." method="_on_shop_pressed"]
-[connection signal="pressed" from="UILayer/MapCenterHUD/MapCenterHud/MapCenterHudInner/MapCenterButton" to="." method="_on_map_center_pressed"]
+[connection signal="pressed" from="UILayer/MapCenterHUD/RightHudColumn/MapCenterHud/MapCenterHudInner/MapCenterButton" to="." method="_on_map_center_pressed"]
 [connection signal="gui_input" from="ShopMenu/Dim" to="ShopMenu" method="_on_dim_clicked"]
 [connection signal="pressed" from="ShopMenu/Panel/PanelMargin/PanelVBox/ShopHeader/CloseButton" to="ShopMenu" method="_on_close_pressed"]
