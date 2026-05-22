@@ -4,7 +4,7 @@ extends Control
 signal placement_mode_changed(type_id: String)
 
 @onready var map_viewport: Control = $MapViewport
-@onready var grid_draw: Control = $GridDraw
+@onready var grid_draw: Control = $MapViewport/GridDraw
 @onready var wires_root: Control = $MapViewport/WiresRoot
 @onready var blocks_root: Control = $MapViewport/BlocksRoot
 
@@ -25,9 +25,7 @@ func _ready() -> void:
 		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Провода поверх блоков, чтобы линии были видны между портами
 	wires_root.z_index = FieldMapConstants.WIRES_Z_INDEX
-	grid_draw.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	_camera = FieldMapCamera.new(self, map_viewport, grid_draw)
+	_camera = FieldMapCamera.new(self, map_viewport)
 	_blocks = FieldMapBlocks.new(blocks_root)
 	_placement = FieldMapPlacement.new(map_viewport, _camera)
 	_wiring = FieldMapWiring.new(self, wires_root, _blocks)
@@ -50,7 +48,8 @@ func _notification(what: int) -> void:
 
 
 func _process(_delta: float) -> void:
-	_camera.sync_grid()
+	if grid_draw.has_method("sync_view"):
+		grid_draw.sync_view()
 	var vis := _camera.visible_world_rect()
 	_blocks.update_visibility(vis)
 	_wiring.set_visible_rect(vis)

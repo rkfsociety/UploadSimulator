@@ -1,19 +1,17 @@
 extends RefCounted
 class_name FieldMapCamera
-## Камера карты: pan, zoom, синхронизация сетки и MapViewport.
+## Камера карты: pan, zoom и MapViewport.
 
 var _host: Control
 var _map_viewport: Control
-var _grid_draw: Control
 
 var zoom: float = 1.0
 var pan: Vector2 = Vector2.ZERO
 
 
-func _init(host: Control, map_viewport: Control, grid_draw: Control) -> void:
+func _init(host: Control, map_viewport: Control) -> void:
 	_host = host
 	_map_viewport = map_viewport
-	_grid_draw = grid_draw
 
 
 ## Размер области FieldMap на экране.
@@ -86,7 +84,6 @@ func apply() -> void:
 	_clamp_pan()
 	_map_viewport.scale = Vector2.ONE * zoom
 	_map_viewport.position = pan
-	_sync_grid()
 
 
 func _clamp_pan() -> void:
@@ -100,17 +97,6 @@ func _clamp_pan() -> void:
 	pan.y = _clamp_axis(
 		pan.y, _host.size.y, zoom, margin, bounds.position.y, bounds.position.y + bounds.size.y
 	)
-
-
-## Обновить сетку без изменения zoom/pan (каждый кадр).
-func sync_grid() -> void:
-	_sync_grid()
-
-
-func _sync_grid() -> void:
-	if _grid_draw == null or not _grid_draw.has_method("set_camera"):
-		return
-	_grid_draw.set_camera(_host.size, pan, zoom, GridDefs.world_bounds_rect())
 
 
 func _clamp_axis(
