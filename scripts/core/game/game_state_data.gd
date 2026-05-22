@@ -4,7 +4,7 @@ class_name GameStateData
 
 enum Phase { IDLE, RECORDING, UPLOADING, PUBLISHED }
 
-var _money: float = float(BlockDefs.starter_kit_cost())
+var _money: float = 0.0
 var _uploader_balance: float = 0.0
 var _subscribers: int = 0
 var _total_views: int = 0
@@ -26,6 +26,11 @@ var _stored_files: Array[StoredFileEntry] = []
 var _upload_queue: Array[FileTransferJob] = []
 
 var _uid_counter: int = 0
+
+
+func _init() -> void:
+	# Касса при старте — сумма shop_cost базового набора (см. BlockDefs.starter_kit_types)
+	_money = float(BlockDefs.starter_kit_cost())
 
 
 func get_money() -> float:
