@@ -249,14 +249,11 @@ static func apply_icon_button(btn: Button) -> void:
 
 
 static func apply_hud_icon_button(hit_btn: Button, icon_tex: TextureRect, texture: Texture2D) -> void:
-	# Рамка на PanelContainer; Button — прозрачная зона клика поверх иконки
-	var panel: PanelContainer = hit_btn.get_parent() as PanelContainer
-	if panel == null and hit_btn.get_parent() != null:
-		panel = hit_btn.get_parent().get_parent() as PanelContainer
+	# Иконка — TextureRect в сцене; Button — прозрачный слой клика (не дочерний узел Button)
+	var panel: PanelContainer = hit_btn.get_parent().get_parent() as PanelContainer
 	var t := theme()
 	if panel:
 		panel.add_theme_stylebox_override("panel", t.get_stylebox("normal", &"icon"))
-		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if texture and icon_tex and icon_tex.texture == null:
 		icon_tex.texture = texture
 	if icon_tex:
@@ -273,33 +270,11 @@ static func apply_hud_icon_button(hit_btn: Button, icon_tex: TextureRect, textur
 	hit_btn.add_theme_stylebox_override("focus", empty)
 
 
-static func apply_shop_hud_button(hit_btn: Button) -> void:
-	var old_icon: Node = hit_btn.get_node_or_null("ShopHudIcon")
-	if old_icon:
-		old_icon.queue_free()
-	var icon_tex := TextureRect.new()
-	icon_tex.name = "ShopHudIcon"
-	icon_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon_tex.custom_minimum_size = Vector2(30, 30)
-	icon_tex.size = Vector2(30, 30)
-	icon_tex.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	hit_btn.add_child(icon_tex)
+static func apply_shop_hud_button(hit_btn: Button, icon_tex: TextureRect) -> void:
 	apply_hud_icon_button(hit_btn, icon_tex, shop_hud_icon())
 
 
-static func apply_map_center_hud_button(hit_btn: Button) -> void:
-	var old_icon: Node = hit_btn.get_node_or_null("MapCenterHudIcon")
-	if old_icon:
-		old_icon.queue_free()
-	var icon_tex := TextureRect.new()
-	icon_tex.name = "MapCenterHudIcon"
-	icon_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon_tex.custom_minimum_size = Vector2(26, 26)
-	icon_tex.size = Vector2(26, 26)
-	icon_tex.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	hit_btn.add_child(icon_tex)
+static func apply_map_center_hud_button(hit_btn: Button, icon_tex: TextureRect) -> void:
 	apply_hud_icon_button(hit_btn, icon_tex, map_center_hud_icon())
 
 

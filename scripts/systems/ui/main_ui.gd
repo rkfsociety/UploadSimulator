@@ -3,16 +3,15 @@ extends Control
 
 @onready var money_label: Label = %MoneyLabel
 @onready var shop_icon_btn: Button = %ShopIconButton
+@onready var shop_icon_tex: TextureRect = %ShopIconTex
 @onready var map_center_btn: Button = %MapCenterButton
+@onready var map_center_tex: TextureRect = %MapCenterIconTex
 @onready var shop_menu: Control = %ShopMenu
 @onready var field_map: Control = %FieldMap
 
 
 func _ready() -> void:
 	_apply_cyber_theme()
-	# Дублируем связь на случай устаревшего пути в .tscn
-	if not shop_icon_btn.pressed.is_connected(_on_shop_pressed):
-		shop_icon_btn.pressed.connect(_on_shop_pressed)
 	shop_menu.closed.connect(_refresh)
 	GameState.stats_changed.connect(_refresh)
 	GameState.placement_requested.connect(_on_placement_requested)
@@ -24,9 +23,9 @@ func _ready() -> void:
 func _apply_cyber_theme() -> void:
 	MinimalUI.attach_theme(self)
 	MinimalUI.apply_balance_label(money_label)
-	MinimalUI.apply_shop_hud_button(shop_icon_btn)
+	MinimalUI.apply_shop_hud_button(shop_icon_btn, shop_icon_tex)
 	shop_icon_btn.tooltip_text = "Магазин"
-	MinimalUI.apply_map_center_hud_button(map_center_btn)
+	MinimalUI.apply_map_center_hud_button(map_center_btn, map_center_tex)
 	map_center_btn.tooltip_text = "В центр карты"
 
 
@@ -34,9 +33,7 @@ func _refresh() -> void:
 	money_label.text = "$%.0f" % GameState.access.get_money()
 	shop_icon_btn.disabled = shop_menu.visible
 	# Затемнение иконки, когда магазин уже открыт
-	var icon_tex: TextureRect = shop_icon_btn.get_node_or_null("ShopHudIcon") as TextureRect
-	if icon_tex:
-		icon_tex.modulate = Color(0.45, 0.55, 0.75, 0.55) if shop_icon_btn.disabled else Color.WHITE
+	shop_icon_tex.modulate = Color(0.45, 0.55, 0.75, 0.55) if shop_icon_btn.disabled else Color.WHITE
 
 
 func _on_block_purchased(type_id: String) -> void:
