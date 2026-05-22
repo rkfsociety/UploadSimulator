@@ -2,8 +2,8 @@ extends Control
 ## Векторная сетка в мировых координатах MapViewport; pan/zoom задаёт родитель.
 
 const COL_BG_MAP := Color(0.071, 0.071, 0.071, 1.0)
-const COL_LINE_MINOR := Color(0.55, 0.55, 0.55, 0.22)
-const COL_LINE_MAJOR := Color(0.65, 0.7, 0.75, 0.42)
+# Однотипные линии сетки — без «крупных» линий и рамки карты
+const COL_LINE := Color(0.55, 0.55, 0.55, 0.22)
 
 var _world_bounds := Rect2()
 
@@ -27,7 +27,7 @@ func _minor_step() -> float:
 	return float(GridDefs.CELL_SIZE) / 8.0
 
 
-func _major_step() -> float:
+func _cell_step() -> float:
 	return float(GridDefs.CELL_SIZE)
 
 
@@ -84,6 +84,17 @@ func _snap_local(v: float) -> float:
 	return floorf(v) + 0.5
 
 
+## Шаг сетки по зуму: плотнее вблизи, реже вдали — один и тот же цвет линий.
+func _line_step(zoom: float) -> float:
+	var minor := _minor_step()
+	if minor * zoom >= 0.75:
+		return minor
+	var cell := _cell_step()
+	if cell * zoom >= 1.0:
+		return cell
+	return 0.0
+
+
 func _draw() -> void:
 	if size.x < 1.0 or size.y < 1.0:
 		return
@@ -101,13 +112,9 @@ func _draw() -> void:
 	if vis_l1 - vis_l0 < 1.0 or vis_b1 - vis_t0 < 1.0:
 		return
 	var clip := Rect2(vis_l0, vis_t0, vis_l1 - vis_l0, vis_b1 - vis_t0)
-	var minor := _minor_step()
-	if minor * zoom >= 0.75:
-		_draw_grid_lines(minor, wx0, wx1, wy0, wy1, vis, clip, COL_LINE_MINOR)
-	var major := _major_step()
-	if major * zoom >= 1.0:
-		_draw_grid_lines(major, wx0, wx1, wy0, wy1, vis, clip, COL_LINE_MAJOR)
-	_draw_border(wx0, wx1, wy0, wy1, clip)
+	var step := _line_step(zoom)
+	if step > 0.0:
+		_draw_grid_lines(step, wx0, wx1, wy0, wy1, vis, clip, COL_LINE)
 
 
 func _draw_grid_lines(
@@ -132,13 +139,6 @@ func _draw_grid_lines(
 	while y <= y_end + 0.001:
 		_draw_h_local(_snap_local(_world_to_local_y(y)), clip, col)
 		y += step
-
-
-func _draw_border(wx0: float, wx1: float, wy0: float, wy1: float, clip: Rect2) -> void:
-	_draw_v_local(_snap_local(_world_to_local_x(wx0)), clip, COL_LINE_MAJOR)
-	_draw_v_local(_snap_local(_world_to_local_x(wx1)), clip, COL_LINE_MAJOR)
-	_draw_h_local(_snap_local(_world_to_local_y(wy0)), clip, COL_LINE_MAJOR)
-	_draw_h_local(_snap_local(_world_to_local_y(wy1)), clip, COL_LINE_MAJOR)
 
 
 func _draw_v_local(local_x: float, clip: Rect2, col: Color) -> void:
