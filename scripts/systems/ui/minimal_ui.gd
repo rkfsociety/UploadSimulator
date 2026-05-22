@@ -3,13 +3,15 @@ class_name MinimalUI
 ## Неоновый киберпанк-стиль интерфейса: палитра, кэш StyleBoxFlat и Theme.
 
 const COLORS_PATH := "res://resources/minimal_ui_colors.tres"
-# Иконка кнопки магазина в нижнем HUD
+# SVG-иконки кнопок HUD
 const SHOP_HUD_ICON_PATH := "res://assets/icons/shop.svg"
+const MAP_CENTER_HUD_ICON_PATH := "res://assets/icons/map_center.svg"
 
 static var _palette: MinimalUIColors
 static var _theme: Theme
 static var _box_cache: Dictionary = {}
 static var _shop_hud_icon: Texture2D
+static var _map_center_hud_icon: Texture2D
 
 
 # Короткие имена цветов (читают палитру из .tres)
@@ -209,12 +211,21 @@ static func icon_btn() -> StyleBoxFlat:
 	return neon_box(c.btn_icon_normal, c.neon_magenta, true, 4, 8)
 
 
+static func _load_hud_icon(path: String, cache: Texture2D) -> Texture2D:
+	# Общая загрузка SVG в кэш HUD-иконок
+	if cache == null and ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return cache
+
+
 static func shop_hud_icon() -> Texture2D:
-	# Кэш SVG-корзины (preload + load на случай горячей перезагрузки)
-	if _shop_hud_icon == null:
-		if ResourceLoader.exists(SHOP_HUD_ICON_PATH):
-			_shop_hud_icon = load(SHOP_HUD_ICON_PATH) as Texture2D
+	_shop_hud_icon = _load_hud_icon(SHOP_HUD_ICON_PATH, _shop_hud_icon)
 	return _shop_hud_icon
+
+
+static func map_center_hud_icon() -> Texture2D:
+	_map_center_hud_icon = _load_hud_icon(MAP_CENTER_HUD_ICON_PATH, _map_center_hud_icon)
+	return _map_center_hud_icon
 
 
 static func _transparent_button_style() -> StyleBoxEmpty:
@@ -237,15 +248,14 @@ static func apply_icon_button(btn: Button) -> void:
 	btn.add_theme_font_size_override("font_size", 20)
 
 
-static func apply_shop_hud_button(hit_btn: Button, icon_tex: TextureRect) -> void:
+static func apply_hud_icon_button(hit_btn: Button, icon_tex: TextureRect, texture: Texture2D) -> void:
 	# Иконка — сосед TextureRect; Button только ловит клики (дети Button под фоном)
 	var panel: PanelContainer = hit_btn.get_parent().get_parent() as PanelContainer
 	var t := theme()
 	if panel:
 		panel.add_theme_stylebox_override("panel", t.get_stylebox("normal", &"icon"))
-	var tex := shop_hud_icon()
-	if tex and icon_tex.texture == null:
-		icon_tex.texture = tex
+	if texture and icon_tex.texture == null:
+		icon_tex.texture = texture
 	icon_tex.modulate = Color.WHITE
 	icon_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var empty := _transparent_button_style()
@@ -257,6 +267,14 @@ static func apply_shop_hud_button(hit_btn: Button, icon_tex: TextureRect) -> voi
 	hit_btn.add_theme_stylebox_override("pressed", empty)
 	hit_btn.add_theme_stylebox_override("disabled", empty)
 	hit_btn.add_theme_stylebox_override("focus", empty)
+
+
+static func apply_shop_hud_button(hit_btn: Button, icon_tex: TextureRect) -> void:
+	apply_hud_icon_button(hit_btn, icon_tex, shop_hud_icon())
+
+
+static func apply_map_center_hud_button(hit_btn: Button, icon_tex: TextureRect) -> void:
+	apply_hud_icon_button(hit_btn, icon_tex, map_center_hud_icon())
 
 
 static func apply_action_button(btn: Button) -> void:

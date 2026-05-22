@@ -5,6 +5,7 @@ extends Control
 @onready var shop_icon_btn: Button = %ShopIconButton
 @onready var shop_icon_tex: TextureRect = %ShopIconTex
 @onready var map_center_btn: Button = %MapCenterButton
+@onready var map_center_tex: TextureRect = %MapCenterIconTex
 @onready var shop_menu: Control = %ShopMenu
 @onready var field_map: Control = %FieldMap
 
@@ -24,7 +25,7 @@ func _apply_cyber_theme() -> void:
 	MinimalUI.apply_balance_label(money_label)
 	MinimalUI.apply_shop_hud_button(shop_icon_btn, shop_icon_tex)
 	shop_icon_btn.tooltip_text = "Магазин"
-	MinimalUI.apply_icon_button(map_center_btn)
+	MinimalUI.apply_map_center_hud_button(map_center_btn, map_center_tex)
 	map_center_btn.tooltip_text = "В центр карты"
 
 
