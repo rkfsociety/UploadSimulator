@@ -33,8 +33,8 @@ func can_collect_money() -> bool:
 	return _svc.can_collect_money()
 
 
-func collect_money() -> bool:
-	return _svc.collect_money()
+func collect_money(collector_uid: String) -> bool:
+	return _svc.collect_money(collector_uid)
 
 
 func run_block_action(uid: String) -> bool:

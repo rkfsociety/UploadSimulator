@@ -145,15 +145,28 @@ func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Diction
 		var next: StoredFileEntry = _data.get_stored_files()[0]
 		target["status"] = "На диске: %s" % FileDefs.get_type_label(next.file_type_id)
 	else:
-		target["status"] = "Сейф: $%.0f" % _data.get_uploader_balance()
+		var safe := _data.get_uploader_balance()
+		if safe >= GameConstants.MIN_COLLECT_BALANCE and not _wiring.get_money_chain().is_empty():
+			target["status"] = "В сейфе $%.0f → коллектор в кассу" % safe
+		else:
+			target["status"] = "Сейф пуст"
 
 
 func _fill_collector_display(target: Dictionary, uid: String, chain_money: Dictionary) -> void:
 	target["action_text"] = "В кассу"
 	target["action_visible"] = not chain_money.is_empty()
 	target["action_enabled"] = _pipeline.can_collect_at(uid)
-	var balance := _data.get_uploader_balance()
-	if balance >= GameConstants.MIN_COLLECT_BALANCE:
-		target["status"] = "Можно собрать: $%.0f" % balance
+	if chain_money.is_empty():
+		target["status"] = "Соедини порт денег с аплоудером"
+		return
+	var safe := _data.get_uploader_balance()
+	if safe < GameConstants.MIN_COLLECT_BALANCE:
+		target["status"] = "Сейф аплоудера пуст"
+		return
+	var inst := _field.get_instance(uid)
+	var bonus: float = GameBonus.effect_at_level("collector", inst.level)
+	var payout: float = safe * (1.0 + bonus)
+	if bonus > 0.0:
+		target["status"] = "Забрать $%.0f из аплоудера → касса (+%.0f%%)" % [payout, bonus * 100.0]
 	else:
-		target["status"] = "В аплоудере: $%.0f" % balance
+		target["status"] = "Забрать $%.0f из аплоудера → касса" % payout

@@ -83,17 +83,24 @@ func can_collect_money() -> bool:
 	)
 
 
-func collect_money() -> bool:
-	if not can_collect_money():
+## Переводит весь сейф аплоудера в общую кассу (нужен провод money_out → money_in).
+func collect_money(collector_uid: String) -> bool:
+	if collector_uid == "" or not can_collect_at(collector_uid):
 		return false
 	var chain := _wiring.get_money_chain()
-	var uid: String = chain.get("to_uid", "")
-	var inst := _field.get_instance(uid)
+	var uploader_uid: String = str(chain.get("from_uid", ""))
+	var safe: float = _data.get_uploader_balance()
+	var inst := _field.get_instance(collector_uid)
 	var bonus: float = GameBonus.effect_at_level("collector", inst.level)
-	var payout: float = _data.get_uploader_balance() * (1.0 + bonus)
+	var payout: float = safe * (1.0 + bonus)
 	_data.set_uploader_balance(0.0)
 	_data.add_money(payout)
-	_host.log_message.emit("Коллектор: $%.0f → касса" % payout)
+	var uploader_name: String = BlockDefs.TYPES.get(_field.get_instance_type(uploader_uid), {}).get(
+		"name", "Аплоудер"
+	)
+	_host.log_message.emit(
+		"Коллектор: $%.0f из %s → касса (баланс $%.0f)" % [payout, uploader_name, _data.get_money()]
+	)
 	_notify_field_and_stats()
 	return true
 
@@ -105,7 +112,7 @@ func run_block_action(uid: String) -> bool:
 		"uploader":
 			return enqueue_upload()
 		"collector":
-			return collect_money()
+			return collect_money(uid)
 	return false
 
 
