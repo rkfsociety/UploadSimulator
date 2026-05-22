@@ -1,8 +1,15 @@
-# Godot 4
+# --- Godot 4: нужно для запуска остаётся в git (project.godot, сцены, .gd, assets, *.import) ---
+
+# Кэш редактора — пересоздаётся при открытии проекта
 .godot/
-*.translation
+
+# UID скриптов — локальные sidecar-файлы редактора (не нужны для клона и F5)
+*.gd.uid
+
+# Локальные настройки экспорта с секретами
 export.cfg
 export_credentials.cfg
+*.translation
 
 # Сборки
 build/
@@ -12,10 +19,33 @@ build/
 *.pck
 *.zip
 
-# Python
+# --- Не нужны для запуска игры в Godot ---
+
+# IDE / агенты
+.cursor/
+
+# CI, линтеры, хуки
+.github/
+.pre-commit-config.yaml
+.coderabbit.yaml
+gdlintrc
+ruff.toml
+requirements-dev.txt
+
+# Тесты и утилиты разработки
+tests/
+tools/
+
+# Внутренняя документация (README.md в корне остаётся)
+docs/
+
+# --- Python / ОС ---
+
 __pycache__/
 *.py[cod]
+*.pyo
+venv/
+.venv/
 
-# OS
 .DS_Store
 Thumbs.db
