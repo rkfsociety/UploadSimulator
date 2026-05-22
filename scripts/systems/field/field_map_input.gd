@@ -33,9 +33,6 @@ func _init(
 
 
 func handle_gui_input(event: InputEvent) -> void:
-	# Не перехватывать клики по HUD (магазин, центр карты) на слое UICanvas
-	if not _pointer_over_field_map():
-		return
 	if event is InputEventMouseButton:
 		_handle_mouse_button(event as InputEventMouseButton)
 	elif event is InputEventMouseMotion:
@@ -48,7 +45,7 @@ func handle_gui_input(event: InputEvent) -> void:
 func handle_input(event: InputEvent) -> void:
 	if not DisplayServer.is_touchscreen_available():
 		return
-	if _screen_event_over_ui(event):
+	if _is_over_hud(_screen_pos_from_event(event)):
 		return
 	if event is InputEventScreenTouch:
 		_handle_screen_touch(event as InputEventScreenTouch)
@@ -99,6 +96,12 @@ func _begin_pointer(local_pos: Vector2) -> void:
 func _end_pointer(local_pos: Vector2) -> void:
 	_update_pointer_follow(local_pos)
 	if _pointer_down and _placement.get_selected_type() != "" and not _pointer_moved:
+		# Установка только если тап не по HUD (клики по кнопкам забирает UILayer)
+		if _is_over_hud(_host.get_global_transform() * local_pos):
+			_pointer_down = false
+			_pointer_moved = false
+			_drag_pan = false
+			return
 		var next_type: String = _placement.try_place_at_screen(local_pos)
 		_placement.set_selected_type(next_type)
 		placement_finished.emit(next_type)
@@ -198,39 +201,25 @@ func _update_pointer_follow(local_pos: Vector2) -> void:
 	_placement.update_preview(local_pos)
 
 
-func _pointer_over_field_map() -> bool:
-	var vp := _host.get_viewport()
-	if vp == null:
-		return true
-	var hovered: Control = vp.gui_get_hovered_control()
-	if hovered == null:
-		return true
-	return hovered == _host or _host.is_ancestor_of(hovered)
-
-
-func _screen_event_over_ui(event: InputEvent) -> bool:
-	var screen_pos := Vector2.ZERO
+func _screen_pos_from_event(event: InputEvent) -> Vector2:
 	if event is InputEventScreenTouch:
-		screen_pos = (event as InputEventScreenTouch).position
-	elif event is InputEventScreenDrag:
-		screen_pos = (event as InputEventScreenDrag).position
-	else:
-		return false
+		return (event as InputEventScreenTouch).position
+	if event is InputEventScreenDrag:
+		return (event as InputEventScreenDrag).position
+	return Vector2.ZERO
+
+
+## Зоны HUD: не ставить модуль «сквозь» нижнюю панель и угловые кнопки.
+func _is_over_hud(screen_pos: Vector2) -> bool:
 	var main := _host.get_parent()
 	if main == null:
 		return false
-	var shop: CanvasItem = main.get_node_or_null("UICanvas/ShopMenu") as CanvasItem
+	var shop: CanvasItem = main.get_node_or_null("ShopMenu") as CanvasItem
 	if shop != null and shop.visible:
 		var shop_rect := Rect2(shop.get_global_position(), shop.size)
 		if shop_rect.has_point(screen_pos):
 			return true
-	var ui_layer: Control = main.get_node_or_null("UICanvas/UILayer") as Control
-	if ui_layer == null:
-		ui_layer = main.get_node_or_null("UILayer") as Control
-	if ui_layer == null:
-		return false
-	# Нижняя полоса HUD и кнопка «в центр» справа снизу
-	var vp_size := ui_layer.get_viewport().get_visible_rect().size
+	var vp_size := _host.get_viewport().get_visible_rect().size
 	if screen_pos.y >= vp_size.y - 96.0:
 		return true
 	if screen_pos.x >= vp_size.x - 88.0 and screen_pos.y >= vp_size.y - 112.0:

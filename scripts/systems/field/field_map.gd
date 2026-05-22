@@ -19,7 +19,10 @@ func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	set_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	map_viewport.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# Без stretch-anchors: position/scale MapViewport = pan/zoom (full_rect ломает сдвиг)
+	map_viewport.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	map_viewport.size = size
+	map_viewport.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	map_viewport.clip_contents = true
 	for node in [wires_root, blocks_root]:
 		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -38,12 +41,14 @@ func _ready() -> void:
 	GameState.queue_changed.connect(_on_field_changed)
 
 	await get_tree().process_frame
+	map_viewport.size = size
 	_camera.focus_world(GridDefs.world_center_pixel())
 	_on_field_changed()
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
+		map_viewport.size = size
 		_camera.apply()
 
 
