@@ -124,14 +124,9 @@ func enqueue_download() -> bool:
 	var file_type_id := FileDefs.DEFAULT_TYPE
 	var dl_level := _field.get_instance_level(dl_uid)
 	var quality := 1.0 + float(dl_level) * GameConstants.QUALITY_PER_DOWNLOADER_LEVEL
-	var assets_bytes := _rng.randf_range(
-		GameConstants.DOWNLOAD_ASSETS_BYTES_MIN, GameConstants.DOWNLOAD_ASSETS_BYTES_MAX
-	)
-	var payload_bytes := (
-		_rng.randf_range(GameConstants.DOWNLOAD_PAYLOAD_BYTES_MIN, GameConstants.DOWNLOAD_PAYLOAD_BYTES_MAX)
-		* quality
-	)
-	var total_bytes := assets_bytes + payload_bytes
+	var speed_bps := download_speed_for(dl_uid)
+	# Случайный размер текста: не больше скорости × 50 (байт) и абсолютного потолка типа
+	var total_bytes := FileDefs.random_download_size_bytes(file_type_id, speed_bps, _rng)
 	if not _storage.has_storage_space(total_bytes):
 		_host.log_message.emit("Мало места на диске.")
 		_host.stats_changed.emit()
@@ -141,7 +136,7 @@ func enqueue_download() -> bool:
 	job.title = FileDefs.get_type_label(file_type_id)
 	job.quality = quality
 	job.size_bytes = total_bytes
-	job.duration = total_bytes / download_speed_for(dl_uid)
+	job.duration = total_bytes / speed_bps
 	job.progress = 0.0
 	_data.get_download_queue().append(job)
 	_notify_queue_and_field()
