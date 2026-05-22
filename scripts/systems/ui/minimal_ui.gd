@@ -5,12 +5,14 @@ class_name MinimalUI
 const COLORS_PATH := "res://resources/minimal_ui_colors.tres"
 # SVG-иконки кнопок HUD
 const SHOP_HUD_ICON_PATH := "res://assets/icons/shop.svg"
+const UPGRADE_SHOP_HUD_ICON_PATH := "res://assets/icons/upgrade_shop.svg"
 const MAP_CENTER_HUD_ICON_PATH := "res://assets/icons/map_center.svg"
 
 static var _palette: MinimalUIColors
 static var _theme: Theme
 static var _box_cache: Dictionary = {}
 static var _shop_hud_icon: Texture2D
+static var _upgrade_shop_hud_icon: Texture2D
 static var _map_center_hud_icon: Texture2D
 
 
@@ -223,6 +225,11 @@ static func shop_hud_icon() -> Texture2D:
 	return _shop_hud_icon
 
 
+static func upgrade_shop_hud_icon() -> Texture2D:
+	_upgrade_shop_hud_icon = _load_hud_icon(UPGRADE_SHOP_HUD_ICON_PATH, _upgrade_shop_hud_icon)
+	return _upgrade_shop_hud_icon
+
+
 static func map_center_hud_icon() -> Texture2D:
 	_map_center_hud_icon = _load_hud_icon(MAP_CENTER_HUD_ICON_PATH, _map_center_hud_icon)
 	return _map_center_hud_icon
@@ -274,6 +281,10 @@ static func apply_hud_icon_button(hit_btn: Button, icon_tex: TextureRect, textur
 
 static func apply_shop_hud_button(hit_btn: Button, icon_tex: TextureRect) -> void:
 	apply_hud_icon_button(hit_btn, icon_tex, shop_hud_icon())
+
+
+static func apply_upgrade_shop_hud_button(hit_btn: Button, icon_tex: TextureRect) -> void:
+	apply_hud_icon_button(hit_btn, icon_tex, upgrade_shop_hud_icon())
 
 
 static func apply_map_center_hud_button(hit_btn: Button, icon_tex: TextureRect) -> void:

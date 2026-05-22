@@ -6,6 +6,7 @@ extends Control
 @onready var shop_icon_btn: Button = %ShopIconButton
 @onready var shop_icon_tex: TextureRect = %ShopIconTex
 @onready var upgrade_shop_btn: Button = %UpgradeShopButton
+@onready var upgrade_shop_tex: TextureRect = %UpgradeShopIconTex
 @onready var map_center_btn: Button = %MapCenterButton
 @onready var map_center_tex: TextureRect = %MapCenterIconTex
 @onready var shop_menu: Control = %ShopMenu
@@ -38,7 +39,7 @@ func _apply_cyber_theme() -> void:
 	diamonds_label.add_theme_font_size_override("font_size", 22)
 	MinimalUI.apply_shop_hud_button(shop_icon_btn, shop_icon_tex)
 	shop_icon_btn.tooltip_text = "Магазин модулей ($)"
-	MinimalUI.apply_shop_hud_button(upgrade_shop_btn, null)
+	MinimalUI.apply_upgrade_shop_hud_button(upgrade_shop_btn, upgrade_shop_tex)
 	upgrade_shop_btn.tooltip_text = "Улучшения среды (◆)"
 	MinimalUI.apply_map_center_hud_button(map_center_btn, map_center_tex)
 	map_center_btn.tooltip_text = "В центр карты"
@@ -53,7 +54,7 @@ func _refresh() -> void:
 	var dim_shop := Color(0.45, 0.55, 0.75, 0.55) if shop_open else Color.WHITE
 	var dim_upg := Color(0.45, 0.55, 0.75, 0.55) if upgrade_open else Color.WHITE
 	shop_icon_tex.modulate = dim_shop
-	upgrade_shop_btn.modulate = dim_upg
+	upgrade_shop_tex.modulate = dim_upg
 
 
 func _on_block_purchased(type_id: String) -> void:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://uploadsim_main"]
+[gd_scene load_steps=8 format=3 uid="uid://uploadsim_main"]
 
 [ext_resource type="Script" path="res://scripts/systems/ui/main_ui.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/systems/ui/shop_menu.gd" id="2_shop"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/systems/visual/grid_background.gd" id="5_grid"]
 [ext_resource type="Texture2D" uid="uid://bvdnnglp123in" path="res://assets/icons/shop.svg" id="6_shop_icon"]
 [ext_resource type="Texture2D" path="res://assets/icons/map_center.svg" id="7_map_center_icon"]
+[ext_resource type="Texture2D" path="res://assets/icons/upgrade_shop.svg" id="9_upgrade_shop_icon"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -240,18 +241,22 @@ layout_mode = 2
 layout_mode = 2
 custom_minimum_size = Vector2(56, 56)
 
-[node name="UpgradeShopIconLabel" type="Label" parent="UILayer/MapCenterHUD/RightHudColumn/UpgradeShopHud/UpgradeShopHudInner"]
+[node name="UpgradeShopIconTex" type="TextureRect" parent="UILayer/MapCenterHUD/RightHudColumn/UpgradeShopHud/UpgradeShopHudInner"]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 26
-text = "◆"
-horizontal_alignment = 1
-vertical_alignment = 1
+texture = ExtResource("9_upgrade_shop_icon")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="UpgradeShopButton" type="Button" parent="UILayer/MapCenterHUD/RightHudColumn/UpgradeShopHud/UpgradeShopHudInner"]
 unique_name_in_owner = true
