@@ -25,7 +25,6 @@ func storage_capacity_for(uid: String) -> float:
 
 func get_storage_used_bytes() -> float:
 	var used := 0.0
-	used += float(_data.get_recorded_files()) * GameConstants.RAW_FILE_BYTES
 	for job: FileTransferJob in _data.get_download_queue():
 		used += job.size_bytes
 	for entry: StoredFileEntry in _data.get_stored_files():

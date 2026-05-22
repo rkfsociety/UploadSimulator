@@ -1,6 +1,6 @@
 extends RefCounted
 class_name GamePipelineService
-## Очереди, запись, скачивание, выгрузка, сбор денег.
+## Очереди: скачивание из сети, выгрузка, сбор денег.
 
 var _data: GameStateData
 var _host: Node
@@ -26,8 +26,6 @@ func _init(
 
 
 func tick(delta: float) -> void:
-	_regen_energy(delta)
-	_tick_active_phase(delta)
 	_tick_download_queue(delta)
 	_tick_upload_queue(delta)
 
@@ -40,32 +38,6 @@ func download_speed_for(uid: String) -> float:
 func upload_speed_for(uid: String) -> float:
 	var inst := _field.get_instance(uid)
 	return GameBonus.speed_scaled(GameConstants.BASE_UPLOAD_SPEED_BPS, inst.type_id, inst.level)
-
-
-func studio_duration_for(uid: String) -> float:
-	var inst := _field.get_instance(uid)
-	return GameBonus.duration_scaled(
-		GameConstants.STUDIO_BASE_DURATION_SEC, inst.type_id, inst.level
-	)
-
-
-func can_record() -> bool:
-	return (
-		_data.get_phase() == GameStateData.Phase.IDLE
-		and _field.has_block_on_field("studio")
-		and _any_studio_can_record()
-	)
-
-
-func can_record_at(uid: String) -> bool:
-	if _field.get_instance_type(uid) != "studio" or _data.get_phase() != GameStateData.Phase.IDLE:
-		return false
-	return (
-		_data.get_energy() >= GameConstants.RECORD_ENERGY_COST
-		and _data.get_download_queue().size() < GameConstants.MAX_QUEUE_JOBS
-		and _data.get_upload_queue().size() < GameConstants.MAX_QUEUE_JOBS
-		and _storage.has_storage_space(GameConstants.RAW_FILE_BYTES)
-	)
 
 
 func can_download_at(uid: String) -> bool:
@@ -85,11 +57,7 @@ func can_collect_at(uid: String) -> bool:
 
 func can_enqueue_download() -> bool:
 	var chain := _wiring.get_file_chain()
-	if (
-		_data.get_phase() != GameStateData.Phase.IDLE
-		or chain.is_empty()
-		or _data.get_recorded_files() <= 0
-	):
+	if _data.get_phase() != GameStateData.Phase.IDLE or chain.is_empty():
 		return false
 	if _data.get_download_queue().size() >= GameConstants.MAX_QUEUE_JOBS:
 		return false
@@ -130,23 +98,8 @@ func collect_money() -> bool:
 	return true
 
 
-func start_recording_at(uid: String) -> bool:
-	if not can_record_at(uid):
-		return false
-	_data.set_energy(_data.get_energy() - GameConstants.RECORD_ENERGY_COST)
-	_data.set_recording_studio_uid(uid)
-	_data.set_phase(GameStateData.Phase.RECORDING)
-	_data.set_phase_progress(0.0)
-	_data.set_phase_duration(studio_duration_for(uid))
-	_notify_field_and_stats()
-	_host.log_message.emit("Студия: запись...")
-	return true
-
-
 func run_block_action(uid: String) -> bool:
 	match _field.get_instance_type(uid):
-		"studio":
-			return start_recording_at(uid)
 		"downloader":
 			return enqueue_download()
 		"uploader":
@@ -161,20 +114,18 @@ func enqueue_download() -> bool:
 		return false
 	var chain := _wiring.get_file_chain()
 	var dl_uid: String = chain.get("downloader", "")
-	_data.add_recorded_files(-1)
 	var file_type_id := FileDefs.DEFAULT_TYPE
 	var dl_level := _field.get_instance_level(dl_uid)
 	var quality := 1.0 + float(dl_level) * GameConstants.QUALITY_PER_DOWNLOADER_LEVEL
 	var assets_bytes := _rng.randf_range(
 		GameConstants.DOWNLOAD_ASSETS_BYTES_MIN, GameConstants.DOWNLOAD_ASSETS_BYTES_MAX
 	)
-	var video_bytes := (
-		_rng.randf_range(GameConstants.DOWNLOAD_VIDEO_BYTES_MIN, GameConstants.DOWNLOAD_VIDEO_BYTES_MAX)
+	var payload_bytes := (
+		_rng.randf_range(GameConstants.DOWNLOAD_PAYLOAD_BYTES_MIN, GameConstants.DOWNLOAD_PAYLOAD_BYTES_MAX)
 		* quality
 	)
-	var total_bytes := assets_bytes + video_bytes
-	if not _storage.has_storage_space(total_bytes - GameConstants.RAW_FILE_BYTES):
-		_data.add_recorded_files(1)
+	var total_bytes := assets_bytes + payload_bytes
+	if not _storage.has_storage_space(total_bytes):
 		_host.log_message.emit("Мало места на диске.")
 		_host.stats_changed.emit()
 		return false
@@ -183,11 +134,11 @@ func enqueue_download() -> bool:
 	job.title = FileDefs.get_type_label(file_type_id)
 	job.quality = quality
 	job.size_bytes = total_bytes
-	job.duration = assets_bytes / download_speed_for(dl_uid)
+	job.duration = total_bytes / download_speed_for(dl_uid)
 	job.progress = 0.0
 	_data.get_download_queue().append(job)
 	_notify_queue_and_field()
-	_host.log_message.emit("Скачивание: %s..." % job.title)
+	_host.log_message.emit("Скачивание из сети: %s..." % job.title)
 	_host.stats_changed.emit()
 	return true
 
@@ -207,62 +158,21 @@ func enqueue_upload() -> bool:
 	job.title = entry.title
 	_data.get_upload_queue().append(job)
 	_notify_queue_and_field()
-	_host.log_message.emit("Выгрузка «%s»..." % entry.title)
+	_host.log_message.emit("Выгрузка: %s..." % FileDefs.get_type_label(job.file_type_id))
 	_host.stats_changed.emit()
 	return true
 
 
 func get_phase_label() -> String:
 	match _data.get_phase():
-		GameStateData.Phase.RECORDING:
-			return "Запись"
-		GameStateData.Phase.PUBLISHED:
-			return "Опубликовано"
+		GameStateData.Phase.SETTLING:
+			return "Завершение выгрузки"
 		_:
 			if not _data.get_download_queue().is_empty():
 				return "Скачивание"
 			if not _data.get_upload_queue().is_empty():
 				return "Выгрузка"
 			return "Свободен"
-
-
-func _regen_energy(delta: float) -> void:
-	if _data.get_phase() == GameStateData.Phase.RECORDING:
-		return
-	if _data.get_energy() < _data.get_max_energy():
-		_data.set_energy(
-			minf(
-				_data.get_energy() + GameConstants.ENERGY_REGEN_PER_SEC * delta,
-				_data.get_max_energy()
-			)
-		)
-		_host.stats_changed.emit()
-
-
-func _tick_active_phase(delta: float) -> void:
-	if (
-		_data.get_phase() == GameStateData.Phase.IDLE
-		or _data.get_phase() == GameStateData.Phase.PUBLISHED
-	):
-		return
-	_data.set_phase_progress(
-		(
-			_data.get_phase_progress()
-			+ delta / maxf(_data.get_phase_duration(), GameConstants.MIN_JOB_DURATION_SEC)
-		)
-	)
-	_host.stats_changed.emit()
-	_host.field_changed.emit()
-	if _data.get_phase_progress() < 1.0:
-		return
-	_data.set_phase_progress(1.0)
-	if _data.get_phase() == GameStateData.Phase.RECORDING:
-		_data.add_recorded_files(1)
-		_data.set_phase(GameStateData.Phase.IDLE)
-		_data.set_phase_progress(0.0)
-		_data.set_recording_studio_uid("")
-		_host.field_changed.emit()
-		_host.log_message.emit("Файл записан → загрузчик «На диск»")
 
 
 func _tick_download_queue(delta: float) -> void:
@@ -305,31 +215,19 @@ func _tick_upload_queue(delta: float) -> void:
 
 
 func apply_publish(job: FileTransferJob) -> void:
-	_data.add_published_files(1)
-	var views := int(
-		round(
-			(
-				_rng.randi_range(GameConstants.PUBLISH_VIEWS_MIN, GameConstants.PUBLISH_VIEWS_MAX)
-				* job.quality
-			)
-		)
-	)
-	var revenue := float(views) * GameConstants.REVENUE_PER_VIEW
+	_data.add_uploaded_files(1)
+	var revenue := job.size_bytes * GameConstants.REVENUE_PER_BYTE * job.quality
 	_data.set_uploader_balance(_data.get_uploader_balance() + revenue)
-	_data.set_phase(GameStateData.Phase.PUBLISHED)
-	_host.log_message.emit("«%s» +$%.1f в аплоудер" % [job.title, revenue])
+	_data.set_phase(GameStateData.Phase.SETTLING)
+	_host.log_message.emit(
+		"Выгружен %s: +$%.1f в аплоудер"
+		% [FileDefs.get_type_label(job.file_type_id), revenue]
+	)
 
 
 func finish_publish_pause() -> void:
 	_data.set_phase(GameStateData.Phase.IDLE)
 	_notify_field_and_stats()
-
-
-func _any_studio_can_record() -> bool:
-	for inst: BlockInstance in _data.get_placed_blocks():
-		if inst.type_id == "studio" and can_record_at(inst.uid):
-			return true
-	return false
 
 
 func _notify_field_and_stats() -> void:

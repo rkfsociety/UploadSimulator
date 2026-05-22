@@ -27,15 +27,13 @@ func get_instance_status_line(uid: String) -> String:
 	return str(get_block_display(uid).get("status", ""))
 
 
-## Постоянные характеристики модуля (скорость, ёмкость, длительность записи и т.д.).
+## Постоянные характеристики модуля (скорость, ёмкость и т.д.).
 func get_block_metric(uid: String) -> String:
 	var inst := _field.get_instance(uid)
 	if not inst.is_valid():
 		return ""
 	var lvl: int = maxi(1, inst.level)
 	match inst.type_id:
-		"studio":
-			return "Длительность записи: %.1f с" % _pipeline.studio_duration_for(uid)
 		"downloader":
 			return (
 				"Скорость: %s"
@@ -54,6 +52,7 @@ func get_block_metric(uid: String) -> String:
 			)
 	return ""
 
+
 func get_block_display(uid: String) -> Dictionary:
 	var inst := _field.get_instance(uid)
 	var empty := {
@@ -68,8 +67,6 @@ func get_block_display(uid: String) -> Dictionary:
 	var chain_file := _wiring.get_file_chain()
 	var chain_money := _wiring.get_money_chain()
 	match inst.type_id:
-		"studio":
-			_fill_studio_display(empty, uid)
 		"downloader":
 			_fill_downloader_display(empty, uid, chain_file)
 		"storage":
@@ -81,25 +78,8 @@ func get_block_display(uid: String) -> Dictionary:
 	return empty
 
 
-func _fill_studio_display(target: Dictionary, uid: String) -> void:
-	target["action_text"] = "Записать"
-	target["action_visible"] = true
-	target["action_enabled"] = _pipeline.can_record_at(uid)
-	if (
-		_data.get_phase() == GameStateData.Phase.RECORDING
-		and _data.get_recording_studio_uid() == uid
-	):
-		target["status"] = "Запись %d%%" % int(_data.get_phase_progress() * 100.0)
-		target["progress"] = _data.get_phase_progress()
-		target["action_enabled"] = false
-	elif _data.get_recorded_files() > 0:
-		target["status"] = "Готово к скачиванию: %d файл." % _data.get_recorded_files()
-	else:
-		target["status"] = "Энергия: %.0f" % _data.get_energy()
-
-
 func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
-	target["action_text"] = "На диск"
+	target["action_text"] = "Из сети"
 	target["action_visible"] = not chain_file.is_empty()
 	target["action_enabled"] = _pipeline.can_download_at(uid)
 	var queue := _data.get_download_queue()
@@ -111,13 +91,24 @@ func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dicti
 		)
 		target["progress"] = job.progress
 		target["action_enabled"] = false
-	elif _data.get_recorded_files() > 0:
-		target["status"] = (
-			"В очереди: %d × %s"
-			% [_data.get_recorded_files(), FileDefs.get_type_label(FileDefs.DEFAULT_TYPE)]
+	elif _pipeline.can_download_at(uid):
+		target["status"] = "Готов: скачать %s из интернета" % FileDefs.get_type_label(
+			FileDefs.DEFAULT_TYPE
 		)
 	else:
-		target["status"] = "Ждёт запись в студии"
+		target["status"] = _downloader_idle_hint(chain_file)
+
+
+func _downloader_idle_hint(chain_file: Dictionary) -> String:
+	if chain_file.is_empty():
+		return "Соедини с хранилищем"
+	if _data.get_download_queue().size() >= GameConstants.MAX_QUEUE_JOBS:
+		return "Очередь скачивания заполнена"
+	if not _storage.has_storage_space(GameConstants.MIN_DOWNLOAD_RESERVE_BYTES):
+		return "Мало места на диске"
+	if _data.get_phase() != GameStateData.Phase.IDLE:
+		return _pipeline.get_phase_label()
+	return "Скачивание недоступно"
 
 
 func _fill_storage_display(target: Dictionary) -> void:
@@ -161,7 +152,6 @@ func _fill_collector_display(target: Dictionary, uid: String, chain_money: Dicti
 	target["action_text"] = "В кассу"
 	target["action_visible"] = not chain_money.is_empty()
 	target["action_enabled"] = _pipeline.can_collect_at(uid)
-	var inst := _field.get_instance(uid)
 	var balance := _data.get_uploader_balance()
 	if balance >= GameConstants.MIN_COLLECT_BALANCE:
 		target["status"] = "Можно собрать: $%.0f" % balance

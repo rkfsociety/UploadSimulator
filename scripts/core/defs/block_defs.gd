@@ -3,18 +3,6 @@ class_name BlockDefs
 ## Описание типов блоков: покупка в магазине, порты и разрешённые соединения.
 
 const TYPES := {
-	"studio":
-	{
-		"name": "Студия",
-		"icon": "🎬",
-		"color": Color(1.0, 0.25, 0.78, 1.0),
-		"desc": "Запись видео на носитель",
-		"shop_cost": 55,
-		"upgrade_base": 28,
-		"upgrade_mult": 1.4,
-		"effect_per_level": 0.1,
-		"ports": {},
-	},
 	"downloader":
 	{
 		"name": "Загрузчик",
@@ -100,7 +88,7 @@ static func get_block_color(type_id: String) -> Color:
 
 
 static func starter_kit_types() -> Array[String]:
-	return ["studio", "downloader", "storage", "uploader", "collector"]
+	return ["downloader", "storage", "uploader", "collector"]
 
 
 static func starter_kit_cost() -> int:

@@ -1,20 +1,12 @@
 extends RefCounted
 class_name GameStatePipeline
-## Очереди, запись, скачивание, выгрузка, сбор денег.
+## Очереди: скачивание, выгрузка, сбор денег.
 
 var _svc: GamePipelineService
 
 
 func _init(svc: GamePipelineService) -> void:
 	_svc = svc
-
-
-func can_record() -> bool:
-	return _svc.can_record()
-
-
-func can_record_at(uid: String) -> bool:
-	return _svc.can_record_at(uid)
 
 
 func can_download_at(uid: String) -> bool:
@@ -43,10 +35,6 @@ func can_collect_money() -> bool:
 
 func collect_money() -> bool:
 	return _svc.collect_money()
-
-
-func start_recording_at(uid: String) -> bool:
-	return _svc.start_recording_at(uid)
 
 
 func run_block_action(uid: String) -> bool:

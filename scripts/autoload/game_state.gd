@@ -9,7 +9,7 @@ signal field_changed
 signal placement_requested(type_id: String)
 signal block_purchased(type_id: String)
 
-enum Phase { IDLE, RECORDING, UPLOADING, PUBLISHED }
+enum Phase { IDLE, SETTLING }
 
 var access: GameStateAccess
 var field: GameStateField
@@ -51,5 +51,5 @@ func run_publish_pause(job: FileTransferJob) -> void:
 
 
 func _finish_publish_pause_async() -> void:
-	await get_tree().create_timer(GameConstants.PUBLISH_PAUSE_SEC).timeout
+	await get_tree().create_timer(GameConstants.UPLOAD_SETTLE_PAUSE_SEC).timeout
 	pipeline.finish_publish_pause()

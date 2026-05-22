@@ -1,7 +1,7 @@
 extends RefCounted
 ## Unit-тесты расчёта бонусов от уровня модуля.
 
-var case_count := 4
+var case_count := 3
 
 
 func run() -> Array[String]:
@@ -17,12 +17,6 @@ func run() -> Array[String]:
 		GameBonus.speed_scaled(GameConstants.BASE_DOWNLOAD_SPEED_BPS, "downloader", 2),
 		GameConstants.BASE_DOWNLOAD_SPEED_BPS * 1.2,
 		"скорость ур.2 downloader +20%",
-	)
-	_assert_close(
-		errors,
-		GameBonus.duration_scaled(4.0, "studio", 2),
-		4.0 / 1.2,
-		"длительность студии ур.2",
 	)
 	var cap_l1 := GameBonus.storage_capacity_bytes(1)
 	var cap_l2 := GameBonus.storage_capacity_bytes(2)
