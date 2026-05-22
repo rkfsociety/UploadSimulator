@@ -10,8 +10,11 @@ const THEME_PATH := "res://themes/placed_block_theme.tres"
 
 static var _scene_cache: PackedScene
 static var _theme_cache: Theme
-const MAIN_CELLS_W := GridDefs.BLOCK_CELLS_W - 1
-const UPGRADE_CELLS_W := 1
+# Основная панель — почти весь след; снизу полоса улучшения на 1 клетку по высоте
+const MAIN_CELLS_W := GridDefs.BLOCK_CELLS_W
+const MAIN_CELLS_H := GridDefs.BLOCK_MAIN_CELLS_H
+const UPGRADE_CELLS_W := GridDefs.BLOCK_CELLS_W
+const UPGRADE_CELLS_H := GridDefs.BLOCK_UPGRADE_CELLS_H
 
 var instance_uid: String = ""
 var block_type: String = ""
@@ -30,21 +33,21 @@ var block_type: String = ""
 var _view: PlacedBlockView
 
 
-## Размер модуля на карте в пикселях (6×4 клетки).
+## Размер модуля на карте в пикселях (10×6 клеток, альбом).
 static func pixel_size() -> Vector2:
 	return GridDefs.block_pixel_size()
 
 
 static func _main_panel_size() -> Vector2:
 	return Vector2(
-		float(MAIN_CELLS_W * GridDefs.CELL_SIZE), float(GridDefs.BLOCK_CELLS_H * GridDefs.CELL_SIZE)
+		float(MAIN_CELLS_W * GridDefs.CELL_SIZE), float(MAIN_CELLS_H * GridDefs.CELL_SIZE)
 	)
 
 
 static func _upgrade_panel_size() -> Vector2:
 	return Vector2(
 		float(UPGRADE_CELLS_W * GridDefs.CELL_SIZE),
-		float(GridDefs.BLOCK_CELLS_H * GridDefs.CELL_SIZE)
+		float(UPGRADE_CELLS_H * GridDefs.CELL_SIZE)
 	)
 
 

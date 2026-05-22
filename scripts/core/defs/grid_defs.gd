@@ -2,11 +2,15 @@ extends RefCounted
 class_name GridDefs
 ## Сетка 100×100 клеток; (0, 0) — центр карты.
 
-const CELL_SIZE := 80
+# Клетка сетки: модуль 10×6 клеток ≈ прежний размер в пикселях (6×4 при 80px)
+const CELL_SIZE := 48
 const GRID_CELLS := 100
 const GRID_HALF := GRID_CELLS / 2
-const BLOCK_CELLS_W := 6
-const BLOCK_CELLS_H := 4
+# Единый след модуля на поле: альбомная ориентация, в пределах 8×5 … 20×20
+const BLOCK_CELLS_W := 10
+const BLOCK_CELLS_H := 6
+const BLOCK_UPGRADE_CELLS_H := 1
+const BLOCK_MAIN_CELLS_H := BLOCK_CELLS_H - BLOCK_UPGRADE_CELLS_H
 
 
 static func is_in_bounds(gx: int, gy: int) -> bool:
@@ -36,7 +40,7 @@ static func snap_cell_from_world(world_px: Vector2) -> Vector2i:
 
 
 static func block_pixel_size() -> Vector2:
-	# Минимальный размер модуля на карте: 6×4 клеток (горизонтально)
+	# Размер модуля на карте: 10×6 клеток (горизонтально)
 	return Vector2(BLOCK_CELLS_W * CELL_SIZE, BLOCK_CELLS_H * CELL_SIZE)
 
 

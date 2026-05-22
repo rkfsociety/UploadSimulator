@@ -5,16 +5,16 @@
 [ext_resource type="Theme" path="res://themes/placed_block_theme.tres" id="3_theme"]
 
 [node name="PlacedBlock" type="Control"]
-custom_minimum_size = Vector2(480, 320)
+custom_minimum_size = Vector2(480, 288)
 layout_mode = 0
 offset_right = 480.0
-offset_bottom = 320.0
+offset_bottom = 288.0
 mouse_filter = 2
 clip_contents = false
 theme = ExtResource("3_theme")
 script = ExtResource("1_placed")
 
-[node name="RootHBox" type="HBoxContainer" parent="."]
+[node name="RootVBox" type="VBoxContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -22,10 +22,11 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 0
 
-[node name="MainPanel" type="Control" parent="RootHBox"]
+[node name="MainPanel" type="Control" parent="RootVBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(400, 320)
+custom_minimum_size = Vector2(480, 240)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -97,15 +98,15 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="UpgradePanel" type="Control" parent="RootHBox"]
+[node name="UpgradePanel" type="Control" parent="RootVBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(80, 320)
+custom_minimum_size = Vector2(480, 48)
 layout_mode = 2
-size_flags_horizontal = 8
-size_flags_vertical = 3
+size_flags_horizontal = 3
+size_flags_vertical = 8
 script = ExtResource("2_neon")
 
-[node name="UpgradeButton" type="Button" parent="RootHBox/UpgradePanel"]
+[node name="UpgradeButton" type="Button" parent="RootVBox/UpgradePanel"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -116,6 +117,5 @@ grow_vertical = 2
 theme_type_variation = &"upgrade"
 flat = true
 mouse_default_cursor_shape = 2
-autowrap_mode = 3
 text_overrun_behavior = 3
 text = "↑ Ур.1 · $0"
