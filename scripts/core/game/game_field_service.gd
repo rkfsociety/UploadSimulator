@@ -45,6 +45,8 @@ func get_block_stock(type_id: String) -> int:
 func can_buy_block(type_id: String) -> bool:
 	if not BlockDefs.TYPES.has(type_id):
 		return false
+	if not _data.is_module_type_unlocked(type_id):
+		return false
 	return _data.get_money() >= float(BlockDefs.TYPES[type_id]["shop_cost"])
 
 
@@ -61,6 +63,8 @@ func buy_block(type_id: String) -> bool:
 
 
 func can_place_block(type_id: String, gx: int, gy: int) -> bool:
+	if not _data.is_module_type_unlocked(type_id):
+		return false
 	if _data.get_block_stock(type_id) <= 0:
 		return false
 	if not GridDefs.footprint_in_bounds(gx, gy):
@@ -129,7 +133,8 @@ func upgrade_instance(uid: String) -> bool:
 func get_shop_block_types() -> Array[String]:
 	var keys: Array[String] = []
 	for k in BlockDefs.TYPES.keys():
-		keys.append(k)
+		if _data.is_module_type_unlocked(k):
+			keys.append(k)
 	keys.sort()
 	return keys
 

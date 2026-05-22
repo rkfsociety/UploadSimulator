@@ -23,3 +23,23 @@ func can_buy_upgrade(upgrade_id: String) -> bool:
 
 func buy_upgrade(upgrade_id: String) -> bool:
 	return _svc.buy_upgrade(upgrade_id)
+
+
+func is_module_unlocked(type_id: String) -> bool:
+	return _svc.is_module_unlocked(type_id)
+
+
+func module_unlock_diamond_cost(type_id: String) -> int:
+	return _svc.module_unlock_diamond_cost(type_id)
+
+
+func can_unlock_module(type_id: String) -> bool:
+	return _svc.can_unlock_module(type_id)
+
+
+func unlock_module(type_id: String) -> bool:
+	return _svc.unlock_module(type_id)
+
+
+func get_lockable_module_type_ids() -> Array[String]:
+	return _svc.get_lockable_module_type_ids()

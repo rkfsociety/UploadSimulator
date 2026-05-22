@@ -8,6 +8,8 @@ var _money: float = 0.0
 var _diamonds: int = GameConstants.START_DIAMONDS
 var _uploader_balance: float = 0.0
 var _env_upgrade_levels: Dictionary = {}
+# Типы модулей, открытые в магазине ◆ (потом покупка за $ в магазине модулей)
+var _unlocked_module_types: Dictionary = {}
 
 var _block_stock: Dictionary = {}
 var _placed_blocks: Array[BlockInstance] = []
@@ -25,6 +27,8 @@ var _uid_counter: int = 0
 func _init() -> void:
 	# Касса при старте — сумма shop_cost базового набора (см. BlockDefs.starter_kit_types)
 	_money = float(BlockDefs.starter_kit_cost())
+	for type_id in BlockDefs.starter_kit_types():
+		_unlocked_module_types[type_id] = true
 
 
 func get_money() -> float:
@@ -67,6 +71,16 @@ func get_env_upgrade_level(upgrade_id: String) -> int:
 
 func set_env_upgrade_level(upgrade_id: String, level: int) -> void:
 	_env_upgrade_levels[upgrade_id] = level
+
+
+func is_module_type_unlocked(type_id: String) -> bool:
+	if BlockDefs.is_unlocked_at_start(type_id):
+		return true
+	return _unlocked_module_types.has(type_id)
+
+
+func unlock_module_type(type_id: String) -> void:
+	_unlocked_module_types[type_id] = true
 
 
 # Множитель от улучшений среды (download_speed, upload_speed, storage_capacity)

@@ -121,7 +121,10 @@ func _show_detail(type_id: String) -> void:
 	panel.offset_top = PANEL_H_DETAIL
 	detail_name.text = def.get("name", type_id)
 	detail_name.add_theme_color_override("font_color", BlockDefs.get_block_color(type_id))
-	detail_desc.text = def.get("desc", "")
+	var desc_text: String = str(def.get("desc", ""))
+	if not GameState.environment.is_module_unlocked(type_id):
+		desc_text = "Сначала откройте в магазине ◆ (алмазы)."
+	detail_desc.text = desc_text
 	var stock: int = GameState.field.get_block_stock(type_id)
 	detail_stock.text = "Не поставлен: %d" % stock if stock > 0 else "Купите и поставьте на карту"
 	buy_btn.text = "Купить · $%d" % int(def.get("shop_cost", 0))

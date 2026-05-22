@@ -41,7 +41,7 @@ tests/
 ```bash
 godot --headless --path . -s res://tests/test_runner.gd
 
-См. также [SETUP.md](SETUP.md) — клонирование и запуск на новом ПК.
+См. также [SETUP.md](SETUP.md) — клонирование и запуск на новом ПК, [MODULES.md](MODULES.md) — как добавить новый тип модуля.
 ```
 
 ## Debug overlay
@@ -60,7 +60,7 @@ Autoload `DebugOverlay` показывает FPS, кассу, фазы, очер
 | `wiring` | `game_state_wiring.gd` | соединения портов |
 | `storage` | `game_state_storage.gd` | диск |
 | `pipeline` | `game_state_pipeline.gd` | скачивание, выгрузка, сбор денег |
-| `environment` | `game_state_environment.gd` | улучшения среды за алмазы |
+| `environment` | `game_state_environment.gd` | открытие типов модулей и улучшения среды за алмазы |
 
 Логика — в сервисах (`GameFieldService`, …); модули только делегируют. Пример: `GameState.field.place_block(...)`, `GameState.access.get_money()`.
 

@@ -9,6 +9,8 @@ const TYPES := {
 		"icon": "⬇",
 		"color": Color(0.0, 0.88, 1.0, 1.0),
 		"desc": "Скачивает файлы из интернета",
+		"unlocked_at_start": true,
+		"diamond_unlock_cost": 0,
 		"shop_cost": 75,
 		"upgrade_base": 35,
 		"upgrade_mult": 1.45,
@@ -20,7 +22,9 @@ const TYPES := {
 		"name": "Хранилище",
 		"icon": "💾",
 		"color": Color(0.58, 0.35, 1.0, 1.0),
-		"desc": "Диск для скачанных роликов",
+		"desc": "Диск для скачанных файлов",
+		"unlocked_at_start": true,
+		"diamond_unlock_cost": 0,
 		"shop_cost": 90,
 		"upgrade_base": 40,
 		"upgrade_mult": 1.5,
@@ -37,6 +41,8 @@ const TYPES := {
 		"icon": "⬆",
 		"color": Color(0.25, 1.0, 0.55, 1.0),
 		"desc": "Выгружает в интернет, копит доход",
+		"unlocked_at_start": true,
+		"diamond_unlock_cost": 0,
 		"shop_cost": 85,
 		"upgrade_base": 38,
 		"upgrade_mult": 1.48,
@@ -53,6 +59,8 @@ const TYPES := {
 		"icon": "💰",
 		"color": Color(1.0, 0.78, 0.15, 1.0),
 		"desc": "Забирает деньги из сейфа аплоудера в общую кассу",
+		"unlocked_at_start": true,
+		"diamond_unlock_cost": 0,
 		"shop_cost": 65,
 		"upgrade_base": 30,
 		"upgrade_mult": 1.4,
@@ -69,7 +77,16 @@ const ALLOWED_WIRES: Array[Array] = [
 ]
 
 const _REQUIRED_TYPE_KEYS: Array[String] = [
-	"name", "icon", "color", "desc", "shop_cost", "upgrade_base", "upgrade_mult", "ports"
+	"name",
+	"icon",
+	"color",
+	"desc",
+	"unlocked_at_start",
+	"diamond_unlock_cost",
+	"shop_cost",
+	"upgrade_base",
+	"upgrade_mult",
+	"ports",
 ]
 const _VALID_PORT_KINDS: Array[String] = ["file", "money"]
 const _VALID_PORT_DIRS: Array[String] = ["in", "out"]
@@ -96,6 +113,31 @@ static func starter_kit_cost() -> int:
 	for type_id in starter_kit_types():
 		total += int(TYPES[type_id]["shop_cost"])
 	return total
+
+
+# Модуль доступен в магазине $ без открытия в ◆
+static func is_unlocked_at_start(type_id: String) -> bool:
+	return bool(TYPES.get(type_id, {}).get("unlocked_at_start", false))
+
+
+# Цена открытия типа в магазине улучшений (0 — уже открыт или не продаётся в ◆)
+static func diamond_unlock_cost(type_id: String) -> int:
+	return int(TYPES.get(type_id, {}).get("diamond_unlock_cost", 0))
+
+
+# Нужно сначала открыть за алмазы, потом покупать за $
+static func requires_diamond_unlock(type_id: String) -> bool:
+	return not is_unlocked_at_start(type_id) and diamond_unlock_cost(type_id) > 0
+
+
+# Типы для вкладки «Новые модули» в магазине ◆ (ещё не открыты игроком)
+static func get_diamond_lockable_type_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for type_id in TYPES:
+		if requires_diamond_unlock(type_id):
+			ids.append(type_id)
+	ids.sort()
+	return ids
 
 
 # Проверяет, разрешено ли соединение указанных портов между типами блоков
@@ -160,6 +202,15 @@ static func _validate_defs() -> void:
 	for type_id in starter_kit_types():
 		if not TYPES.has(type_id):
 			push_error("BlockDefs: стартовый набор ссылается на неизвестный тип «%s»." % type_id)
+		elif not is_unlocked_at_start(type_id):
+			push_error("BlockDefs: стартовый тип «%s» должен иметь unlocked_at_start." % type_id)
+		elif diamond_unlock_cost(type_id) > 0:
+			push_error("BlockDefs: стартовый тип «%s» не должен требовать алмазы." % type_id)
+	for type_id in TYPES:
+		if requires_diamond_unlock(type_id) and diamond_unlock_cost(type_id) <= 0:
+			push_error(
+				"BlockDefs: тип «%s» с unlocked_at_start=false нужен diamond_unlock_cost > 0." % type_id
+			)
 
 
 static func _validate_type(type_id: String, type_def: Dictionary) -> void:

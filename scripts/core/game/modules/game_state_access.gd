@@ -21,6 +21,10 @@ func get_env_multiplier(effect_key: String) -> float:
 	return _data.get_env_multiplier(effect_key)
 
 
+func is_module_type_unlocked(type_id: String) -> bool:
+	return _data.is_module_type_unlocked(type_id)
+
+
 func get_uploader_balance() -> float:
 	return _data.get_uploader_balance()
 

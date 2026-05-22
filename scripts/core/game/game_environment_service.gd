@@ -1,6 +1,6 @@
 extends RefCounted
 class_name GameEnvironmentService
-## Покупка улучшений среды за алмазы.
+## Улучшения среды и открытие новых типов модулей за алмазы.
 
 var _data: GameStateData
 var _host: Node
@@ -40,3 +40,41 @@ func buy_upgrade(upgrade_id: String) -> bool:
 	_host.log_message.emit("%s: ур. %d (◆ −%d)" % [name, lvl, cost])
 	_host.stats_changed.emit()
 	return true
+
+
+func is_module_unlocked(type_id: String) -> bool:
+	return _data.is_module_type_unlocked(type_id)
+
+
+func module_unlock_diamond_cost(type_id: String) -> int:
+	return BlockDefs.diamond_unlock_cost(type_id)
+
+
+func can_unlock_module(type_id: String) -> bool:
+	if not BlockDefs.requires_diamond_unlock(type_id):
+		return false
+	if is_module_unlocked(type_id):
+		return false
+	return _data.get_diamonds() >= module_unlock_diamond_cost(type_id)
+
+
+func unlock_module(type_id: String) -> bool:
+	if not can_unlock_module(type_id):
+		return false
+	var cost := module_unlock_diamond_cost(type_id)
+	_data.try_spend_diamonds(cost)
+	_data.unlock_module_type(type_id)
+	var name: String = BlockDefs.TYPES.get(type_id, {}).get("name", type_id)
+	_host.log_message.emit(
+		"Открыт модуль «%s» — теперь в магазине за $ (◆ −%d)" % [name, cost]
+	)
+	_host.stats_changed.emit()
+	return true
+
+
+func get_lockable_module_type_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for type_id in BlockDefs.get_diamond_lockable_type_ids():
+		if not is_module_unlocked(type_id):
+			ids.append(type_id)
+	return ids
