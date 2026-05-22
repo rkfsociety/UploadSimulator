@@ -1,6 +1,9 @@
 # Godot 4 — только локальный кэш (после clone создаётся сам)
 .godot/
 
+# Локальная копия редактора Godot в Godot/ (exe, шаблоны, keystores)
+Godot/
+
 # Локальные секреты экспорта
 export.cfg
 export_credentials.cfg

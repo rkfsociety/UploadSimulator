@@ -1,19 +1,22 @@
 @echo off
 setlocal EnableExtensions
 
-rem Upload Simulator - open project in Godot editor
+rem Upload Simulator — открыть проект в редакторе Godot
 set "PROJECT_DIR=%~dp0"
 if "%PROJECT_DIR:~-1%"=="\" set "PROJECT_DIR=%PROJECT_DIR:~0,-1%"
 
+rem 1) переменная окружения  2) Godot/ в корне репозитория
+set "LOCAL_GODOT=%PROJECT_DIR%\Godot\Godot_v4.6.2-stable_win64.exe"
 if not defined GODOT_EXE (
-	set "GODOT_EXE=F:\github\cursor\Godot\Godot_v4.6.2-stable_win64.exe"
+	set "GODOT_EXE=%LOCAL_GODOT%"
 )
 
 if not exist "%GODOT_EXE%" (
 	echo ERROR: Godot not found:
 	echo   %GODOT_EXE%
 	echo.
-	echo Set custom path, then run again:
+	echo Put Godot 4.6.2 into: %PROJECT_DIR%\Godot\
+	echo   or set path:
 	echo   set GODOT_EXE=C:\Path\To\Godot_v4.6.2-stable_win64.exe
 	echo   run_godot.bat
 	echo.
