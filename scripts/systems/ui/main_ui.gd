@@ -21,7 +21,7 @@ func _ready() -> void:
 func _apply_cyber_theme() -> void:
 	MinimalUI.attach_theme(self)
 	MinimalUI.apply_balance_label(money_label)
-	MinimalUI.apply_icon_button(shop_icon_btn)
+	MinimalUI.apply_shop_hud_button(shop_icon_btn)
 	shop_icon_btn.tooltip_text = "Магазин"
 	MinimalUI.apply_icon_button(map_center_btn)
 	map_center_btn.tooltip_text = "В центр карты"

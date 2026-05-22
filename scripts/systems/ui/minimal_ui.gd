@@ -3,10 +3,13 @@ class_name MinimalUI
 ## Неоновый киберпанк-стиль интерфейса: палитра, кэш StyleBoxFlat и Theme.
 
 const COLORS_PATH := "res://resources/minimal_ui_colors.tres"
+# Иконка кнопки магазина в нижнем HUD
+const SHOP_HUD_ICON_PATH := "res://assets/icons/shop.svg"
 
 static var _palette: MinimalUIColors
 static var _theme: Theme
 static var _box_cache: Dictionary = {}
+static var _shop_hud_icon: Texture2D
 
 
 # Короткие имена цветов (читают палитру из .tres)
@@ -206,6 +209,13 @@ static func icon_btn() -> StyleBoxFlat:
 	return neon_box(c.btn_icon_normal, c.neon_magenta, true, 4, 8)
 
 
+static func shop_hud_icon() -> Texture2D:
+	# Кэш текстуры корзины, чтобы не грузить SVG при каждом вызове
+	if _shop_hud_icon == null:
+		_shop_hud_icon = load(SHOP_HUD_ICON_PATH) as Texture2D
+	return _shop_hud_icon
+
+
 static func apply_icon_button(btn: Button) -> void:
 	btn.flat = false
 	btn.custom_minimum_size = Vector2(44, 44)
@@ -218,6 +228,14 @@ static func apply_icon_button(btn: Button) -> void:
 	btn.add_theme_stylebox_override("disabled", t.get_stylebox("disabled", &"icon"))
 	btn.add_theme_color_override("font_color", NEON_MAGENTA)
 	btn.add_theme_font_size_override("font_size", 20)
+
+
+static func apply_shop_hud_button(btn: Button) -> void:
+	# Та же рамка, что у icon-кнопок, но с SVG вместо символа шрифта
+	apply_icon_button(btn)
+	btn.text = ""
+	btn.icon = shop_hud_icon()
+	btn.expand_icon = true
 
 
 static func apply_action_button(btn: Button) -> void:
