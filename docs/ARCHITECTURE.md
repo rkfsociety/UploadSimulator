@@ -40,6 +40,8 @@ tests/
 
 ```bash
 godot --headless --path . -s res://tests/test_runner.gd
+
+См. также [SETUP.md](SETUP.md) — клонирование и запуск на новом ПК.
 ```
 
 ## Debug overlay

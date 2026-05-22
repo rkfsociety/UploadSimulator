@@ -55,8 +55,8 @@ static func get_scene() -> PackedScene:
 	return _scene_cache
 
 
-static func get_theme() -> Theme:
-	# Ленивая загрузка темы UI модуля
+static func get_block_theme() -> Theme:
+	# Ленивая загрузка темы UI модуля (не get_theme — конфликт с Control)
 	if _theme_cache == null:
 		_theme_cache = load(THEME_PATH) as Theme
 	return _theme_cache
@@ -70,7 +70,7 @@ static func instantiate_block() -> PlacedBlock:
 func _ready() -> void:
 	# Тема: отступы, шрифты и базовые стили (см. themes/placed_block_theme.tres)
 	if theme == null:
-		theme = get_theme()
+		theme = get_block_theme()
 	_apply_root_layout()
 	_view = PlacedBlockView.new(
 		_main_panel,
