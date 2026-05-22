@@ -12,7 +12,7 @@ static func default_font() -> Font:
 	if _default == null:
 		var f := SystemFont.new()
 		f.font_names = PackedStringArray(["Segoe UI", "Roboto", "Noto Sans", "Arial", "sans-serif"])
-		f.font_antialiasing = TextServer.FONT_ANTIALIASING_GRAY
+		f.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
 		f.hinting = TextServer.HINTING_LIGHT
 		f.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_AUTO
 		_default = f
@@ -25,7 +25,7 @@ static func title_font() -> Font:
 		var f := SystemFont.new()
 		f.font_names = PackedStringArray(["Segoe UI Semibold", "Roboto Medium", "Noto Sans", "Arial", "sans-serif"])
 		f.font_weight = 600
-		f.font_antialiasing = TextServer.FONT_ANTIALIASING_GRAY
+		f.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
 		f.hinting = TextServer.HINTING_LIGHT
 		f.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_AUTO
 		_bold = f

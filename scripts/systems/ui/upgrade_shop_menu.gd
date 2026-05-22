@@ -73,8 +73,8 @@ func _build_ui() -> void:
 
 	var hint := Label.new()
 	hint.text = (
-		"◆ алмазы: сначала откройте новый тип модуля здесь, затем купите его за $ в магазине корзины. "
-		+ "Ниже — улучшения каналов и диска."
+		'◆ алмазы: сначала откройте новый тип модуля здесь, затем купите его за $ в магазине корзины. '
+		+ 'Ниже — улучшения каналов и диска.'
 	)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_color_override("font_color", MinimalUI.TEXT_DIM)
@@ -144,14 +144,13 @@ func _make_module_unlock_row(type_id: String) -> Control:
 	return _make_row(
 		str(def.get("icon", "?")),
 		def.get("name", type_id),
-		"Откроет покупку в магазине $ · %s" % def.get("desc", ""),
+		'Откроет покупку в магазине $ - %s' % def.get("desc", ""),
 		"Открыть",
 		cost,
 		GameState.environment.can_unlock_module(type_id),
 		_on_unlock_module.bind(type_id),
 		BlockDefs.get_block_color(type_id),
 	)
-}
 
 
 func _make_env_upgrade_row(upgrade_id: String) -> Control:

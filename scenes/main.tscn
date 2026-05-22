@@ -288,7 +288,7 @@ grow_vertical = 2
 mouse_filter = 0
 script = ExtResource("2_shop")
 
-[node name="Dim" type="ColorRect" parent="ShopMenu"]
+[node name="Dim" type="ColorRect" parent="ModalLayer/ShopMenu"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -298,7 +298,7 @@ grow_vertical = 2
 color = Color(0.01, 0.0, 0.06, 0.85)
 mouse_filter = 0
 
-[node name="Panel" type="PanelContainer" parent="ShopMenu"]
+[node name="Panel" type="PanelContainer" parent="ModalLayer/ShopMenu"]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -308,75 +308,75 @@ offset_top = -200.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="PanelMargin" type="MarginContainer" parent="ShopMenu/Panel"]
+[node name="PanelMargin" type="MarginContainer" parent="ModalLayer/ShopMenu/Panel"]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="PanelVBox" type="VBoxContainer" parent="ShopMenu/Panel/PanelMargin"]
+[node name="PanelVBox" type="VBoxContainer" parent="ModalLayer/ShopMenu/Panel/PanelMargin"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ShopHeader" type="HBoxContainer" parent="ShopMenu/Panel/PanelMargin/PanelVBox"]
+[node name="ShopHeader" type="HBoxContainer" parent="ModalLayer/ShopMenu/Panel/PanelMargin/PanelVBox"]
 layout_mode = 2
 
-[node name="ShopTitle" type="Label" parent="ShopMenu/Panel/PanelMargin/PanelVBox/ShopHeader"]
+[node name="ShopTitle" type="Label" parent="ModalLayer/ShopMenu/Panel/PanelMargin/PanelVBox/ShopHeader"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 18
 text = "Модули"
 
-[node name="CloseButton" type="Button" parent="ShopMenu/Panel/PanelMargin/PanelVBox/ShopHeader"]
+[node name="CloseButton" type="Button" parent="ModalLayer/ShopMenu/Panel/PanelMargin/PanelVBox/ShopHeader"]
 layout_mode = 2
 custom_minimum_size = Vector2(72, 36)
 text = "×"
 
-[node name="ShopIconRow" type="HBoxContainer" parent="ShopMenu/Panel/PanelMargin/PanelVBox"]
+[node name="ShopIconRow" type="HBoxContainer" parent="ModalLayer/ShopMenu/Panel/PanelMargin/PanelVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 alignment = 1
 theme_override_constants/separation = 10
 
-[node name="ShopDetailPanel" type="VBoxContainer" parent="ShopMenu/Panel/PanelMargin/PanelVBox"]
+[node name="ShopDetailPanel" type="VBoxContainer" parent="ModalLayer/ShopMenu/Panel/PanelMargin/PanelVBox"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ShopDetailName" type="Label" parent="ShopMenu/Panel/PanelMargin/PanelVBox/ShopDetailPanel"]
+[node name="ShopDetailName" type="Label" parent="ModalLayer/ShopMenu/Panel/PanelMargin/PanelVBox/ShopDetailPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 17
 text = "Блок"
 
-[node name="ShopDetailDesc" type="Label" parent="ShopMenu/Panel/PanelMargin/PanelVBox/ShopDetailPanel"]
+[node name="ShopDetailDesc" type="Label" parent="ModalLayer/ShopMenu/Panel/PanelMargin/PanelVBox/ShopDetailPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 3
 theme_override_font_sizes/font_size = 12
 text = "Описание"
 
-[node name="ShopDetailStock" type="Label" parent="ShopMenu/Panel/PanelMargin/PanelVBox/ShopDetailPanel"]
+[node name="ShopDetailStock" type="Label" parent="ModalLayer/ShopMenu/Panel/PanelMargin/PanelVBox/ShopDetailPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = ""
 
-[node name="ShopDetailButtons" type="HBoxContainer" parent="ShopMenu/Panel/PanelMargin/PanelVBox/ShopDetailPanel"]
+[node name="ShopDetailButtons" type="HBoxContainer" parent="ModalLayer/ShopMenu/Panel/PanelMargin/PanelVBox/ShopDetailPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ShopBuyButton" type="Button" parent="ShopMenu/Panel/PanelMargin/PanelVBox/ShopDetailPanel/ShopDetailButtons"]
+[node name="ShopBuyButton" type="Button" parent="ModalLayer/ShopMenu/Panel/PanelMargin/PanelVBox/ShopDetailPanel/ShopDetailButtons"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 44)
 text = "$0"
 
-[node name="ShopPlaceButton" type="Button" parent="ShopMenu/Panel/PanelMargin/PanelVBox/ShopDetailPanel/ShopDetailButtons"]
+[node name="ShopPlaceButton" type="Button" parent="ModalLayer/ShopMenu/Panel/PanelMargin/PanelVBox/ShopDetailPanel/ShopDetailButtons"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -398,5 +398,5 @@ script = ExtResource("8_upgrade_shop")
 [connection signal="pressed" from="UILayer/MapCenterHUD/RightHudColumn/UpgradeShopHud/UpgradeShopHudInner/UpgradeShopButton" to="." method="_on_upgrade_shop_pressed"]
 [connection signal="pressed" from="UILayer/BottomHUD/HudButtonsRow/ShopHud/ShopHudInner/ShopIconButton" to="." method="_on_shop_pressed"]
 [connection signal="pressed" from="UILayer/MapCenterHUD/RightHudColumn/MapCenterHud/MapCenterHudInner/MapCenterButton" to="." method="_on_map_center_pressed"]
-[connection signal="gui_input" from="ShopMenu/Dim" to="ShopMenu" method="_on_dim_clicked"]
-[connection signal="pressed" from="ShopMenu/Panel/PanelMargin/PanelVBox/ShopHeader/CloseButton" to="ShopMenu" method="_on_close_pressed"]
+[connection signal="gui_input" from="ModalLayer/ShopMenu/Dim" to="ModalLayer/ShopMenu" method="_on_dim_clicked"]
+[connection signal="pressed" from="ModalLayer/ShopMenu/Panel/PanelMargin/PanelVBox/ShopHeader/CloseButton" to="ModalLayer/ShopMenu" method="_on_close_pressed"]

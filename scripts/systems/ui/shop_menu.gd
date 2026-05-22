@@ -6,13 +6,13 @@ signal closed
 const PANEL_H_COMPACT := -200.0
 const PANEL_H_DETAIL := -340.0
 
-@onready var icon_row: HBoxContainer = %ShopIconRow
-@onready var detail_panel: VBoxContainer = %ShopDetailPanel
-@onready var detail_name: Label = %ShopDetailName
-@onready var detail_desc: Label = %ShopDetailDesc
-@onready var detail_stock: Label = %ShopDetailStock
-@onready var buy_btn: Button = %ShopBuyButton
-@onready var place_btn: Button = %ShopPlaceButton
+@onready var icon_row: HBoxContainer = $Panel/PanelMargin/PanelVBox/ShopIconRow
+@onready var detail_panel: VBoxContainer = $Panel/PanelMargin/PanelVBox/ShopDetailPanel
+@onready var detail_name: Label = $Panel/PanelMargin/PanelVBox/ShopDetailPanel/ShopDetailName
+@onready var detail_desc: Label = $Panel/PanelMargin/PanelVBox/ShopDetailPanel/ShopDetailDesc
+@onready var detail_stock: Label = $Panel/PanelMargin/PanelVBox/ShopDetailPanel/ShopDetailStock
+@onready var buy_btn: Button = $Panel/PanelMargin/PanelVBox/ShopDetailPanel/ShopDetailButtons/ShopBuyButton
+@onready var place_btn: Button = $Panel/PanelMargin/PanelVBox/ShopDetailPanel/ShopDetailButtons/ShopPlaceButton
 @onready var dim: ColorRect = $Dim
 @onready var panel: PanelContainer = $Panel
 @onready var shop_title: Label = $Panel/PanelMargin/PanelVBox/ShopHeader/ShopTitle
@@ -134,7 +134,7 @@ func _show_detail(type_id: String) -> void:
 	detail_desc.text = desc_text
 	var stock: int = GameState.field.get_block_stock(type_id)
 	detail_stock.text = "Не поставлен: %d" % stock if stock > 0 else "Купите и поставьте на карту"
-	buy_btn.text = "Купить · $%d" % int(def.get("shop_cost", 0))
+	buy_btn.text = 'Купить · $%d' % int(def.get("shop_cost", 0))
 	buy_btn.disabled = not GameState.field.can_buy_block(type_id)
 	place_btn.visible = stock > 0
 	place_btn.disabled = stock <= 0
