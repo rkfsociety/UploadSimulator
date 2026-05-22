@@ -57,7 +57,7 @@ func focus_world(world_px: Vector2) -> void:
 ## Масштаб с фиксацией точки под курсором.
 func zoom_at(factor: float, screen_pos: Vector2) -> void:
 	var old_zoom := zoom
-	zoom = clampf(zoom * factor, FieldMapConstants.ZOOM_MIN, FieldMapConstants.ZOOM_MAX)
+	zoom = clampf(zoom * factor, min_zoom(), FieldMapConstants.ZOOM_MAX)
 	if is_equal_approx(old_zoom, zoom):
 		return
 	var map_point := (screen_pos - pan) / old_zoom
@@ -77,13 +77,28 @@ func set_pan(value: Vector2) -> void:
 	apply()
 
 
+## Минимальный зум: карта заполняет экран, пустоты за краями не видно.
+func min_zoom() -> float:
+	var bounds := GridDefs.world_bounds_rect()
+	var vs := view_size()
+	if vs.x < 1.0 or vs.y < 1.0:
+		return FieldMapConstants.ZOOM_MIN
+	var cover := maxf(vs.x / bounds.size.x, vs.y / bounds.size.y)
+	return maxf(cover, FieldMapConstants.ZOOM_MIN)
+
+
 ## Применить текущие zoom/pan к viewport и сетке.
 func apply() -> void:
 	if _map_content == null or not _host.is_node_ready():
 		return
+	_clamp_zoom()
 	_clamp_pan()
 	_map_content.scale = Vector2.ONE * zoom
 	_map_content.position = pan
+
+
+func _clamp_zoom() -> void:
+	zoom = clampf(zoom, min_zoom(), FieldMapConstants.ZOOM_MAX)
 
 
 func _clamp_pan() -> void:
@@ -107,14 +122,9 @@ func _clamp_axis(
 	world_min: float,
 	world_max: float,
 ) -> float:
-	var span := world_max - world_min
-	var span_screen := span * zoom_level
-	if span_screen <= view_size:
-		var center_w := (world_min + world_max) * 0.5
-		return view_size * 0.5 - center_w * zoom_level
-	var m := margin / maxf(zoom_level, FieldMapConstants.MIN_ZOOM_EPSILON)
-	var lo := view_size - (world_max - m) * zoom_level
-	var hi := -(world_min + m) * zoom_level
+	# Экран (0…view) показывает только мир [world_min, world_max] — без пустоты за картой
+	var lo := view_size - world_max * zoom_level - margin
+	var hi := -world_min * zoom_level + margin
 	if lo > hi:
 		return (lo + hi) * 0.5
 	return clampf(value, lo, hi)

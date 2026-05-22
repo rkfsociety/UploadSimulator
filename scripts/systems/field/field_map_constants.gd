@@ -6,7 +6,7 @@ const ZOOM_MIN := 0.2
 const ZOOM_MAX := 3.5
 const ZOOM_WHEEL_STEP := 1.12
 const DRAG_THRESHOLD := 6.0
-const PAN_CLAMP_MARGIN := 2.0
+const PAN_CLAMP_MARGIN := 0.0
 const MIN_ZOOM_EPSILON := 0.001
 const MIN_PINCH_DISTANCE := 1.0
 

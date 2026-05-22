@@ -187,7 +187,7 @@ func _update_pinch() -> void:
 	var focal := _to_local((pts[0] + pts[1]) * 0.5)
 	var new_zoom: float = clampf(
 		_pinch_start_zoom * (dist / _pinch_start_dist),
-		FieldMapConstants.ZOOM_MIN,
+		_camera.min_zoom(),
 		FieldMapConstants.ZOOM_MAX,
 	)
 	var map_point := (focal - _camera.pan) / _pinch_start_zoom
