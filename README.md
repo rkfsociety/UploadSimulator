@@ -47,6 +47,17 @@
 
 **Старт:** касса $370 (стоимость базового комплекта модулей), по одному модулю каждого типа на складе. Провода игрок прокладывает сам.
 
+## Проверка кода и CI
+
+В репозитории: GitHub Actions (Godot, GDScript lint, Semgrep, CodeQL) и конфиг **CodeRabbit**.  
+Подробнее: [docs/CODE_REVIEW_TOOLS.md](docs/CODE_REVIEW_TOOLS.md).
+
+```powershell
+pip install -r requirements-dev.txt
+pre-commit install
+pre-commit run --all-files
+```
+
 ## Сборка под Windows
 
 1. **Project → Export…**
@@ -70,21 +81,30 @@ godot --headless --export-release "Windows Desktop" build/UploadSimulator.exe
 
 Рендерер проекта: `gl_compatibility` — стабильный вариант для мобильных GPU. UI масштабируется (`canvas_items`) + touch на мобильных. Ориентация Android: portrait.
 
-## Структура (в репозитории — только для запуска)
+## Структура
+
+Скрипты по системам; подробнее — [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ```
-project.godot                       # точка входа Godot
 scenes/main.tscn                    # главный экран
 scenes/blocks/placed_block.tscn     # модуль на поле (6×4)
-assets/                             # звук, иконки (+ *.import)
-scripts/autoload/                   # GameState, музыка
-scripts/core/                       # модели, defs, сервисы
-scripts/systems/                    # поле, блоки, UI, провода
+scripts/autoload/game_state.gd      # фасад состояния (autoload)
+scripts/core/game/                  # сервисы и модели
+scripts/core/defs/block_defs.gd     # типы блоков и порты
+scripts/systems/field/              # карта, камера, установка
+scripts/systems/blocks/             # PlacedBlock, порты
+scripts/systems/ui/                 # HUD и магазин
 scripts/debug/debug_overlay.gd      # отладка (F3)
-resources/ themes/                  # темы UI
+tests/unit/                         # unit-тесты
 export_presets.cfg                  # пресеты Windows + Android
 ```
 
-Кэш `.godot/`, служебные `*.gd.uid`, тесты, CI и утилиты в git не попадают — Godot создаёт их локально при открытии проекта.
+В git не коммитятся только кэш и служебные файлы: `.godot/`, `*.gd.uid`, `build/`, `.cursor/`.
+
+### Unit-тесты
+
+```bash
+godot --headless --path . -s res://tests/test_runner.gd
+```
 
 Лицензия: уточни при публикации в сторах.

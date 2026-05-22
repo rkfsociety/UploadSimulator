@@ -1,0 +1,10 @@
+# Линт Python-утилит проекта
+target-version = "py312"
+line-length = 100
+src = ["tools"]
+
+[lint]
+select = ["E", "F", "I", "W"]
+
+[lint.per-file-ignores]
+"tools/**" = ["W191"]

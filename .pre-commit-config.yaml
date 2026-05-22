@@ -1,0 +1,30 @@
+# Локальные проверки перед коммитом: pip install -r requirements-dev.txt && pre-commit install
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+  - repo: local
+    hooks:
+      - id: gdlint
+        name: GDScript lint (gdlint)
+        entry: gdlint
+        language: python
+        additional_dependencies: [gdtoolkit>=4.3.3]
+        files: ^scripts/.*\.gd$
+      - id: gdformat-check
+        name: GDScript format check
+        entry: gdformat --check
+        language: python
+        additional_dependencies: [gdtoolkit>=4.3.3]
+        files: ^scripts/.*\.gd$
+      - id: ruff
+        name: Python lint (tools/)
+        entry: ruff check tools/
+        language: python
+        additional_dependencies: [ruff>=0.8.0]
+        pass_filenames: false

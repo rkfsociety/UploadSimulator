@@ -1,0 +1,5 @@
+# Конфиг gdlint: отключены шумные правила для Godot 4 class_name / фасадов
+disable:
+  - class-definitions-order
+  - max-public-methods
+  - max-returns
