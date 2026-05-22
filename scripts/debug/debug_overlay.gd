@@ -72,7 +72,10 @@ func _build_stats_text() -> String:
 			GameState.access.get_placed_blocks().size(),
 			GameState.access.get_wire_connections().size(),
 		],
-		"Диск: %.0f / %.0f МБ"
-		% [GameState.storage.get_storage_used_mb(), GameState.storage.get_storage_capacity_mb()],
+		"Диск: %s / %s"
+		% [
+			ByteFormat.format_bytes(GameState.storage.get_storage_used_bytes()),
+			ByteFormat.format_bytes(GameState.storage.get_storage_capacity_bytes()),
+		],
 	])
 	return "\n".join(lines)

@@ -36,11 +36,11 @@ func get_block_metric(uid: String) -> String:
 		"studio":
 			return "%.1f с · запись" % _pipeline.studio_duration_for(uid)
 		"downloader":
-			return "%.1f МБ/с" % _pipeline.download_speed_for(uid)
+			return ByteFormat.format_speed_bps(_pipeline.download_speed_for(uid))
 		"storage":
-			return "%.0f ГБ диск" % (_storage.storage_capacity_for(uid) / GameConstants.MB_PER_GB)
+			return "%s диск" % ByteFormat.format_bytes(_storage.storage_capacity_for(uid))
 		"uploader":
-			return "%.1f МБ/с" % _pipeline.upload_speed_for(uid)
+			return ByteFormat.format_speed_bps(_pipeline.upload_speed_for(uid))
 		"collector":
 			return "+%.0f%% к кассе" % (GameBonus.effect_at_level("collector", lvl) * 100.0)
 	return ""
@@ -108,8 +108,10 @@ func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dicti
 
 func _fill_storage_display(target: Dictionary) -> void:
 	var used_pct := 0.0
-	if _storage.get_storage_capacity_mb() > 0.0:
-		used_pct = _storage.get_storage_used_mb() / _storage.get_storage_capacity_mb() * 100.0
+	if _storage.get_storage_capacity_bytes() > 0.0:
+		used_pct = (
+			_storage.get_storage_used_bytes() / _storage.get_storage_capacity_bytes() * 100.0
+		)
 	target["status"] = "Диск %.0f%% · %d файл." % [used_pct, _data.get_stored_files().size()]
 	if not _data.get_download_queue().is_empty():
 		target["status"] = "Принимает файл..."

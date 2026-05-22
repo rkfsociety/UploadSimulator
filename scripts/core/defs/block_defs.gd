@@ -36,7 +36,7 @@ const TYPES := {
 		"shop_cost": 90,
 		"upgrade_base": 40,
 		"upgrade_mult": 1.5,
-		"capacity_gb_per_level": 40.0,
+		"capacity_bytes_per_level": 40.0 * 1024.0 * GameConstants.BYTE_SIZE_SCALE,
 		"ports":
 		{
 			"file_in": {"kind": "file", "dir": "in"},
@@ -178,9 +178,9 @@ static func _validate_type(type_id: String, type_def: Dictionary) -> void:
 	for key in _REQUIRED_TYPE_KEYS:
 		if not type_def.has(key):
 			push_error("BlockDefs: тип «%s» не содержит обязательное поле «%s»." % [type_id, key])
-	if not type_def.has("effect_per_level") and not type_def.has("capacity_gb_per_level"):
+	if not type_def.has("effect_per_level") and not type_def.has("capacity_bytes_per_level"):
 		push_error(
-			"BlockDefs: тип «%s» должен иметь effect_per_level или capacity_gb_per_level." % type_id
+			"BlockDefs: тип «%s» должен иметь effect_per_level или capacity_bytes_per_level." % type_id
 		)
 	var ports: Dictionary = PORT_DEFS.get(type_id, {})
 	for port_id in ports:

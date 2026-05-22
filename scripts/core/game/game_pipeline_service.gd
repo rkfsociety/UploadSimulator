@@ -34,12 +34,12 @@ func tick(delta: float) -> void:
 
 func download_speed_for(uid: String) -> float:
 	var inst := _field.get_instance(uid)
-	return GameBonus.speed_scaled(GameConstants.BASE_DOWNLOAD_SPEED_MBPS, inst.type_id, inst.level)
+	return GameBonus.speed_scaled(GameConstants.BASE_DOWNLOAD_SPEED_BPS, inst.type_id, inst.level)
 
 
 func upload_speed_for(uid: String) -> float:
 	var inst := _field.get_instance(uid)
-	return GameBonus.speed_scaled(GameConstants.BASE_UPLOAD_SPEED_MBPS, inst.type_id, inst.level)
+	return GameBonus.speed_scaled(GameConstants.BASE_UPLOAD_SPEED_BPS, inst.type_id, inst.level)
 
 
 func studio_duration_for(uid: String) -> float:
@@ -64,7 +64,7 @@ func can_record_at(uid: String) -> bool:
 		_data.get_energy() >= GameConstants.RECORD_ENERGY_COST
 		and _data.get_download_queue().size() < GameConstants.MAX_QUEUE_JOBS
 		and _data.get_upload_queue().size() < GameConstants.MAX_QUEUE_JOBS
-		and _storage.has_storage_space(GameConstants.RAW_FILE_MB)
+		and _storage.has_storage_space(GameConstants.RAW_FILE_BYTES)
 	)
 
 
@@ -93,7 +93,7 @@ func can_enqueue_download() -> bool:
 		return false
 	if _data.get_download_queue().size() >= GameConstants.MAX_QUEUE_JOBS:
 		return false
-	return _storage.has_storage_space(GameConstants.MIN_DOWNLOAD_RESERVE_MB)
+	return _storage.has_storage_space(GameConstants.MIN_DOWNLOAD_RESERVE_BYTES)
 
 
 func can_enqueue_upload() -> bool:
@@ -165,15 +165,15 @@ func enqueue_download() -> bool:
 	var title := _random_title()
 	var dl_level := _field.get_instance_level(dl_uid)
 	var quality := 1.0 + float(dl_level) * GameConstants.QUALITY_PER_DOWNLOADER_LEVEL
-	var assets_mb := _rng.randf_range(
-		GameConstants.DOWNLOAD_ASSETS_MB_MIN, GameConstants.DOWNLOAD_ASSETS_MB_MAX
+	var assets_bytes := _rng.randf_range(
+		GameConstants.DOWNLOAD_ASSETS_BYTES_MIN, GameConstants.DOWNLOAD_ASSETS_BYTES_MAX
 	)
-	var video_mb := (
-		_rng.randf_range(GameConstants.DOWNLOAD_VIDEO_MB_MIN, GameConstants.DOWNLOAD_VIDEO_MB_MAX)
+	var video_bytes := (
+		_rng.randf_range(GameConstants.DOWNLOAD_VIDEO_BYTES_MIN, GameConstants.DOWNLOAD_VIDEO_BYTES_MAX)
 		* quality
 	)
-	var total_mb := assets_mb + video_mb
-	if not _storage.has_storage_space(total_mb - GameConstants.RAW_FILE_MB):
+	var total_bytes := assets_bytes + video_bytes
+	if not _storage.has_storage_space(total_bytes - GameConstants.RAW_FILE_BYTES):
 		_data.add_recorded_files(1)
 		_host.log_message.emit("Мало места на диске.")
 		_host.stats_changed.emit()
@@ -181,8 +181,8 @@ func enqueue_download() -> bool:
 	var job := FileTransferJob.new()
 	job.title = title
 	job.quality = quality
-	job.size_mb = total_mb
-	job.duration = assets_mb / download_speed_for(dl_uid)
+	job.size_bytes = total_bytes
+	job.duration = assets_bytes / download_speed_for(dl_uid)
 	job.progress = 0.0
 	_data.get_download_queue().append(job)
 	_notify_queue_and_field()
@@ -199,8 +199,8 @@ func enqueue_upload() -> bool:
 	var entry: StoredFileEntry = _data.get_stored_files().pop_front()
 	var job := FileTransferJob.new()
 	job.quality = entry.quality
-	job.size_mb = entry.size_mb
-	job.duration = entry.size_mb / upload_speed_for(up_uid)
+	job.size_bytes = entry.size_bytes
+	job.duration = entry.size_bytes / upload_speed_for(up_uid)
 	job.progress = 0.0
 	job.title = entry.title
 	_data.get_upload_queue().append(job)
@@ -278,7 +278,7 @@ func _tick_download_queue(delta: float) -> void:
 	var stored := StoredFileEntry.new()
 	stored.title = job.title
 	stored.quality = job.quality
-	stored.size_mb = job.size_mb
+	stored.size_bytes = job.size_bytes
 	_data.get_stored_files().append(stored)
 	_host.field_changed.emit()
 	_host.stats_changed.emit()

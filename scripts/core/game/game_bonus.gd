@@ -17,12 +17,12 @@ static func duration_scaled(base_duration: float, type_id: String, level: int) -
 	return base_duration / (1.0 + effect_at_level(type_id, level))
 
 
-static func storage_capacity_mb(level: int) -> float:
+static func storage_capacity_bytes(level: int) -> float:
 	var lvl := maxi(1, level)
-	var extra_gb: float = (
-		float(lvl - 1) * float(BlockDefs.TYPES["storage"]["capacity_gb_per_level"])
+	var extra_bytes: float = (
+		float(lvl - 1) * float(BlockDefs.TYPES["storage"]["capacity_bytes_per_level"])
 	)
-	return (GameConstants.BASE_STORAGE_GB + extra_gb) * GameConstants.MB_PER_GB
+	return GameConstants.BASE_STORAGE_BYTES + extra_bytes
 
 
 static func upgrade_cost(type_id: String, level: int) -> int:
