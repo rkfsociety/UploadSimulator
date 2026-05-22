@@ -27,7 +27,16 @@
 
 ## Запуск из командной строки (Windows)
 
-Если Godot не в PATH, укажи полный путь к exe:
+Двойной клик по **`run_godot.bat`** в корне проекта (редактор Godot).
+
+Если Godot установлен в другом месте — один раз в cmd:
+
+```bat
+set GODOT_EXE=C:\путь\к\Godot_v4.6.2-stable_win64.exe
+run_godot.bat
+```
+
+Или вручную:
 
 ```powershell
 & "F:\github\cursor\Godot\Godot_v4.6.2-stable_win64.exe" --path "F:\путь\к\UploadSimulator"
