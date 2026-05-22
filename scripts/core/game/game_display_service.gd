@@ -27,6 +27,7 @@ func get_instance_status_line(uid: String) -> String:
 	return str(get_block_display(uid).get("status", ""))
 
 
+## Постоянные характеристики модуля (скорость, ёмкость, длительность записи и т.д.).
 func get_block_metric(uid: String) -> String:
 	var inst := _field.get_instance(uid)
 	if not inst.is_valid():
@@ -34,16 +35,32 @@ func get_block_metric(uid: String) -> String:
 	var lvl: int = maxi(1, inst.level)
 	match inst.type_id:
 		"studio":
-			return "%.1f с · запись" % _pipeline.studio_duration_for(uid)
+			return "Длительность записи: %.1f с" % _pipeline.studio_duration_for(uid)
 		"downloader":
-			return ByteFormat.format_speed_bps(_pipeline.download_speed_for(uid))
+			return (
+				"Скорость: %s"
+				% ByteFormat.format_speed_bps(_pipeline.download_speed_for(uid))
+			)
 		"storage":
-			return "%s диск" % ByteFormat.format_bytes(_storage.storage_capacity_for(uid))
+			return "Ёмкость: %s" % ByteFormat.format_bytes(_storage.storage_capacity_for(uid))
 		"uploader":
-			return ByteFormat.format_speed_bps(_pipeline.upload_speed_for(uid))
+			return (
+				"Скорость: %s" % ByteFormat.format_speed_bps(_pipeline.upload_speed_for(uid))
+			)
 		"collector":
-			return "+%.0f%% к кассе" % (GameBonus.effect_at_level("collector", lvl) * 100.0)
+			return (
+				"Бонус к сбору: +%.0f%%"
+				% (GameBonus.effect_at_level("collector", lvl) * 100.0)
+			)
 	return ""
+
+
+# Укорачивает длинные имена файлов для подписи на модуле
+static func _short_title(title: String, max_len: int = 22) -> String:
+	var t := title.strip_edges()
+	if t.length() <= max_len:
+		return t
+	return t.substr(0, max_len - 1) + "…"
 
 
 func get_block_display(uid: String) -> Dictionary:
@@ -85,9 +102,9 @@ func _fill_studio_display(target: Dictionary, uid: String) -> void:
 		target["progress"] = _data.get_phase_progress()
 		target["action_enabled"] = false
 	elif _data.get_recorded_files() > 0:
-		target["status"] = "Готово: %d файл." % _data.get_recorded_files()
+		target["status"] = "Готово к скачиванию: %d файл." % _data.get_recorded_files()
 	else:
-		target["status"] = "Энергия %.0f" % _data.get_energy()
+		target["status"] = "Энергия: %.0f" % _data.get_energy()
 
 
 func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
@@ -97,13 +114,15 @@ func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dicti
 	var queue := _data.get_download_queue()
 	if not queue.is_empty() and chain_file.get("downloader", "") == uid:
 		var job: FileTransferJob = queue[0]
-		target["status"] = "Качает %d%%" % int(job.progress * 100.0)
+		target["status"] = (
+			"Качает: «%s» · %d%%" % [_short_title(job.title), int(job.progress * 100.0)]
+		)
 		target["progress"] = job.progress
 		target["action_enabled"] = false
 	elif _data.get_recorded_files() > 0:
-		target["status"] = "В очереди: %d" % _data.get_recorded_files()
+		target["status"] = "В очереди на скачивание: %d файл." % _data.get_recorded_files()
 	else:
-		target["status"] = "Ждёт запись"
+		target["status"] = "Ждёт запись в студии"
 
 
 func _fill_storage_display(target: Dictionary) -> void:
@@ -112,10 +131,14 @@ func _fill_storage_display(target: Dictionary) -> void:
 		used_pct = (
 			_storage.get_storage_used_bytes() / _storage.get_storage_capacity_bytes() * 100.0
 		)
-	target["status"] = "Диск %.0f%% · %d файл." % [used_pct, _data.get_stored_files().size()]
-	if not _data.get_download_queue().is_empty():
-		target["status"] = "Принимает файл..."
-		target["progress"] = _data.get_download_queue()[0].progress
+	target["status"] = "Занято: %.0f%% · %d файл." % [used_pct, _data.get_stored_files().size()]
+	var dl_queue := _data.get_download_queue()
+	if not dl_queue.is_empty():
+		var job: FileTransferJob = dl_queue[0]
+		target["status"] = (
+			"Принимает: «%s» · %d%%" % [_short_title(job.title), int(job.progress * 100.0)]
+		)
+		target["progress"] = job.progress
 
 
 func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
@@ -125,11 +148,16 @@ func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Diction
 	var queue := _data.get_upload_queue()
 	if not queue.is_empty() and chain_file.get("uploader", "") == uid:
 		var job: FileTransferJob = queue[0]
-		target["status"] = "Грузит %d%%" % int(job.progress * 100.0)
+		target["status"] = (
+			"Грузит: «%s» · %d%%" % [_short_title(job.title), int(job.progress * 100.0)]
+		)
 		target["progress"] = job.progress
 		target["action_enabled"] = false
+	elif not _data.get_stored_files().is_empty():
+		var next: StoredFileEntry = _data.get_stored_files()[0]
+		target["status"] = "На диске: «%s»" % _short_title(next.title)
 	else:
-		target["status"] = "Сейф $%.0f" % _data.get_uploader_balance()
+		target["status"] = "Сейф: $%.0f" % _data.get_uploader_balance()
 
 
 func _fill_collector_display(target: Dictionary, uid: String, chain_money: Dictionary) -> void:
@@ -137,6 +165,8 @@ func _fill_collector_display(target: Dictionary, uid: String, chain_money: Dicti
 	target["action_visible"] = not chain_money.is_empty()
 	target["action_enabled"] = _pipeline.can_collect_at(uid)
 	var inst := _field.get_instance(uid)
-	target["status"] = (
-		"Бонус +%.0f%%" % (GameBonus.effect_at_level("collector", inst.level) * 100.0)
-	)
+	var balance := _data.get_uploader_balance()
+	if balance >= GameConstants.MIN_COLLECT_BALANCE:
+		target["status"] = "Можно собрать: $%.0f" % balance
+	else:
+		target["status"] = "В аплоудере: $%.0f" % balance
