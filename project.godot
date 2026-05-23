@@ -22,6 +22,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+PlatformInfo="*res://scripts/autoload/platform_info.gd"
 WindowBootstrap="*res://scripts/autoload/window_bootstrap.gd"
 GameState="*res://scripts/autoload/game_state.gd"
 BgmPlayer="*res://scripts/autoload/bgm_player.gd"

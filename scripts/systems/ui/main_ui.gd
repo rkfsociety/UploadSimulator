@@ -16,6 +16,7 @@ extends Control
 
 func _ready() -> void:
 	_apply_cyber_theme()
+	PlatformInfo.apply_mobile_hud(self)
 	# Дублируем связи на случай сбоя connection в .tscn
 	if not shop_icon_btn.pressed.is_connected(_on_shop_pressed):
 		shop_icon_btn.pressed.connect(_on_shop_pressed)
@@ -49,7 +50,7 @@ func _apply_cyber_theme() -> void:
 
 func _refresh() -> void:
 	money_label.text = "$%.0f" % GameState.access.get_money()
-	diamonds_label.text = "◆ %d" % GameState.access.get_diamonds()
+	diamonds_label.text = "◆ %d" % GameState.premium.get_balance()
 	var shop_open := shop_menu.visible
 	var upgrade_open := upgrade_shop_menu.visible
 	# Не блокируем кнопки disabled — иначе после сбоя видимости магазин «не открывается»

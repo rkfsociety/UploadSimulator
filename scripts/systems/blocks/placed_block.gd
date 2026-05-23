@@ -88,6 +88,8 @@ func _ready() -> void:
 	)
 	_upgrade_btn.pressed.connect(func(): upgrade_requested.emit(self))
 	_action_btn.pressed.connect(func(): action_requested.emit(self))
+	# Кнопка действия на модуле — не ниже touch target на мобильных
+	PlatformInfo.apply_action_button_touch(_action_btn)
 
 
 ## Привязывает экземпляр к uid и типу, пересобирает порты и обновляет UI.
@@ -125,7 +127,9 @@ func _build_ports() -> void:
 
 func _make_port(port_id: String, def: Dictionary) -> ConnectionPort:
 	var port := ConnectionPort.new()
-	port.custom_minimum_size = Vector2(12, 12)
+	# Зона нажатия порта — не меньше touch target (визуал остаётся 30px)
+	var hit := float(PlatformInfo.port_hit_size())
+	port.custom_minimum_size = Vector2(hit, hit)
 	var p_kind := (
 		ConnectionPort.Kind.MONEY if def.get("kind", "") == "money" else ConnectionPort.Kind.FILE
 	)

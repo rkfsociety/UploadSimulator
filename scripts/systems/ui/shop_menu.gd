@@ -41,7 +41,7 @@ func _style_panel() -> void:
 	shop_title.add_theme_font_size_override("font_size", 18)
 	MinimalUI.apply_action_button(close_btn)
 	close_btn.text = "×"
-	close_btn.custom_minimum_size = Vector2(56, 36)
+	PlatformInfo.ensure_touch_minimum(close_btn, 56, PlatformInfo.touch_target_px())
 	dim.color = Color(0.01, 0.0, 0.05, 0.82)
 
 
@@ -72,7 +72,7 @@ func close() -> void:
 func _on_dim_clicked(event: InputEvent) -> void:
 	if Time.get_ticks_msec() < _dim_ignore_until_msec:
 		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+	if PlatformInfo.is_primary_pointer_press(event):
 		close()
 
 
@@ -156,7 +156,7 @@ func _hide_detail() -> void:
 func _on_buy_pressed() -> void:
 	if _selected_type == "":
 		return
-	if GameState.field.buy_block(_selected_type):
+	if GameState.report_operation(GameState.field.buy_block(_selected_type)):
 		close()
 
 

@@ -2,13 +2,15 @@ extends RefCounted
 class_name FieldMapInput
 ## Ввод мыши и тача: панорама, зум, установка по тапу.
 
+const _BlockDragClass := preload("res://scripts/systems/field/field_map_block_drag.gd")
+
 signal placement_finished(type_id: String)
 
 var _host: Control
 var _camera: FieldMapCamera
 var _placement: FieldMapPlacement
 var _wiring: FieldMapWiring
-var _block_drag: FieldMapBlockDrag
+var _block_drag: RefCounted
 
 var _drag_pan: bool = false
 var _drag_start := Vector2.ZERO
@@ -19,6 +21,9 @@ var _press_pos := Vector2.ZERO
 var _touch_positions: Dictionary = {}
 var _pinch_start_dist: float = 0.0
 var _pinch_start_zoom: float = 1.0
+# Кэш узлов HUD — find_child на каждый кадр дорогой
+var _hud_menus: Array[CanvasItem] = []
+var _hud_menus_resolved: bool = false
 
 
 func _init(
@@ -26,7 +31,7 @@ func _init(
 	camera: FieldMapCamera,
 	placement: FieldMapPlacement,
 	wiring: FieldMapWiring,
-	block_drag: FieldMapBlockDrag,
+	block_drag: RefCounted,
 ) -> void:
 	_host = host
 	_camera = camera
@@ -150,7 +155,7 @@ func process_frame(host: Control) -> void:
 	if vp == null:
 		return
 	var global_mouse := vp.get_mouse_position()
-	var local_pos := host.get_global_transform().affine_inverse() * global_mouse
+	var local_pos := host.get_local_mouse_position()
 	var over_hud := _is_over_hud(global_mouse)
 	var lmb := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 
@@ -169,7 +174,8 @@ func process_frame(host: Control) -> void:
 func _update_drag_state(local_pos: Vector2) -> void:
 	if not _pointer_down:
 		return
-	if not _pointer_moved and local_pos.distance_to(_press_pos) >= FieldMapConstants.DRAG_THRESHOLD:
+	var drag_thr := PlatformInfo.drag_threshold_px()
+	if not _pointer_moved and local_pos.distance_to(_press_pos) >= drag_thr:
 		_pointer_moved = true
 		_drag_pan = true
 		if _block_drag.try_begin_drag(local_pos):
@@ -264,32 +270,44 @@ func _screen_pos_from_event(event: InputEvent) -> Vector2:
 	return Vector2.ZERO
 
 
-## Зоны HUD: не ставить модуль «сквозь» нижнюю панель и угловые кнопки.
-func _is_over_hud(screen_pos: Vector2) -> bool:
+func _ensure_hud_menus_cached() -> void:
+	if _hud_menus_resolved:
+		return
+	_hud_menus_resolved = true
 	var main := _host.get_parent()
 	if main == null:
-		return false
+		return
 	for menu_name in ["ShopMenu", "UpgradeShopMenu"]:
 		# Меню в ModalLayer — get_node("ShopMenu") не сработает
 		var menu: CanvasItem = main.find_child(menu_name, true, false) as CanvasItem
-		if menu != null and menu.visible:
+		if menu != null:
+			_hud_menus.append(menu)
+
+
+## Зоны HUD: не ставить модуль «сквозь» нижнюю панель и угловые кнопки.
+func _is_over_hud(screen_pos: Vector2) -> bool:
+	_ensure_hud_menus_cached()
+	for menu in _hud_menus:
+		if menu != null and is_instance_valid(menu) and menu.visible:
 			var menu_rect := Rect2(menu.get_global_position(), menu.size)
 			if menu_rect.has_point(screen_pos):
 				return true
 	var vp_size := _host.get_viewport().get_visible_rect().size
 	# Нижняя полоса: магазин $ по центру
-	if screen_pos.y >= vp_size.y - 96.0:
+	if screen_pos.y >= vp_size.y - PlatformInfo.hud_bottom_strip_height():
 		return true
 	# Правый столбец: «в центр» и магазин ◆ под ним
-	if screen_pos.x >= vp_size.x - 88.0 and screen_pos.y >= vp_size.y - 148.0:
+	if (
+		screen_pos.x >= vp_size.x - PlatformInfo.hud_right_column_width()
+		and screen_pos.y >= vp_size.y - PlatformInfo.hud_right_column_top_offset()
+	):
 		return true
 	return false
 
 
 func _use_touch_input() -> bool:
-	var os_name := OS.get_name()
-	return os_name == "Android" or os_name == "iOS"
+	return PlatformInfo.prefers_touch_input()
 
 
 func _use_polling_input() -> bool:
-	return not _use_touch_input()
+	return not PlatformInfo.prefers_touch_input()

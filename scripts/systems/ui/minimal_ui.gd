@@ -243,7 +243,8 @@ static func _transparent_button_style() -> StyleBoxEmpty:
 
 static func apply_icon_button(btn: Button) -> void:
 	btn.flat = false
-	btn.custom_minimum_size = Vector2(44, 44)
+	var touch := PlatformInfo.touch_target_px()
+	btn.custom_minimum_size = Vector2(touch, touch)
 	btn.text = "◈"
 	btn.theme_type_variation = &"icon"
 	var t := theme()
@@ -293,7 +294,7 @@ static func apply_map_center_hud_button(hit_btn: Button, icon_tex: TextureRect) 
 
 static func apply_action_button(btn: Button) -> void:
 	btn.flat = false
-	btn.custom_minimum_size = Vector2(0, 44)
+	PlatformInfo.apply_action_button_touch(btn)
 	btn.theme_type_variation = &"action"
 	var t := theme()
 	btn.add_theme_stylebox_override("normal", t.get_stylebox("normal", &"action"))
@@ -436,7 +437,10 @@ static func apply_block_upgrade_button(btn: Button, accent: Color) -> void:
 
 static func apply_shop_icon_button(btn: Button) -> void:
 	btn.flat = false
-	btn.custom_minimum_size = Vector2(68, 68)
+	var side := 68
+	if PlatformInfo.is_mobile_os():
+		side = maxi(68, PlatformInfo.touch_target_px() + 20)
+	btn.custom_minimum_size = Vector2(side, side)
 	btn.theme_type_variation = &"shop_icon"
 	btn.add_theme_font_size_override("font_size", 28)
 	btn.add_theme_color_override("font_color", NEON_CYAN)

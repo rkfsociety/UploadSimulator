@@ -66,8 +66,8 @@ func _build_ui() -> void:
 
 	var close_btn := Button.new()
 	close_btn.text = "×"
-	close_btn.custom_minimum_size = Vector2(56, 36)
 	MinimalUI.apply_action_button(close_btn)
+	PlatformInfo.ensure_touch_minimum(close_btn, 56, PlatformInfo.touch_target_px())
 	close_btn.pressed.connect(close)
 	header.add_child(close_btn)
 
@@ -93,7 +93,7 @@ func _build_ui() -> void:
 
 
 func _on_dim_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+	if PlatformInfo.is_primary_pointer_press(event):
 		close()
 
 
@@ -219,8 +219,8 @@ func _make_row(
 	info.add_child(desc)
 
 	var buy := Button.new()
-	buy.custom_minimum_size = Vector2(120, 44)
 	MinimalUI.apply_action_button(buy)
+	PlatformInfo.ensure_touch_minimum(buy, 120, PlatformInfo.touch_target_px())
 	buy.text = btn_label
 	buy.disabled = not can_buy
 	buy.pressed.connect(on_pressed)
@@ -230,10 +230,10 @@ func _make_row(
 
 
 func _on_unlock_module(type_id: String) -> void:
-	if GameState.environment.unlock_module(type_id):
+	if GameState.report_operation(GameState.environment.unlock_module(type_id)):
 		_refresh()
 
 
 func _on_buy_upgrade(upgrade_id: String) -> void:
-	if GameState.environment.buy_upgrade(upgrade_id):
+	if GameState.report_operation(GameState.environment.buy_upgrade(upgrade_id)):
 		_refresh()

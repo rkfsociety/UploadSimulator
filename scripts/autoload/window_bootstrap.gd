@@ -1,15 +1,22 @@
 extends Node
-## Фиксированный размер окна: без ресайза, не больше рабочей области экрана.
+## Фиксированный размер окна на ПК; на мобильных — полноэкран и учёт DPI.
 
 const DESIGN_SIZE := Vector2i(720, 1280)
 
 
 func _ready() -> void:
 	# Откладываем, чтобы корневое Window уже было создано движком
-	call_deferred("_apply_fixed_window")
+	call_deferred("_apply_window")
 
 
-func _apply_fixed_window() -> void:
+func _apply_window() -> void:
+	if PlatformInfo.is_mobile_os():
+		_apply_mobile_window()
+	else:
+		_apply_desktop_window()
+
+
+func _apply_desktop_window() -> void:
 	var win := get_tree().root as Window
 	if win == null:
 		return
@@ -32,7 +39,25 @@ func _apply_fixed_window() -> void:
 	win.min_size = final_size
 	win.max_size = final_size
 	win.unresizable = true
+	# HiDPI на ПК: чёткий UI без смены логического 720×1280
+	var dpi_scale := PlatformInfo.get_display_scale()
+	if dpi_scale > 1.01:
+		win.content_scale_factor = dpi_scale
 	# Центр в usable-области, чтобы не уезжало за край
 	var pos_x: int = usable.position.x + (usable.size.x - target_w) / 2
 	var pos_y: int = usable.position.y + (usable.size.y - target_h) / 2
 	win.position = Vector2i(pos_x, pos_y)
+
+
+func _apply_mobile_window() -> void:
+	var win := get_tree().root as Window
+	if win == null:
+		return
+	# Полноэкран; масштаб сцены — stretch canvas_items в project.godot
+	win.mode = Window.MODE_FULLSCREEN
+	win.borderless = true
+	win.unresizable = true
+	# Плотность пикселей: content_scale_factor согласует тач и отрисовку UI
+	var dpi_scale := PlatformInfo.get_display_scale()
+	if dpi_scale > 1.01:
+		win.content_scale_factor = dpi_scale

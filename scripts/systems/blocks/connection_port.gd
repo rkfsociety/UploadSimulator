@@ -7,7 +7,9 @@ signal port_pressed(port: ConnectionPort)
 enum Kind { FILE, MONEY }
 enum Dir { IN, OUT }
 
+# Визуальный размер иконки порта (зона нажатия шире — см. _ready)
 const SIZE := Vector2(30, 30)
+const _AsyncSafety := preload("res://scripts/core/async_safety.gd")
 
 # Статический кэш текстур (kind + direction)
 static var _texture_cache: Dictionary = {}
@@ -52,7 +54,9 @@ func configure(uid: String, type_id: String, p_id: String, p_kind: Kind, p_dir: 
 
 
 func _ready() -> void:
-	custom_minimum_size = SIZE
+	# На таче — не меньше 48px, рисуем иконку по центру
+	var hit := float(PlatformInfo.port_hit_size())
+	custom_minimum_size = Vector2(hit, hit)
 	tooltip_text = _tooltip_text()
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	if not _cache_init_started:
@@ -62,20 +66,22 @@ func _ready() -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		port_pressed.emit(self)
-		accept_event()
-	elif event is InputEventScreenTouch and event.pressed:
+	if PlatformInfo.is_primary_pointer_press(event):
 		port_pressed.emit(self)
 		accept_event()
 
 
 func _draw() -> void:
+	var vis_sz := float(PlatformInfo.port_visual_size())
+	var vis := Vector2(vis_sz, vis_sz)
+	var offset := (size - vis) * 0.5
 	var tex := get_port_texture(_kind, _direction)
 	if tex != null:
-		draw_texture(tex, Vector2.ZERO)
+		draw_texture_rect(tex, Rect2(offset, vis))
 	else:
-		draw_port_visual(self, size, _kind, _direction)
+		draw_set_transform(offset, 0.0, Vector2.ONE)
+		draw_port_visual(self, vis, _kind, _direction)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 static func get_port_texture(p_kind: Kind, p_direction: Dir) -> Texture2D:
@@ -126,11 +132,16 @@ static func _cache_key(p_kind: Kind, p_direction: Dir) -> String:
 func _warm_texture_cache_async() -> void:
 	for p_kind in [Kind.FILE, Kind.MONEY]:
 		for p_dir in [Dir.IN, Dir.OUT]:
+			# Порт могли удалить во время выпечки предыдущей текстуры
+			if not _AsyncSafety.is_node_alive(self):
+				return
 			var key := _cache_key(p_kind, p_dir)
 			if _texture_cache.has(key):
 				continue
-			_texture_cache[key] = await _bake_port_texture(p_kind, p_dir)
-	if is_inside_tree():
+			var baked: Texture2D = await _bake_port_texture(p_kind, p_dir)
+			if baked != null:
+				_texture_cache[key] = baked
+	if _AsyncSafety.is_node_in_scene(self):
 		queue_redraw()
 
 
@@ -151,8 +162,14 @@ static func _bake_port_texture(p_kind: Kind, p_direction: Dir) -> Texture2D:
 		return null
 	tree.root.add_child(vp)
 	await tree.process_frame
+	# SubViewport или дерево могли исчезнуть за кадр ожидания
+	if not _AsyncSafety.is_scene_tree_alive(tree) or not is_instance_valid(vp):
+		if is_instance_valid(vp):
+			vp.queue_free()
+		return null
 	var tex: Texture2D = vp.get_texture()
-	tree.root.remove_child(vp)
+	if is_instance_valid(tree.root) and vp.get_parent() == tree.root:
+		tree.root.remove_child(vp)
 	vp.queue_free()
 	return tex
 
