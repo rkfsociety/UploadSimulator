@@ -21,6 +21,30 @@ func can_collect_at(uid: String) -> bool:
 	return _svc.can_collect_at(uid)
 
 
+func check_download_at(uid: String) -> GameOperationResult:
+	return _svc.check_download_at(uid)
+
+
+func check_upload_at(uid: String) -> GameOperationResult:
+	return _svc.check_upload_at(uid)
+
+
+func check_collect_at(uid: String) -> GameOperationResult:
+	return _svc.check_collect_at(uid)
+
+
+func check_enqueue_download() -> GameOperationResult:
+	return _svc.check_enqueue_download()
+
+
+func check_enqueue_upload() -> GameOperationResult:
+	return _svc.check_enqueue_upload()
+
+
+func check_collect_money() -> GameOperationResult:
+	return _svc.check_collect_money()
+
+
 func can_enqueue_download() -> bool:
 	return _svc.can_enqueue_download()
 
@@ -33,19 +57,19 @@ func can_collect_money() -> bool:
 	return _svc.can_collect_money()
 
 
-func collect_money(collector_uid: String) -> bool:
+func collect_money(collector_uid: String) -> GameOperationResult:
 	return _svc.collect_money(collector_uid)
 
 
-func run_block_action(uid: String) -> bool:
+func run_block_action(uid: String) -> GameOperationResult:
 	return _svc.run_block_action(uid)
 
 
-func enqueue_download() -> bool:
+func enqueue_download() -> GameOperationResult:
 	return _svc.enqueue_download()
 
 
-func enqueue_upload() -> bool:
+func enqueue_upload() -> GameOperationResult:
 	return _svc.enqueue_upload()
 
 

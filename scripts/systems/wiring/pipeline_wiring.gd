@@ -1,6 +1,8 @@
 extends Control
 ## Рисует провода между ячейками и обрабатывает клики по портам.
 
+const _AsyncSafety := preload("res://scripts/core/async_safety.gd")
+
 @onready var wires_root: Control = %WiresRoot
 @onready var modules_host: Control = %ModulesHost
 
@@ -10,7 +12,13 @@ var _line_nodes: Array[Line2D] = []
 
 
 func _ready() -> void:
-	await get_tree().process_frame
+	var tree := get_tree()
+	if tree == null:
+		return
+	await tree.process_frame
+	# Узел проводки могли удалить до завершения отложенной инициализации
+	if not _AsyncSafety.is_node_in_scene(self):
+		return
 	_collect_ports()
 	for port: ConnectionPort in _ports:
 		port.port_pressed.connect(_on_port_pressed)
@@ -43,11 +51,13 @@ func _on_port_pressed(port: ConnectionPort) -> void:
 	if _pending_out == null:
 		GameState.log_message.emit("Сначала выберите выход (круг или квадрат справа).")
 		return
-	GameState.wiring.try_connect_ports(
-		_pending_out.instance_uid,
-		_pending_out.port_id,
-		port.instance_uid,
-		port.port_id,
+	GameState.report_operation(
+		GameState.wiring.try_connect_ports(
+			_pending_out.instance_uid,
+			_pending_out.port_id,
+			port.instance_uid,
+			port.port_id,
+		)
 	)
 	_clear_pending()
 

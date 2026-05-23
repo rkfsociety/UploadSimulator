@@ -92,11 +92,13 @@ func _on_port_pressed(port: ConnectionPort) -> void:
 	if _pending_out == null:
 		GameState.log_message.emit("Сначала выход.")
 		return
-	GameState.wiring.try_connect_ports(
-		_pending_out.instance_uid,
-		_pending_out.port_id,
-		port.instance_uid,
-		port.port_id,
+	GameState.report_operation(
+		GameState.wiring.try_connect_ports(
+			_pending_out.instance_uid,
+			_pending_out.port_id,
+			port.instance_uid,
+			port.port_id,
+		)
 	)
 	clear_pending()
 

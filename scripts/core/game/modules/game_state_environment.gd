@@ -21,7 +21,11 @@ func can_buy_upgrade(upgrade_id: String) -> bool:
 	return _svc.can_buy_upgrade(upgrade_id)
 
 
-func buy_upgrade(upgrade_id: String) -> bool:
+func check_buy_upgrade(upgrade_id: String) -> GameOperationResult:
+	return _svc.check_buy_upgrade(upgrade_id)
+
+
+func buy_upgrade(upgrade_id: String) -> GameOperationResult:
 	return _svc.buy_upgrade(upgrade_id)
 
 
@@ -37,7 +41,11 @@ func can_unlock_module(type_id: String) -> bool:
 	return _svc.can_unlock_module(type_id)
 
 
-func unlock_module(type_id: String) -> bool:
+func check_unlock_module(type_id: String) -> GameOperationResult:
+	return _svc.check_unlock_module(type_id)
+
+
+func unlock_module(type_id: String) -> GameOperationResult:
 	return _svc.unlock_module(type_id)
 
 

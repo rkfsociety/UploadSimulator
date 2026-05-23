@@ -53,6 +53,26 @@ func get_block_metric(uid: String) -> String:
 	return ""
 
 
+## Uid модулей, у которых меняется прогресс/статус во время активной очереди.
+func get_progress_block_uids() -> Array[String]:
+	var out: Array[String] = []
+	if _data.get_phase() != GameStateData.Phase.IDLE:
+		return out
+	var chain_file := _wiring.get_file_chain()
+	if not _data.get_download_queue().is_empty():
+		var dl_uid: String = str(chain_file.get("downloader", ""))
+		if dl_uid != "":
+			out.append(dl_uid)
+		for inst: BlockInstance in _data.get_placed_blocks():
+			if inst.type_id == "storage":
+				out.append(inst.uid)
+	elif not _data.get_upload_queue().is_empty():
+		var up_uid: String = str(chain_file.get("uploader", ""))
+		if up_uid != "":
+			out.append(up_uid)
+	return out
+
+
 func get_block_display(uid: String) -> Dictionary:
 	var inst := _field.get_instance(uid)
 	var empty := {
@@ -78,6 +98,7 @@ func get_block_display(uid: String) -> Dictionary:
 	return empty
 
 
+## UI загрузчика: кнопка выкл., пока на этом uid идёт queue[0] (даже если в очереди ещё задачи).
 func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
 	target["action_text"] = "Из сети"
 	target["action_visible"] = not chain_file.is_empty()
@@ -90,7 +111,7 @@ func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dicti
 			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0)]
 		)
 		target["progress"] = job.progress
-		target["action_enabled"] = false
+		target["action_enabled"] = false  # блок: активное скачивание на модуле цепочки
 	elif _pipeline.can_download_at(uid):
 		target["status"] = "Готов: скачать %s из интернета" % FileDefs.get_type_label(
 			FileDefs.DEFAULT_TYPE
@@ -99,15 +120,13 @@ func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dicti
 		target["status"] = _downloader_idle_hint(chain_file)
 
 
+## Подсказка, почему can_download_at ложен (порядок проверок для текста статуса).
 func _downloader_idle_hint(chain_file: Dictionary) -> String:
 	if chain_file.is_empty():
-		return "Соедини с хранилищем"
-	if _data.get_download_queue().size() >= GameConstants.MAX_QUEUE_JOBS:
-		return "Очередь скачивания заполнена"
-	if not _storage.has_storage_space(GameConstants.MIN_DOWNLOAD_RESERVE_BYTES):
-		return "Мало места на диске"
-	if _data.get_phase() != GameStateData.Phase.IDLE:
-		return _pipeline.get_phase_label()
+		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_CHAIN).get_message()
+	var check := _pipeline.check_enqueue_download()
+	if not check.is_ok():
+		return check.get_message()
 	return "Скачивание недоступно"
 
 
@@ -128,6 +147,7 @@ func _fill_storage_display(target: Dictionary) -> void:
 		target["progress"] = job.progress
 
 
+## UI аплоудера: кнопка выкл. на время активной выгрузки (queue[0] на uploader цепочки).
 func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
 	target["action_text"] = "В сеть"
 	target["action_visible"] = not chain_file.is_empty()
@@ -140,10 +160,13 @@ func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Diction
 			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0)]
 		)
 		target["progress"] = job.progress
-		target["action_enabled"] = false
+		target["action_enabled"] = false  # блок: идёт выгрузка с этого аплоудера
 	elif not _data.get_stored_files().is_empty():
 		var next: StoredFileEntry = _data.get_stored_files()[0]
 		target["status"] = "На диске: %s" % FileDefs.get_type_label(next.file_type_id)
+	elif not _pipeline.can_upload_at(uid):
+		var hint := _pipeline.check_upload_at(uid)
+		target["status"] = hint.get_message() if not hint.is_ok() else "Выгрузка недоступна"
 	else:
 		var safe := _data.get_uploader_balance()
 		if safe >= GameConstants.MIN_COLLECT_BALANCE and not _wiring.get_money_chain().is_empty():
@@ -152,17 +175,27 @@ func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Diction
 			target["status"] = "Сейф пуст"
 
 
+## UI коллектора: action_enabled только при can_collect_at (сейф, провод, фаза IDLE).
 func _fill_collector_display(target: Dictionary, uid: String, chain_money: Dictionary) -> void:
 	target["action_text"] = "В кассу"
 	target["action_visible"] = not chain_money.is_empty()
 	target["action_enabled"] = _pipeline.can_collect_at(uid)
 	if chain_money.is_empty():
-		target["status"] = "Соедини порт денег с аплоудером"
+		target["status"] = GameOperationResult.fail(
+			GameOperationResult.Code.PIPELINE_NO_MONEY_CHAIN
+		).get_message()
 		return
 	var safe := _data.get_uploader_balance()
 	if safe < GameConstants.MIN_COLLECT_BALANCE:
-		target["status"] = "Сейф аплоудера пуст"
+		target["status"] = GameOperationResult.fail(
+			GameOperationResult.Code.PIPELINE_SAFE_EMPTY
+		).get_message()
 		return
+	if not _pipeline.can_collect_at(uid):
+		var hint := _pipeline.check_collect_at(uid)
+		if not hint.is_ok():
+			target["status"] = hint.get_message()
+			return
 	var inst := _field.get_instance(uid)
 	var bonus: float = GameBonus.effect_at_level("collector", inst.level)
 	var payout: float = safe * (1.0 + bonus)

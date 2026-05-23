@@ -10,10 +10,11 @@ func run() -> Array[String]:
 	var data := GameStateData.new()
 	var field := GameFieldService.new(data, host)
 	data.add_block_stock("storage", 1)
-	var uid := field.place_block("storage", 0, 0)
-	if uid == "":
+	var place_storage := field.place_block("storage", 0, 0)
+	if not place_storage.is_ok():
 		errors.append("place_block storage")
 		return errors
+	var uid := place_storage.get_uid()
 	if not field.can_relocate_block(uid, 12, 0):
 		errors.append("can_relocate на свободную клетку")
 	if field.relocate_block(uid, 12, 0):
@@ -23,8 +24,8 @@ func run() -> Array[String]:
 	else:
 		errors.append("relocate_block")
 	data.add_block_stock("downloader", 1)
-	var other := field.place_block("downloader", 24, 0)
-	if other == "":
+	var place_dl := field.place_block("downloader", 24, 0)
+	if not place_dl.is_ok():
 		errors.append("place_block downloader")
 		return errors
 	if field.can_relocate_block(uid, 24, 0):

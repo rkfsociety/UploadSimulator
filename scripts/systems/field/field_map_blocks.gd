@@ -55,6 +55,14 @@ func refresh_all() -> void:
 			block.refresh()
 
 
+## Обновляет только указанные модули (прогресс очереди без обхода всей карты).
+func refresh_uids(uids: Array) -> void:
+	for uid in uids:
+		var block: PlacedBlock = get_block(str(uid))
+		if block != null and is_instance_valid(block):
+			block.refresh()
+
+
 func get_block(uid: String) -> PlacedBlock:
 	return _nodes.get(uid, null) as PlacedBlock
 
@@ -86,8 +94,8 @@ func update_visibility(visible_rect: Rect2) -> void:
 
 
 func _on_upgrade_requested(block: PlacedBlock) -> void:
-	GameState.field.upgrade_instance(block.instance_uid)
+	GameState.report_operation(GameState.field.upgrade_instance(block.instance_uid))
 
 
 func _on_block_action(block: PlacedBlock) -> void:
-	GameState.pipeline.run_block_action(block.instance_uid)
+	GameState.report_operation(GameState.pipeline.run_block_action(block.instance_uid))

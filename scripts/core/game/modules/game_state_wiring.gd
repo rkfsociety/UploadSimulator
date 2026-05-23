@@ -19,6 +19,12 @@ func can_connect_ports(
 	return _svc.can_connect_ports(from_uid, from_port, to_uid, to_port)
 
 
+func check_connect_ports(
+	from_uid: String, from_port: String, to_uid: String, to_port: String
+) -> GameOperationResult:
+	return _svc.check_connect_ports(from_uid, from_port, to_uid, to_port)
+
+
 func port_has_output_link(uid: String, port_id: String) -> bool:
 	return _svc.port_has_output_link(uid, port_id)
 
@@ -29,7 +35,7 @@ func port_has_input_link(uid: String, port_id: String) -> bool:
 
 func try_connect_ports(
 	from_uid: String, from_port: String, to_uid: String, to_port: String
-) -> bool:
+) -> GameOperationResult:
 	return _svc.try_connect_ports(from_uid, from_port, to_uid, to_port)
 
 

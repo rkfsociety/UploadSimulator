@@ -8,6 +8,8 @@ signal queue_changed
 ## Лёгкое обновление UI модулей при прогрессе очереди (без полного field_changed).
 signal blocks_progress_changed
 signal log_message(text: String)
+## Код GameOperationResult.Code и текст — для UI/отладки без разбора лога.
+signal operation_failed(code: int, message: String)
 signal wiring_changed
 signal field_changed
 signal placement_requested(type_id: String)
@@ -77,3 +79,14 @@ func _finish_publish_pause_async() -> void:
 	if not _AsyncSafety.is_node_alive(self):
 		return
 	pipeline.finish_publish_pause()
+
+
+## Показывает ошибку в логе и шлёт operation_failed; возвращает успех операции.
+func report_operation(result: GameOperationResult) -> bool:
+	if result.is_ok():
+		return true
+	var msg := result.get_message()
+	if not msg.is_empty():
+		log_message.emit(msg)
+	operation_failed.emit(result.code, msg)
+	return false

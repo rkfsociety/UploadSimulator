@@ -61,9 +61,11 @@ func try_place_at_screen(screen_pos: Vector2) -> String:
 			"Край карты (%d…%d)." % [-GridDefs.GRID_HALF, GridDefs.GRID_HALF - 1]
 		)
 		return _selected_type
-	var uid := GameState.field.place_block(_selected_type, cell.x, cell.y)
-	if uid == "":
+	var place := GameState.field.place_block(_selected_type, cell.x, cell.y)
+	if not place.is_ok():
+		GameState.report_operation(place)
 		return _selected_type
+	var uid := place.get_uid()
 	if GameState.field.get_block_stock(_selected_type) > 0:
 		return _selected_type
 	return ""
@@ -77,8 +79,9 @@ func place_at_view_center(type_id: String, spawn_block: Callable) -> bool:
 	for cell in _cells_near(anchor, FieldMapConstants.PLACE_SEARCH_RADIUS):
 		if not GridDefs.is_in_bounds(cell.x, cell.y):
 			continue
-		var uid := GameState.field.place_block(type_id, cell.x, cell.y)
-		if uid != "":
+		var place := GameState.field.place_block(type_id, cell.x, cell.y)
+		if place.is_ok():
+			var uid := place.get_uid()
 			spawn_block.call(uid)
 			return true
 	GameState.log_message.emit("Нет свободного места у центра карты.")

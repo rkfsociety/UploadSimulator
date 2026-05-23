@@ -37,7 +37,11 @@ func can_buy_block(type_id: String) -> bool:
 	return _svc.can_buy_block(type_id)
 
 
-func buy_block(type_id: String) -> bool:
+func check_buy_block(type_id: String) -> GameOperationResult:
+	return _svc.check_buy_block(type_id)
+
+
+func buy_block(type_id: String) -> GameOperationResult:
 	return _svc.buy_block(type_id)
 
 
@@ -45,19 +49,27 @@ func can_place_block(type_id: String, gx: int, gy: int) -> bool:
 	return _svc.can_place_block(type_id, gx, gy)
 
 
+func check_place_block(type_id: String, gx: int, gy: int) -> GameOperationResult:
+	return _svc.check_place_block(type_id, gx, gy)
+
+
+func place_block(type_id: String, gx: int, gy: int) -> GameOperationResult:
+	return _svc.place_block(type_id, gx, gy)
+
+
 func get_block_at(gx: int, gy: int) -> BlockInstance:
 	return _svc.get_block_at(gx, gy)
-
-
-func place_block(type_id: String, gx: int, gy: int) -> String:
-	return _svc.place_block(type_id, gx, gy)
 
 
 func can_relocate_block(uid: String, gx: int, gy: int) -> bool:
 	return _svc.can_relocate_block(uid, gx, gy)
 
 
-func relocate_block(uid: String, gx: int, gy: int) -> bool:
+func check_relocate_block(uid: String, gx: int, gy: int) -> GameOperationResult:
+	return _svc.check_relocate_block(uid, gx, gy)
+
+
+func relocate_block(uid: String, gx: int, gy: int) -> GameOperationResult:
 	return _svc.relocate_block(uid, gx, gy)
 
 
@@ -69,7 +81,11 @@ func can_upgrade_instance(uid: String) -> bool:
 	return _svc.can_upgrade_instance(uid)
 
 
-func upgrade_instance(uid: String) -> bool:
+func check_upgrade_instance(uid: String) -> GameOperationResult:
+	return _svc.check_upgrade_instance(uid)
+
+
+func upgrade_instance(uid: String) -> GameOperationResult:
 	return _svc.upgrade_instance(uid)
 
 

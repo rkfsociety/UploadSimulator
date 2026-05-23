@@ -23,26 +23,39 @@ func is_wired(from_uid: String, from_port: String, to_uid: String, to_port: Stri
 func can_connect_ports(
 	from_uid: String, from_port: String, to_uid: String, to_port: String
 ) -> bool:
+	return check_connect_ports(from_uid, from_port, to_uid, to_port).is_ok()
+
+
+## Проверка нового провода out→in.
+## Один провод на порт: WIRING_OUTPUT_BUSY / WIRING_INPUT_BUSY — линейный пайплайн без разветвлений.
+## Типы только из ALLOWED_WIRES; направление out→in и одинаковый kind (file/money).
+func check_connect_ports(
+	from_uid: String, from_port: String, to_uid: String, to_port: String
+) -> GameOperationResult:
 	var types := _port_types(from_uid, from_port, to_uid, to_port)
 	if types[0] == "" or types[2] == "":
-		return false
+		return GameOperationResult.fail(GameOperationResult.Code.WIRING_INVALID_MODULE)
 	if not BlockDefs.is_allowed_wire(types[0], types[1], types[2], types[3]):
-		return false
+		return GameOperationResult.fail(
+			GameOperationResult.Code.WIRING_TYPE_NOT_ALLOWED,
+			_connection_error(types[0], types[2])
+		)
 	var from_def: Dictionary = BlockDefs.PORT_DEFS.get(types[0], {}).get(from_port, {})
 	var to_def: Dictionary = BlockDefs.PORT_DEFS.get(types[2], {}).get(to_port, {})
 	if from_def.is_empty() or to_def.is_empty():
-		return false
+		return GameOperationResult.fail(GameOperationResult.Code.WIRING_INVALID_MODULE)
 	if from_def.get("dir", "") != "out" or to_def.get("dir", "") != "in":
-		return false
+		return GameOperationResult.fail(GameOperationResult.Code.WIRING_PORT_DIRECTION)
 	if from_def.get("kind", "") != to_def.get("kind", ""):
-		return false
+		return GameOperationResult.fail(GameOperationResult.Code.WIRING_PORT_KIND_MISMATCH)
 	if port_has_output_link(from_uid, from_port):
-		return false
+		return GameOperationResult.fail(GameOperationResult.Code.WIRING_OUTPUT_BUSY)
 	if port_has_input_link(to_uid, to_port):
-		return false
-	return true
+		return GameOperationResult.fail(GameOperationResult.Code.WIRING_INPUT_BUSY)
+	return GameOperationResult.ok()
 
 
+## У выхода уже есть провод — второй исходящий с того же out запрещён.
 func port_has_output_link(uid: String, port_id: String) -> bool:
 	for link: WireLink in _data.get_wire_connections():
 		if link.from_uid == uid and link.from_port == port_id:
@@ -50,6 +63,7 @@ func port_has_output_link(uid: String, port_id: String) -> bool:
 	return false
 
 
+## У входа уже есть провод — второй входящий на тот же in запрещён.
 func port_has_input_link(uid: String, port_id: String) -> bool:
 	for link: WireLink in _data.get_wire_connections():
 		if link.to_uid == uid and link.to_port == port_id:
@@ -59,21 +73,19 @@ func port_has_input_link(uid: String, port_id: String) -> bool:
 
 func try_connect_ports(
 	from_uid: String, from_port: String, to_uid: String, to_port: String
-) -> bool:
+) -> GameOperationResult:
 	if is_wired(from_uid, from_port, to_uid, to_port):
 		disconnect_ports(from_uid, from_port, to_uid, to_port)
 		_host.log_message.emit("Провод снят.")
 		_host.wiring_changed.emit()
-		return true
-	if not can_connect_ports(from_uid, from_port, to_uid, to_port):
-		_host.log_message.emit(
-			_connection_error(_field.get_instance_type(from_uid), _field.get_instance_type(to_uid))
-		)
-		return false
+		return GameOperationResult.ok()
+	var check := check_connect_ports(from_uid, from_port, to_uid, to_port)
+	if not check.is_ok():
+		return check
 	_data.get_wire_connections().append(WireLink.create(from_uid, from_port, to_uid, to_port))
 	_host.log_message.emit("Соединено: %s → %s" % [_type_name(from_uid), _type_name(to_uid)])
 	_host.wiring_changed.emit()
-	return true
+	return GameOperationResult.ok()
 
 
 func disconnect_output_port(uid: String, port_id: String) -> void:
@@ -91,6 +103,7 @@ func disconnect_ports(from_uid: String, from_port: String, to_uid: String, to_po
 			links.remove_at(i)
 
 
+## Цепочка файлов: downloader→storage→uploader; storage в обоих звеньях — один uid.
 func get_file_chain() -> Dictionary:
 	var a := _find_wired_pair("downloader", "file_out", "storage", "file_in")
 	if a.is_empty():
@@ -105,6 +118,7 @@ func get_file_chain() -> Dictionary:
 	}
 
 
+## Цепочка денег: uploader→collector (money_out→money_in), одна пара на поле.
 func get_money_chain() -> Dictionary:
 	return _find_wired_pair("uploader", "money_out", "collector", "money_in")
 

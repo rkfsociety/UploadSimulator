@@ -13,10 +13,6 @@ func get_money() -> float:
 	return _data.get_money()
 
 
-func get_diamonds() -> int:
-	return _data.get_diamonds()
-
-
 func get_env_multiplier(effect_key: String) -> float:
 	return _data.get_env_multiplier(effect_key)
 
