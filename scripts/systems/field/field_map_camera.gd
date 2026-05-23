@@ -7,6 +7,7 @@ var _map_content: Control
 
 var zoom: float = 1.0
 var pan: Vector2 = Vector2.ZERO
+var _view_dirty: bool = true
 
 
 func _init(host: Control, map_content: Control) -> void:
@@ -95,6 +96,14 @@ func apply() -> void:
 	_clamp_pan()
 	_map_content.scale = Vector2.ONE * zoom
 	_map_content.position = pan
+	_view_dirty = true
+
+
+## Сбрасывает флаг: pan/zoom изменились с прошлого кадра (для перерисовки сетки).
+func consume_view_dirty() -> bool:
+	var dirty := _view_dirty
+	_view_dirty = false
+	return dirty
 
 
 func _clamp_zoom() -> void:

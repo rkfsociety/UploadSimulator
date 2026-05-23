@@ -19,3 +19,7 @@ func get_block_metric(uid: String) -> String:
 
 func get_block_display(uid: String) -> Dictionary:
 	return _svc.get_block_display(uid)
+
+
+func get_progress_block_uids() -> Array[String]:
+	return _svc.get_progress_block_uids()

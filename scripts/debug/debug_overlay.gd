@@ -6,6 +6,9 @@ const TOGGLE_KEY := KEY_F3
 var _panel: PanelContainer
 var _label: Label
 var _visible_debug := OS.is_debug_build()
+# Не собирать строки статистики каждый кадр — достаточно ~6 раз/с
+var _stats_accum: float = 0.0
+const STATS_REFRESH_SEC := 0.15
 
 
 func _ready() -> void:
@@ -24,9 +27,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not _visible_debug or _label == null:
 		return
+	_stats_accum += delta
+	if _stats_accum < STATS_REFRESH_SEC:
+		return
+	_stats_accum = 0.0
 	_label.text = _build_stats_text()
 
 

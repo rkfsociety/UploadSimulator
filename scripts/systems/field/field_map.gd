@@ -1,6 +1,9 @@
 extends Control
 ## Поле карты (лимит 100×100 клеток). Оркестратор: камера, блоки, провода, установка, ввод.
 
+const _BlockDragClass := preload("res://scripts/systems/field/field_map_block_drag.gd")
+const _AsyncSafety := preload("res://scripts/core/async_safety.gd")
+
 signal placement_mode_changed(type_id: String)
 
 @onready var map_viewport: Control = $MapViewport
@@ -14,7 +17,7 @@ var _blocks: FieldMapBlocks
 var _placement: FieldMapPlacement
 var _wiring: FieldMapWiring
 var _map_input: FieldMapInput
-var _block_drag: FieldMapBlockDrag
+var _block_drag: RefCounted
 
 
 func _ready() -> void:
@@ -34,15 +37,22 @@ func _ready() -> void:
 	_blocks = FieldMapBlocks.new(blocks_root)
 	_placement = FieldMapPlacement.new(map_content, _camera)
 	_wiring = FieldMapWiring.new(self, wires_root, _blocks)
-	_block_drag = FieldMapBlockDrag.new(map_content, _camera, _blocks, _placement)
+	_block_drag = _BlockDragClass.new(map_content, _camera, _blocks, _placement)
 	_map_input = FieldMapInput.new(self, _camera, _placement, _wiring, _block_drag)
 	_map_input.placement_finished.connect(_on_placement_finished)
 
 	GameState.field_changed.connect(_on_field_changed)
 	GameState.wiring_changed.connect(_on_wiring_changed)
 	GameState.queue_changed.connect(_on_blocks_refresh)
+	GameState.blocks_progress_changed.connect(_on_blocks_progress)
 
-	await get_tree().process_frame
+	var tree := get_tree()
+	if tree == null:
+		return
+	await tree.process_frame
+	# Карта могла сняться с дерева за кадр ожидания
+	if not _AsyncSafety.is_node_in_scene(self):
+		return
 	_camera.focus_world(GridDefs.world_center_pixel())
 	_on_field_changed()
 
@@ -55,7 +65,8 @@ func _notification(what: int) -> void:
 func _process(_delta: float) -> void:
 	if _map_input != null:
 		_map_input.process_frame(self)
-	if grid_draw.has_method("sync_view"):
+	# Сетка — только при сдвиге/зуме камеры, не каждый кадр
+	if _camera.consume_view_dirty() and grid_draw.has_method("sync_view"):
 		grid_draw.sync_view()
 	var vis := _camera.visible_world_rect()
 	_blocks.update_visibility(vis)
@@ -134,6 +145,10 @@ func _on_field_changed() -> void:
 
 func _on_blocks_refresh() -> void:
 	_blocks.refresh_all()
+
+
+func _on_blocks_progress() -> void:
+	_blocks.refresh_uids(GameState.display.get_progress_block_uids())
 
 
 func _on_wiring_changed() -> void:
