@@ -16,12 +16,17 @@ const _SUITES: Array[Script] = [
 	preload("res://tests/unit/test_operation_errors.gd"),
 	preload("res://tests/unit/test_async_safety.gd"),
 	preload("res://tests/unit/test_game_save.gd"),
+	preload("res://tests/unit/test_game_pipeline_critical.gd"),
 	preload("res://tests/unit/test_premium_currency.gd"),
 	preload("res://tests/unit/test_platform_info.gd"),
 ]
 
 
 func _init() -> void:
+	# Autoload DebugOverlay в headless гоняет _process без сцены игры — отключаем
+	var overlay := root.get_node_or_null("DebugOverlay")
+	if overlay != null:
+		overlay.set_process(false)
 	var failed := 0
 	var passed := 0
 	for suite_script: Script in _SUITES:

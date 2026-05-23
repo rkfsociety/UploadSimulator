@@ -20,9 +20,7 @@ static func duration_scaled(base_duration: float, type_id: String, level: int) -
 
 static func storage_capacity_bytes(level: int) -> float:
 	var lvl := maxi(1, level)
-	var extra_bytes: float = (
-		float(lvl - 1) * float(BlockDefs.TYPES["storage"]["capacity_bytes_per_level"])
-	)
+	var extra_bytes: float = float(lvl - 1) * BlockDefs.storage_capacity_bytes_per_level()
 	return GameConstants.BASE_STORAGE_BYTES + extra_bytes
 
 

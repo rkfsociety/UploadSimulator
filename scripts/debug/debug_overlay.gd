@@ -28,7 +28,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
-	if not _visible_debug or _label == null:
+	if not _visible_debug or _label == null or not _game_state_ready():
 		return
 	_stats_accum += delta
 	if _stats_accum < STATS_REFRESH_SEC:
@@ -64,7 +64,15 @@ func _set_overlay_visible(show_overlay: bool) -> void:
 		_panel.visible = show_overlay
 
 
+func _game_state_ready() -> bool:
+	# Headless-тесты: autoload может быть не инициализирован — не спамим ошибками
+	var gs := get_tree().root.get_node_or_null("GameState")
+	return gs != null and gs.get("access") != null
+
+
 func _build_stats_text() -> String:
+	if not _game_state_ready():
+		return "[DEBUG] GameState недоступен"
 	var fps := Engine.get_frames_per_second()
 	var phase := GameState.access.get_phase()
 	var lines: PackedStringArray = PackedStringArray([

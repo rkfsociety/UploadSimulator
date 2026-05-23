@@ -12,7 +12,7 @@ func run() -> Array[String]:
 
 
 func _test_snapshot_roundtrip(errors: Array[String]) -> void:
-	var host := Node.new()
+	var host := _SaveTestHost.new()
 	var data := GameStateData.new()
 	var premium := PremiumCurrencyService.new(host, GameConstants.START_DIAMONDS)
 	data.add_money(50.0)
@@ -42,7 +42,7 @@ func _test_snapshot_roundtrip(errors: Array[String]) -> void:
 
 
 func _test_memory_backend(errors: Array[String]) -> void:
-	var host := Node.new()
+	var host := _SaveTestHost.new()
 	var data := GameStateData.new()
 	var premium := PremiumCurrencyService.new(host)
 	var backend := MemorySaveBackend.new()
@@ -60,3 +60,12 @@ func _test_memory_backend(errors: Array[String]) -> void:
 	if fresh.get_money() != data.get_money():
 		errors.append("load restored money")
 	host.free()
+
+
+class _SaveTestHost:
+	extends Node
+
+	signal stats_changed
+	signal queue_changed
+	signal wiring_changed
+	signal field_changed

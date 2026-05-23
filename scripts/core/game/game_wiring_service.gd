@@ -5,12 +5,17 @@ class_name GameWiringService
 var _data: GameStateData
 var _host: Node
 var _field: GameFieldService
+var _pipeline: GamePipelineService = null
 
 
 func _init(data: GameStateData, host: Node, field: GameFieldService) -> void:
 	_data = data
 	_host = host
 	_field = field
+
+
+func bind_pipeline(pipeline: GamePipelineService) -> void:
+	_pipeline = pipeline
 
 
 func is_wired(from_uid: String, from_port: String, to_uid: String, to_port: String) -> bool:
@@ -94,6 +99,7 @@ func disconnect_output_port(uid: String, port_id: String) -> void:
 		if links[i].from_uid == uid and links[i].from_port == port_id:
 			links.remove_at(i)
 	_host.wiring_changed.emit()
+	_notify_topology_changed()
 
 
 func disconnect_ports(from_uid: String, from_port: String, to_uid: String, to_port: String) -> void:
@@ -101,6 +107,13 @@ func disconnect_ports(from_uid: String, from_port: String, to_uid: String, to_po
 	for i in range(links.size() - 1, -1, -1):
 		if links[i].matches(from_uid, from_port, to_uid, to_port):
 			links.remove_at(i)
+	_notify_topology_changed()
+
+
+func _notify_topology_changed() -> void:
+	# Нет полной цепочки файлов — останавливаем передачу
+	if _pipeline != null and get_file_chain().is_empty():
+		_pipeline.cancel_file_transfer_queues()
 
 
 ## Цепочка файлов: downloader→storage→uploader; storage в обоих звеньях — один uid.

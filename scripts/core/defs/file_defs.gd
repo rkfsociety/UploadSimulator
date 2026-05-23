@@ -39,12 +39,21 @@ static func _static_init() -> void:
 			push_error("FileDefs: тип «%s» должен иметь name, bytes_min, bytes_max." % type_id)
 
 
-# Лимиты текстового типа — из resources/game_balance.tres
+# Лимиты текстового типа — из GameConstants (без записи в const TYPES)
 static func sync_limits_from_balance() -> void:
-	if not TYPES.has("text"):
-		return
-	TYPES["text"]["bytes_min"] = GameConstants.TEXT_FILE_BYTES_MIN
-	TYPES["text"]["bytes_max"] = GameConstants.TEXT_FILE_BYTES_MAX
+	pass
+
+
+static func _bytes_min_for_type(type_id: String, def: Dictionary) -> float:
+	if type_id == "text":
+		return GameConstants.TEXT_FILE_BYTES_MIN
+	return float(def.get("bytes_min", GameConstants.TEXT_FILE_BYTES_MIN))
+
+
+static func _bytes_max_for_type(type_id: String, def: Dictionary) -> float:
+	if type_id == "text":
+		return GameConstants.TEXT_FILE_BYTES_MAX
+	return float(def.get("bytes_max", GameConstants.TEXT_FILE_BYTES_MAX))
 
 
 # Человекочитаемое название типа для UI модуля
@@ -88,10 +97,11 @@ static func random_download_size_bytes(
 	file_type_id: String, speed_bps: float, rng: RandomNumberGenerator
 ) -> float:
 	var def: Dictionary = TYPES.get(file_type_id, TYPES[DEFAULT_TYPE])
-	var safe_speed := GameValueBounds.speed_bps(speed_bps)
+	# Без GameValueBounds — иначе цикл с GameConstants._static_init
+	var safe_speed := maxf(speed_bps, 1.0)
 	var speed_cap := maxf(safe_speed * GameConstants.MAX_TRANSFER_JOB_DURATION_SEC, 1.0)
-	var type_max := float(def.get("bytes_max", GameConstants.TEXT_FILE_BYTES_MAX))
-	var type_min := float(def.get("bytes_min", GameConstants.TEXT_FILE_BYTES_MIN))
+	var type_max := _bytes_max_for_type(file_type_id, def)
+	var type_min := _bytes_min_for_type(file_type_id, def)
 	var max_b := minf(type_max, speed_cap)
 	var min_b := minf(type_min, max_b)
 	return rng.randf_range(min_b, max_b)

@@ -102,14 +102,14 @@ static func _static_init() -> void:
 	_validate_defs()
 
 
-# Подтягивает ёмкость диска из централизованного баланса (после GameConstants._static_init)
+# Ёмкость диска за уровень — из GameBalanceConfig (без записи в const TYPES)
 static func sync_limits_from_balance() -> void:
-	if not TYPES.has("storage"):
-		return
+	pass
+
+
+static func storage_capacity_bytes_per_level() -> float:
 	var cfg := GameConstants.get_balance_config()
-	TYPES["storage"]["capacity_bytes_per_level"] = (
-		cfg.storage_capacity_legacy_kb_per_level * 1024.0 * GameConstants.BYTE_SIZE_SCALE
-	)
+	return cfg.storage_capacity_legacy_kb_per_level * 1024.0 * GameConstants.BYTE_SIZE_SCALE
 
 
 static func get_block_color(type_id: String) -> Color:

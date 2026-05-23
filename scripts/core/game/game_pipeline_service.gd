@@ -250,13 +250,14 @@ func _tick_download_queue(delta: float) -> void:
 		_host.blocks_progress_changed.emit()
 		return
 	queue.pop_front()
-	var stored := StoredFileEntry.new()
-	stored.title = job.title
-	stored.file_type_id = job.file_type_id
-	stored.quality = job.quality
-	stored.size_bytes = job.size_bytes
-	stored.apply_bounds()
-	_data.get_stored_files().append(stored)
+	if not _try_store_completed_download(job):
+		# Диск переполнен: текущий файл не помещается — сбрасываем ожидающие задачи
+		queue.clear()
+		_host.log_message.emit("Диск переполнен: очередь скачивания очищена.")
+		_host.queue_changed.emit()
+		_host.field_changed.emit()
+		_host.stats_changed.emit()
+		return
 	_host.field_changed.emit()
 	_host.stats_changed.emit()
 
@@ -296,6 +297,40 @@ func apply_publish(job: FileTransferJob) -> void:
 func finish_publish_pause() -> void:
 	_data.set_phase(GameStateData.Phase.IDLE)
 	_notify_field_and_stats()
+
+
+## Сброс очередей файлов при разрыве цепочки (отключение провода / модуля).
+func cancel_file_transfer_queues() -> void:
+	_return_upload_queue_to_storage()
+	_data.get_download_queue().clear()
+	if _data.get_phase() == GameStateData.Phase.SETTLING:
+		_data.set_phase(GameStateData.Phase.IDLE)
+	_notify_queue_and_field()
+
+
+func _try_store_completed_download(job: FileTransferJob) -> bool:
+	if not _storage.has_storage_space(job.size_bytes):
+		return false
+	var stored := StoredFileEntry.new()
+	stored.title = job.title
+	stored.file_type_id = job.file_type_id
+	stored.quality = job.quality
+	stored.size_bytes = job.size_bytes
+	stored.apply_bounds()
+	_data.get_stored_files().append(stored)
+	return true
+
+
+func _return_upload_queue_to_storage() -> void:
+	for job: FileTransferJob in _data.get_upload_queue():
+		var entry := StoredFileEntry.new()
+		entry.title = job.title
+		entry.file_type_id = job.file_type_id
+		entry.quality = job.quality
+		entry.size_bytes = job.size_bytes
+		entry.apply_bounds()
+		_data.get_stored_files().append(entry)
+	_data.get_upload_queue().clear()
 
 
 func _notify_field_and_stats() -> void:
