@@ -5,6 +5,7 @@ const _SUITES: Array[Script] = [
 	preload("res://tests/unit/test_game_bonus.gd"),
 	preload("res://tests/unit/test_block_defs.gd"),
 	preload("res://tests/unit/test_game_state_data.gd"),
+	preload("res://tests/unit/test_game_value_bounds.gd"),
 	preload("res://tests/unit/test_game_models.gd"),
 	preload("res://tests/unit/test_game_wiring.gd"),
 	preload("res://tests/unit/test_game_collect.gd"),
@@ -12,6 +13,9 @@ const _SUITES: Array[Script] = [
 	preload("res://tests/unit/test_file_types.gd"),
 	preload("res://tests/unit/test_module_unlock.gd"),
 	preload("res://tests/unit/test_field_relocate.gd"),
+	preload("res://tests/unit/test_async_safety.gd"),
+	preload("res://tests/unit/test_game_save.gd"),
+	preload("res://tests/unit/test_platform_info.gd"),
 ]
 
 

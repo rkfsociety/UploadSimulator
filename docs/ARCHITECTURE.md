@@ -9,6 +9,7 @@ scripts/
   autoload/          # GameState, BgmPlayer, DebugOverlay
   core/
     defs/            # BlockDefs, GridDefs, FileDefs, EnvironmentUpgradeDefs
+    save/            # SaveBackend, снимок состояния, GameSaveService
     game/            # состояние, сервисы, модели (RefCounted)
       modules/       # фасады API для autoload GameState
   systems/
@@ -61,8 +62,23 @@ Autoload `DebugOverlay` показывает FPS, кассу, фазы, очер
 | `storage` | `game_state_storage.gd` | диск |
 | `pipeline` | `game_state_pipeline.gd` | скачивание, выгрузка, сбор денег |
 | `environment` | `game_state_environment.gd` | открытие типов модулей и улучшения среды за алмазы |
+| `save` | `game_state_save.gd` | сохранение/загрузка снимка (`SaveBackend`, пока `NullSaveBackend`) |
 
 Логика — в сервисах (`GameFieldService`, …); модули только делегируют. Пример: `GameState.field.place_block(...)`, `GameState.access.get_money()`.
+
+## Сохранения
+
+Слой в `scripts/core/save/` отделён от UI и сцены:
+
+| Класс | Назначение |
+|-------|------------|
+| `SaveBackend` | абстрактный интерфейс: `has_save`, `write_save`, `read_save` |
+| `NullSaveBackend` | заглушка по умолчанию в `GameState` (ничего не пишет на диск) |
+| `MemorySaveBackend` | in-memory для тестов |
+| `GameSaveSnapshot` | снимок `GameStateData` (`export_save_dict` / `import_save_dict`) |
+| `GameSaveService` | `save` / `load` слота, сигналы UI после загрузки |
+
+Публичный API: `GameState.save.save(slot_id)`, `GameState.save.load(slot_id)`. Файловый бэкенд (user://) подключается позже через `GameSaveService.set_backend()` без правок сервисов поля и пайплайна.
 
 ## Поток данных
 
