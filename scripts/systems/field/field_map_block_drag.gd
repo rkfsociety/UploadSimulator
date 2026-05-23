@@ -61,7 +61,7 @@ func try_begin_drag(local_pos: Vector2) -> bool:
 	_drag_uid = _press_uid
 	_dragging = true
 	_set_selected(_drag_uid)
-	_update_drag(local_pos)
+	update_drag(local_pos)
 	return true
 
 

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="GameBalanceConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/game/game_balance_config.gd" id="1_balance"]
+
+[resource]
+script = ExtResource("1_balance")
+max_queue_jobs = 5
+min_job_duration_sec = 0.05
+max_transfer_job_duration_sec = 50.0
+base_download_speed_bps = 100.0
+base_upload_speed_bps = 100.0
+legacy_speed_mbps = 3.5
+base_storage_legacy_kb = 32.0
+storage_capacity_legacy_kb_per_level = 40.0
+raw_file_legacy_mb = 18.0
+min_download_reserve_bytes = 96000.0
+text_file_bytes_min = 400.0
+text_file_bytes_max = 3200.0
+default_stored_file_bytes = 1000.0
+start_diamonds = 5
+diamonds_per_upload = 1
+min_collect_balance = 0.01
+revenue_legacy_numerator = 0.04
+quality_per_downloader_level = 0.08
+default_upgrade_base = 30.0
+default_upgrade_mult = 1.4
+upload_settle_pause_sec = 1.0
