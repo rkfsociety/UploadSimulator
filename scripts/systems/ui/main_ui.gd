@@ -62,8 +62,8 @@ func _refresh() -> void:
 func _on_block_purchased(type_id: String) -> void:
 	shop_menu.close()
 	upgrade_shop_menu.close()
-	if field_map.has_method("place_at_view_center"):
-		field_map.call_deferred("place_at_view_center", type_id)
+	if field_map.has_method("start_placement_after_buy"):
+		field_map.call_deferred("start_placement_after_buy", type_id)
 
 
 func _on_placement_requested(type_id: String) -> void:

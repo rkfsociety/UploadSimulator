@@ -75,20 +75,29 @@ func focus_map_center() -> void:
 	_camera.focus_world(GridDefs.world_center_pixel())
 
 
+## После покупки: автопостановка или режим «тап по карте».
+func start_placement_after_buy(type_id: String) -> void:
+	place_at_view_center(type_id)
+
+
 ## Ставит модуль в центр текущего вида; ищет свободную клетку вокруг якоря.
 func place_at_view_center(type_id: String) -> bool:
+	if GameState.field.get_block_stock(type_id) <= 0:
+		return false
 	_block_drag.clear_selection()
-	var ok := _placement.place_at_view_center(type_id, _blocks.spawn)
-	if ok:
-		_focus_placed_block_center()
+	if _placement.place_at_view_center(type_id, _blocks.spawn):
+		cancel_placement_mode()
+		_sync_field_visual()
 		return true
 	enter_placement_mode(type_id)
-	GameState.log_message.emit("Тапните по карте, чтобы поставить купленный модуль.")
 	return false
 
 
-func _focus_placed_block_center() -> void:
-	_blocks.refresh_all()
+func _sync_field_visual() -> void:
+	_blocks.sync_from_state()
+	_block_drag.sync_selection_visual()
+	_wiring.collect_ports()
+	_wiring.update_positions()
 
 
 ## Включает режим ручной установки выбранного типа модуля.

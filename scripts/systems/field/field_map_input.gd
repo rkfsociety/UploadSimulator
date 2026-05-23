@@ -36,7 +36,11 @@ func _init(
 
 
 func handle_gui_input(event: InputEvent) -> void:
-	# Блокируем только нажатия по HUD; движение мыши нужно для панорамы
+	# На ПК ЛКМ и панорама — в process_frame (опрос мыши), здесь только колесо и СКМ
+	if _use_polling_input() and event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_LEFT:
+			return
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		var screen_pos := _host.get_global_transform() * mb.position
@@ -44,7 +48,7 @@ func handle_gui_input(event: InputEvent) -> void:
 			return
 	if event is InputEventMouseButton:
 		_handle_mouse_button(event as InputEventMouseButton)
-	elif event is InputEventMouseMotion:
+	elif event is InputEventMouseMotion and not _use_polling_input():
 		_handle_pointer_motion(event.position)
 	elif event is InputEventMagnifyGesture:
 		_camera.zoom_at(1.0 + (event as InputEventMagnifyGesture).factor, event.position)
@@ -138,16 +142,28 @@ func _apply_pan_drag(local_pos: Vector2) -> void:
 	_update_drag_state(local_pos)
 
 
-## Каждый кадр: панорама не зависит от пропущенных InputEventMouseMotion.
+## Каждый кадр на ПК: опрос ЛКМ — панорама и установка без _gui_input.
 func process_frame(host: Control) -> void:
-	if _pointer_down and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		_end_pointer(host.get_local_mouse_position())
+	if not _use_polling_input():
 		return
-	if not _pointer_down:
+	var vp := host.get_viewport()
+	if vp == null:
 		return
-	var local_pos := host.get_local_mouse_position()
-	_update_pointer_follow(local_pos)
-	_update_drag_state(local_pos)
+	var global_mouse := vp.get_mouse_position()
+	var local_pos := host.get_global_transform().affine_inverse() * global_mouse
+	var over_hud := _is_over_hud(global_mouse)
+	var lmb := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+
+	if _placement.get_selected_type() != "" and not lmb and not _pointer_down:
+		_placement.update_preview(local_pos)
+
+	if lmb and not over_hud:
+		if not _pointer_down:
+			_begin_pointer(local_pos)
+		_update_pointer_follow(local_pos)
+		_update_drag_state(local_pos)
+	elif _pointer_down:
+		_end_pointer(local_pos)
 
 
 func _update_drag_state(local_pos: Vector2) -> void:
@@ -273,3 +289,7 @@ func _is_over_hud(screen_pos: Vector2) -> bool:
 func _use_touch_input() -> bool:
 	var os_name := OS.get_name()
 	return os_name == "Android" or os_name == "iOS"
+
+
+func _use_polling_input() -> bool:
+	return not _use_touch_input()
