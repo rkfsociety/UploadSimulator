@@ -99,6 +99,7 @@ func get_view_center_cell() -> Vector2i:
 
 
 func _on_field_changed() -> void:
+	_block_drag.cancel_drag()
 	var prev_uids: Array = _blocks.get_nodes().keys()
 	_blocks.sync_from_state()
 	var curr_uids: Array = _blocks.get_nodes().keys()

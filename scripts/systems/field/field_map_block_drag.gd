@@ -50,7 +50,8 @@ func on_pointer_down(local_pos: Vector2) -> void:
 func try_begin_drag(local_pos: Vector2) -> bool:
 	if _placement.get_selected_type() != "":
 		return false
-	if _press_uid == "":
+	# Перетаскивание только выделенного модуля; иначе жест уходит в панораму камеры
+	if _press_uid == "" or _press_uid != _selected_uid:
 		return false
 	_drag_uid = _press_uid
 	_dragging = true
@@ -82,8 +83,19 @@ func finish_drag(local_pos: Vector2) -> void:
 	if not _dragging:
 		return
 	update_drag(local_pos)
-	if _drag_uid != "" and _hover_cell.x >= -GridDefs.GRID_HALF:
+	if (
+		_drag_uid != ""
+		and GridDefs.footprint_in_bounds(_hover_cell.x, _hover_cell.y)
+		and GameState.field.can_relocate_block(_drag_uid, _hover_cell.x, _hover_cell.y)
+	):
 		GameState.field.relocate_block(_drag_uid, _hover_cell.x, _hover_cell.y)
+	_dragging = false
+	_drag_uid = ""
+	_hide_ghost()
+
+
+## Сброс перетаскивания без переноса (например после field_changed).
+func cancel_drag() -> void:
 	_dragging = false
 	_drag_uid = ""
 	_hide_ghost()

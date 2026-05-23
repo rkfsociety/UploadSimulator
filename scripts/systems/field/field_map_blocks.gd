@@ -28,6 +28,9 @@ func sync_from_state() -> void:
 
 
 func spawn(uid: String) -> void:
+	if _nodes.has(uid):
+		(_nodes[uid] as PlacedBlock).refresh()
+		return
 	var inst := GameState.field.get_instance(uid)
 	if not inst.is_valid():
 		return
