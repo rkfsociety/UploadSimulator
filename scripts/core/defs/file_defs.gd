@@ -10,6 +10,7 @@ const TYPES := {
 	{
 		"name": "Текстовый файл",
 		"weight": 1.0,
+		# bytes_min/max синхронизируются из GameBalanceConfig (см. sync_limits_from_balance)
 		"bytes_min": 400.0,
 		"bytes_max": 3_200.0,
 	},
@@ -38,9 +39,24 @@ static func _static_init() -> void:
 			push_error("FileDefs: тип «%s» должен иметь name, bytes_min, bytes_max." % type_id)
 
 
+# Лимиты текстового типа — из resources/game_balance.tres
+static func sync_limits_from_balance() -> void:
+	if not TYPES.has("text"):
+		return
+	TYPES["text"]["bytes_min"] = GameConstants.TEXT_FILE_BYTES_MIN
+	TYPES["text"]["bytes_max"] = GameConstants.TEXT_FILE_BYTES_MAX
+
+
 # Человекочитаемое название типа для UI модуля
 static func get_type_label(type_id: String) -> String:
 	return str(TYPES.get(type_id, TYPES[DEFAULT_TYPE]).get("name", "Файл"))
+
+
+# Тип доступен для скачивания (weight > 0)
+static func is_downloadable_type(type_id: String) -> bool:
+	if not TYPES.has(type_id):
+		return false
+	return float(TYPES[type_id].get("weight", 0.0)) > 0.0
 
 
 # Случайный тип для скачивания (сейчас только текст; позже — по weight)
@@ -72,7 +88,8 @@ static func random_download_size_bytes(
 	file_type_id: String, speed_bps: float, rng: RandomNumberGenerator
 ) -> float:
 	var def: Dictionary = TYPES.get(file_type_id, TYPES[DEFAULT_TYPE])
-	var speed_cap := maxf(speed_bps * GameConstants.DOWNLOAD_SIZE_SPEED_MULTIPLIER, 1.0)
+	var safe_speed := GameValueBounds.speed_bps(speed_bps)
+	var speed_cap := maxf(safe_speed * GameConstants.MAX_TRANSFER_JOB_DURATION_SEC, 1.0)
 	var type_max := float(def.get("bytes_max", GameConstants.TEXT_FILE_BYTES_MAX))
 	var type_min := float(def.get("bytes_min", GameConstants.TEXT_FILE_BYTES_MIN))
 	var max_b := minf(type_max, speed_cap)

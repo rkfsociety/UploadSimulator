@@ -2,6 +2,8 @@ extends RefCounted
 class_name GameStateData
 ## Инкапсулированное состояние игры (без публичных полей).
 
+const _SaveConstants := preload("res://scripts/core/save/save_constants.gd")
+
 enum Phase { IDLE, SETTLING }
 
 var _money: float = 0.0
@@ -24,7 +26,6 @@ var _uid_counter: int = 0
 
 
 func _init() -> void:
-	_diamonds = GameConstants.START_DIAMONDS
 	# Касса при старте — сумма shop_cost базового набора (см. BlockDefs.starter_kit_types)
 	_money = float(BlockDefs.starter_kit_cost())
 	for type_id in BlockDefs.starter_kit_types():
@@ -171,7 +172,7 @@ func export_save_dict() -> Dictionary:
 	for job: FileTransferJob in _upload_queue:
 		uploads.append(job.to_dict())
 	return {
-		"format_version": SaveConstants.FORMAT_VERSION,
+		"format_version": _SaveConstants.FORMAT_VERSION,
 		"money": _money,
 		"uploader_balance": _uploader_balance,
 		"env_upgrade_levels": _env_upgrade_levels.duplicate(),
@@ -190,19 +191,24 @@ func export_save_dict() -> Dictionary:
 
 func import_save_dict(payload: Dictionary) -> void:
 	# Восстановление состояния из снимка (вызывается GameSaveSnapshot)
-	_money = float(payload.get("money", _money))
-	_uploader_balance = float(payload.get("uploader_balance", _uploader_balance))
+	set_money(float(payload.get("money", _money)))
+	set_uploader_balance(float(payload.get("uploader_balance", _uploader_balance)))
 	_env_upgrade_levels = {}
 	var env_raw: Variant = payload.get("env_upgrade_levels", {})
 	if env_raw is Dictionary:
-		_env_upgrade_levels = (env_raw as Dictionary).duplicate()
+		for upgrade_id: Variant in (env_raw as Dictionary).keys():
+			set_env_upgrade_level(
+				str(upgrade_id),
+				GameValueBounds.env_level(int((env_raw as Dictionary)[upgrade_id])),
+			)
 	_unlocked_module_types = {}
 	for type_id: Variant in payload.get("unlocked_module_types", []):
 		_unlocked_module_types[str(type_id)] = true
 	_block_stock = {}
 	var stock_raw: Variant = payload.get("block_stock", {})
 	if stock_raw is Dictionary:
-		_block_stock = (stock_raw as Dictionary).duplicate()
+		for type_id: Variant in (stock_raw as Dictionary).keys():
+			set_block_stock(str(type_id), int((stock_raw as Dictionary)[type_id]))
 	_placed_blocks.clear()
 	for item: Variant in payload.get("placed_blocks", []):
 		if item is Dictionary:
@@ -212,7 +218,7 @@ func import_save_dict(payload: Dictionary) -> void:
 		if item is Dictionary:
 			_wire_connections.append(WireLink.from_dict(item as Dictionary))
 	_phase = int(payload.get("phase", Phase.IDLE)) as Phase
-	_uploaded_files = int(payload.get("uploaded_files", 0))
+	_uploaded_files = GameValueBounds.count(int(payload.get("uploaded_files", 0)))
 	set_uid_counter(int(payload.get("uid_counter", 0)))
 	_download_queue.clear()
 	for item: Variant in payload.get("download_queue", []):

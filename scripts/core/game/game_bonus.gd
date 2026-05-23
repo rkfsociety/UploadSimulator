@@ -10,7 +10,8 @@ static func effect_at_level(type_id: String, level: int) -> float:
 
 
 static func speed_scaled(base_speed: float, type_id: String, level: int) -> float:
-	return base_speed * (1.0 + effect_at_level(type_id, level))
+	var scaled := base_speed * (1.0 + effect_at_level(type_id, level))
+	return GameValueBounds.speed_bps(scaled)
 
 
 static func duration_scaled(base_duration: float, type_id: String, level: int) -> float:

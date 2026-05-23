@@ -46,5 +46,5 @@ static func from_legacy_dict(data: Dictionary) -> BlockInstance:
 	inst.type_id = str(data.get("type", data.get("type_id", "")))
 	inst.gx = int(data.get("gx", 0))
 	inst.gy = int(data.get("gy", 0))
-	inst.level = int(data.get("level", 1))
+	inst.level = maxi(1, int(data.get("level", 1)))
 	return inst

@@ -10,4 +10,7 @@ func run() -> Array[String]:
 	var data := GameStateData.new()
 	if data.get_money() != expected:
 		errors.append("стартовая касса должна быть %.0f, получено %.0f" % [expected, data.get_money()])
+	data.set_money(-1.0)
+	if data.get_money() < 0.0:
+		errors.append("касса не должна становиться отрицательной")
 	return errors
