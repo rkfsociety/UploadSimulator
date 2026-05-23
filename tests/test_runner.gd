@@ -11,6 +11,7 @@ const _SUITES: Array[Script] = [
 	preload("res://tests/unit/test_file_size.gd"),
 	preload("res://tests/unit/test_file_types.gd"),
 	preload("res://tests/unit/test_module_unlock.gd"),
+	preload("res://tests/unit/test_field_relocate.gd"),
 ]
 
 

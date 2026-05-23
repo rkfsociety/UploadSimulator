@@ -87,6 +87,32 @@ func get_block_at(gx: int, gy: int) -> BlockInstance:
 	return BlockInstance.new()
 
 
+func can_relocate_block(uid: String, gx: int, gy: int) -> bool:
+	var inst := get_instance(uid)
+	if not inst.is_valid():
+		return false
+	if not GridDefs.footprint_in_bounds(gx, gy):
+		return false
+	for cell in GridDefs.block_footprint_cells(gx, gy):
+		var other := get_block_at(cell.x, cell.y)
+		if other.is_valid() and other.uid != uid:
+			return false
+	return true
+
+
+func relocate_block(uid: String, gx: int, gy: int) -> bool:
+	if not can_relocate_block(uid, gx, gy):
+		return false
+	var inst := get_instance(uid)
+	if inst.gx == gx and inst.gy == gy:
+		return true
+	inst.gx = gx
+	inst.gy = gy
+	_replace_instance(inst)
+	_notify_stats_and_field()
+	return true
+
+
 func place_block(type_id: String, gx: int, gy: int) -> String:
 	if not GridDefs.footprint_in_bounds(gx, gy):
 		_host.log_message.emit(

@@ -140,3 +140,11 @@ func refresh() -> void:
 		return
 	_apply_root_layout()
 	_view.apply(PlacedBlockViewData.from_instance(instance_uid, block_type))
+
+
+## Подсветка выбранного модуля на карте (рамка NeonFrame).
+func set_map_selected(on: bool) -> void:
+	if _main_panel != null:
+		_main_panel.set_map_selected(on)
+	if _upgrade_panel != null:
+		_upgrade_panel.set_map_selected(on)

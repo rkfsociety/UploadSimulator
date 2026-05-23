@@ -53,6 +53,14 @@ func place_block(type_id: String, gx: int, gy: int) -> String:
 	return _svc.place_block(type_id, gx, gy)
 
 
+func can_relocate_block(uid: String, gx: int, gy: int) -> bool:
+	return _svc.can_relocate_block(uid, gx, gy)
+
+
+func relocate_block(uid: String, gx: int, gy: int) -> bool:
+	return _svc.relocate_block(uid, gx, gy)
+
+
 func get_instance_upgrade_cost(uid: String) -> int:
 	return _svc.get_instance_upgrade_cost(uid)
 

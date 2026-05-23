@@ -14,6 +14,7 @@ var _blocks: FieldMapBlocks
 var _placement: FieldMapPlacement
 var _wiring: FieldMapWiring
 var _map_input: FieldMapInput
+var _block_drag: FieldMapBlockDrag
 
 
 func _ready() -> void:
@@ -33,7 +34,8 @@ func _ready() -> void:
 	_blocks = FieldMapBlocks.new(blocks_root)
 	_placement = FieldMapPlacement.new(map_content, _camera)
 	_wiring = FieldMapWiring.new(self, wires_root, _blocks)
-	_map_input = FieldMapInput.new(self, _camera, _placement, _wiring)
+	_block_drag = FieldMapBlockDrag.new(map_content, _camera, _blocks, _placement)
+	_map_input = FieldMapInput.new(self, _camera, _placement, _wiring, _block_drag)
 	_map_input.placement_finished.connect(_on_placement_finished)
 
 	GameState.field_changed.connect(_on_field_changed)
@@ -79,6 +81,7 @@ func place_at_view_center(type_id: String) -> bool:
 
 ## Включает режим ручной установки выбранного типа модуля.
 func enter_placement_mode(type_id: String) -> void:
+	_block_drag.clear_selection()
 	_placement.set_selected_type(type_id)
 	placement_mode_changed.emit(type_id)
 
@@ -103,6 +106,7 @@ func _on_field_changed() -> void:
 	if _blocks_layout_changed(prev_uids, curr_uids):
 		_wiring.collect_ports()
 		_wiring.update_positions()
+	_block_drag.sync_selection_visual()
 
 
 func _on_wiring_changed() -> void:

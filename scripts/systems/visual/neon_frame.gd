@@ -3,6 +3,7 @@ class_name NeonFrame
 ## Векторная неоновая рамка; Control — чтобы внутри было несколько дочерних узлов.
 
 var accent: Color = Color(0.0, 0.88, 1.0, 1.0)
+var map_selected: bool = false
 
 var _border_draw: Control
 
@@ -17,6 +18,15 @@ func _ready() -> void:
 
 func set_accent(color: Color) -> void:
 	accent = color
+	queue_redraw()
+	if _border_draw != null:
+		_border_draw.queue_redraw()
+
+
+func set_map_selected(on: bool) -> void:
+	if map_selected == on:
+		return
+	map_selected = on
 	queue_redraw()
 	if _border_draw != null:
 		_border_draw.queue_redraw()
@@ -80,11 +90,14 @@ func _draw_border() -> void:
 	if rect.size.x < 2.0 or rect.size.y < 2.0:
 		return
 	var px := _screen_pixel_thickness()
-	var glow := Color(accent.r, accent.g, accent.b, 0.28)
-	var glow2 := Color(accent.r, accent.g, accent.b, 0.14)
+	var sel_mul := 2.2 if map_selected else 1.0
+	var glow := Color(accent.r, accent.g, accent.b, 0.28 * sel_mul)
+	var glow2 := Color(accent.r, accent.g, accent.b, 0.14 * sel_mul)
 	_border_draw.draw_rect(rect.grow_individual(px * 2.0, px * 2.0, px * 2.0, px * 2.0), glow2)
 	_border_draw.draw_rect(rect.grow_individual(px, px, px, px), glow)
-	_draw_border_rect_on(_border_draw, rect, accent, px)
+	var border_color := accent.lightened(0.35) if map_selected else accent
+	var border_px := px * (1.8 if map_selected else 1.0)
+	_draw_border_rect_on(_border_draw, rect, border_color, border_px)
 
 
 func _draw_border_rect_on(canvas: Control, rect: Rect2, color: Color, thickness: float) -> void:

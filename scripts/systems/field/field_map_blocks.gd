@@ -43,6 +43,10 @@ func spawn(uid: String) -> void:
 	_nodes[uid] = block
 
 
+func get_block(uid: String) -> PlacedBlock:
+	return _nodes.get(uid, null) as PlacedBlock
+
+
 func _relayout() -> void:
 	var sz := PlacedBlock.pixel_size()
 	for uid in _nodes.keys():

@@ -8,6 +8,7 @@ var _host: Control
 var _camera: FieldMapCamera
 var _placement: FieldMapPlacement
 var _wiring: FieldMapWiring
+var _block_drag: FieldMapBlockDrag
 
 var _drag_pan: bool = false
 var _drag_start := Vector2.ZERO
@@ -25,11 +26,13 @@ func _init(
 	camera: FieldMapCamera,
 	placement: FieldMapPlacement,
 	wiring: FieldMapWiring,
+	block_drag: FieldMapBlockDrag,
 ) -> void:
 	_host = host
 	_camera = camera
 	_placement = placement
 	_wiring = wiring
+	_block_drag = block_drag
 
 
 func handle_gui_input(event: InputEvent) -> void:
@@ -96,21 +99,23 @@ func _begin_pointer(local_pos: Vector2) -> void:
 	_drag_pan = false
 	_drag_start = local_pos
 	_pan_at_drag = _camera.pan
+	_block_drag.on_pointer_down(local_pos)
 	_update_pointer_follow(local_pos)
 
 
 func _end_pointer(local_pos: Vector2) -> void:
 	_update_pointer_follow(local_pos)
-	if _pointer_down and _placement.get_selected_type() != "" and not _pointer_moved:
-		# Установка только если тап не по HUD (клики по кнопкам забирает UILayer)
+	if _block_drag.is_dragging():
+		_block_drag.finish_drag(local_pos)
+	elif _pointer_down and not _pointer_moved:
 		if _is_over_hud(_host.get_global_transform() * local_pos):
-			_pointer_down = false
-			_pointer_moved = false
-			_drag_pan = false
-			return
-		var next_type: String = _placement.try_place_at_screen(local_pos)
-		_placement.set_selected_type(next_type)
-		placement_finished.emit(next_type)
+			pass
+		elif _placement.get_selected_type() != "":
+			var next_type: String = _placement.try_place_at_screen(local_pos)
+			_placement.set_selected_type(next_type)
+			placement_finished.emit(next_type)
+		else:
+			_block_drag.handle_tap(local_pos)
 	_pointer_down = false
 	_pointer_moved = false
 	_drag_pan = false
@@ -128,8 +133,14 @@ func _apply_pan_drag(local_pos: Vector2) -> void:
 	_update_pointer_follow(local_pos)
 	if not _pointer_down:
 		return
+	if _block_drag.is_dragging():
+		_block_drag.update_drag(local_pos)
+		_pointer_moved = true
+		return
 	if not _pointer_moved and local_pos.distance_to(_press_pos) >= FieldMapConstants.DRAG_THRESHOLD:
 		_pointer_moved = true
+		if _block_drag.try_begin_drag(local_pos):
+			return
 		_drag_pan = true
 	if _drag_pan:
 		_camera.set_pan(_pan_at_drag + (local_pos - _drag_start))
@@ -137,7 +148,7 @@ func _apply_pan_drag(local_pos: Vector2) -> void:
 
 func _handle_pointer_motion(screen_pos: Vector2) -> void:
 	_apply_pan_drag(screen_pos)
-	if _drag_pan:
+	if _drag_pan or _block_drag.is_dragging():
 		_host.accept_event()
 
 
@@ -166,6 +177,9 @@ func _handle_screen_drag(sd: InputEventScreenDrag) -> void:
 		_update_pinch()
 	elif _drag_pan:
 		_camera.apply_pan_delta(sd.relative)
+		_host.accept_event()
+	elif _block_drag.is_dragging():
+		_block_drag.update_drag(_to_local(sd.position))
 		_host.accept_event()
 	else:
 		_apply_pan_drag(_to_local(sd.position))
