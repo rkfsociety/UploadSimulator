@@ -52,7 +52,8 @@ func handle_gui_input(event: InputEvent) -> void:
 
 
 func handle_input(event: InputEvent) -> void:
-	if not DisplayServer.is_touchscreen_available():
+	# На ПК мышь обрабатывается в _gui_input; тач здесь только на мобильных ОС
+	if not _use_touch_input():
 		return
 	if _is_over_hud(_screen_pos_from_event(event)):
 		return
@@ -109,7 +110,10 @@ func _end_pointer(local_pos: Vector2) -> void:
 		_block_drag.finish_drag(local_pos)
 	elif _pointer_down and not _pointer_moved:
 		if _is_over_hud(_host.get_global_transform() * local_pos):
-			pass
+			_pointer_down = false
+			_pointer_moved = false
+			_drag_pan = false
+			return
 		elif _placement.get_selected_type() != "":
 			var next_type: String = _placement.try_place_at_screen(local_pos)
 			_placement.set_selected_type(next_type)
@@ -133,15 +137,14 @@ func _apply_pan_drag(local_pos: Vector2) -> void:
 	_update_pointer_follow(local_pos)
 	if not _pointer_down:
 		return
-	if _block_drag.is_dragging():
-		_block_drag.update_drag(local_pos)
-		_pointer_moved = true
-		return
 	if not _pointer_moved and local_pos.distance_to(_press_pos) >= FieldMapConstants.DRAG_THRESHOLD:
 		_pointer_moved = true
-		if _block_drag.try_begin_drag(local_pos):
-			return
 		_drag_pan = true
+		if _block_drag.try_begin_drag(local_pos):
+			_drag_pan = false
+	if _block_drag.is_dragging():
+		_block_drag.update_drag(local_pos)
+		return
 	if _drag_pan:
 		_camera.set_pan(_pan_at_drag + (local_pos - _drag_start))
 
@@ -249,3 +252,8 @@ func _is_over_hud(screen_pos: Vector2) -> bool:
 	if screen_pos.x >= vp_size.x - 88.0 and screen_pos.y >= vp_size.y - 148.0:
 		return true
 	return false
+
+
+func _use_touch_input() -> bool:
+	var os_name := OS.get_name()
+	return os_name == "Android" or os_name == "iOS"

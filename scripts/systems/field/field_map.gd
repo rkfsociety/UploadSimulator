@@ -40,8 +40,7 @@ func _ready() -> void:
 
 	GameState.field_changed.connect(_on_field_changed)
 	GameState.wiring_changed.connect(_on_wiring_changed)
-	GameState.stats_changed.connect(_on_field_changed)
-	GameState.queue_changed.connect(_on_field_changed)
+	GameState.queue_changed.connect(_on_blocks_refresh)
 
 	await get_tree().process_frame
 	_camera.focus_world(GridDefs.world_center_pixel())
@@ -76,7 +75,18 @@ func focus_map_center() -> void:
 
 ## Ставит модуль в центр текущего вида; ищет свободную клетку вокруг якоря.
 func place_at_view_center(type_id: String) -> bool:
-	return _placement.place_at_view_center(type_id, _blocks.spawn)
+	_block_drag.clear_selection()
+	var ok := _placement.place_at_view_center(type_id, _blocks.spawn)
+	if ok:
+		_focus_placed_block_center()
+		return true
+	enter_placement_mode(type_id)
+	GameState.log_message.emit("Тапните по карте, чтобы поставить купленный модуль.")
+	return false
+
+
+func _focus_placed_block_center() -> void:
+	_blocks.refresh_all()
 
 
 ## Включает режим ручной установки выбранного типа модуля.
@@ -99,7 +109,8 @@ func get_view_center_cell() -> Vector2i:
 
 
 func _on_field_changed() -> void:
-	_block_drag.cancel_drag()
+	if _block_drag.is_dragging():
+		_block_drag.cancel_drag()
 	var prev_uids: Array = _blocks.get_nodes().keys()
 	_blocks.sync_from_state()
 	var curr_uids: Array = _blocks.get_nodes().keys()
@@ -108,6 +119,10 @@ func _on_field_changed() -> void:
 		_wiring.collect_ports()
 		_wiring.update_positions()
 	_block_drag.sync_selection_visual()
+
+
+func _on_blocks_refresh() -> void:
+	_blocks.refresh_all()
 
 
 func _on_wiring_changed() -> void:

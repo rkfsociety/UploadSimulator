@@ -44,6 +44,15 @@ func spawn(uid: String) -> void:
 	_blocks_root.add_child(block)
 	block.setup(uid, inst.type_id)
 	_nodes[uid] = block
+	block.visible = true
+	block.process_mode = Node.PROCESS_MODE_INHERIT
+
+
+func refresh_all() -> void:
+	for uid in _nodes.keys():
+		var block: PlacedBlock = _nodes[uid] as PlacedBlock
+		if block != null and is_instance_valid(block):
+			block.refresh()
 
 
 func get_block(uid: String) -> PlacedBlock:
