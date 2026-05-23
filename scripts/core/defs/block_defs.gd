@@ -28,7 +28,8 @@ const TYPES := {
 		"shop_cost": 90,
 		"upgrade_base": 40,
 		"upgrade_mult": 1.5,
-		"capacity_bytes_per_level": 40.0 * 1024.0 * GameConstants.BYTE_SIZE_SCALE,
+		# Значение задаётся в sync_limits_from_balance() из GameBalanceConfig
+		"capacity_bytes_per_level": 1.0,
 		"ports":
 		{
 			"file_in": {"kind": "file", "dir": "in"},
@@ -69,7 +70,8 @@ const TYPES := {
 	},
 }
 
-# Разрешённые пары типов блоков (порты подбираются автоматически по kind/dir)
+# Разрешённые пары типов (только эти три; обход хранилища невозможен на уровне типов).
+# У каждого типа в TYPES ровно один out нужного kind — иначе resolve_wire_ports вернёт {}.
 const ALLOWED_WIRES: Array[Array] = [
 	["downloader", "storage"],
 	["storage", "uploader"],
@@ -98,6 +100,16 @@ static var PORT_DEFS: Dictionary = {}
 static func _static_init() -> void:
 	_build_port_defs()
 	_validate_defs()
+
+
+# Подтягивает ёмкость диска из централизованного баланса (после GameConstants._static_init)
+static func sync_limits_from_balance() -> void:
+	if not TYPES.has("storage"):
+		return
+	var cfg := GameConstants.get_balance_config()
+	TYPES["storage"]["capacity_bytes_per_level"] = (
+		cfg.storage_capacity_legacy_kb_per_level * 1024.0 * GameConstants.BYTE_SIZE_SCALE
+	)
 
 
 static func get_block_color(type_id: String) -> Color:
@@ -150,7 +162,7 @@ static func is_allowed_wire(
 	return resolved["from_port"] == from_port and resolved["to_port"] == to_port
 
 
-# Возвращает единственную пару портов out→in для разрешённого соединения типов
+# Единственная пара портов out→in для пары типов; при двух out на типе — пусто (ошибка конфига).
 static func resolve_wire_ports(from_type: String, to_type: String) -> Dictionary:
 	if not _is_allowed_type_pair(from_type, to_type):
 		return {}
