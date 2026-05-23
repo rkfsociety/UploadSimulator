@@ -36,11 +36,11 @@ func _init(
 
 
 func handle_gui_input(event: InputEvent) -> void:
-	# Клики по HUD не забираем картой (иначе кнопка магазина может не сработать)
+	# Блокируем только нажатия по HUD; движение мыши нужно для панорамы
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		var screen_pos := _host.get_global_transform() * mb.position
-		if _is_over_hud(screen_pos):
+		if mb.pressed and _is_over_hud(screen_pos):
 			return
 	if event is InputEventMouseButton:
 		_handle_mouse_button(event as InputEventMouseButton)
@@ -135,6 +135,22 @@ func _begin_pan(local_pos: Vector2, moved: bool) -> void:
 
 func _apply_pan_drag(local_pos: Vector2) -> void:
 	_update_pointer_follow(local_pos)
+	_update_drag_state(local_pos)
+
+
+## Каждый кадр: панорама не зависит от пропущенных InputEventMouseMotion.
+func process_frame(host: Control) -> void:
+	if _pointer_down and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		_end_pointer(host.get_local_mouse_position())
+		return
+	if not _pointer_down:
+		return
+	var local_pos := host.get_local_mouse_position()
+	_update_pointer_follow(local_pos)
+	_update_drag_state(local_pos)
+
+
+func _update_drag_state(local_pos: Vector2) -> void:
 	if not _pointer_down:
 		return
 	if not _pointer_moved and local_pos.distance_to(_press_pos) >= FieldMapConstants.DRAG_THRESHOLD:

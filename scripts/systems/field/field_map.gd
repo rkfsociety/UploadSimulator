@@ -53,6 +53,8 @@ func _notification(what: int) -> void:
 
 
 func _process(_delta: float) -> void:
+	if _map_input != null:
+		_map_input.process_frame(self)
 	if grid_draw.has_method("sync_view"):
 		grid_draw.sync_view()
 	var vis := _camera.visible_world_rect()
