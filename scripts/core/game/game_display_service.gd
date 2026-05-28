@@ -98,11 +98,10 @@ func get_block_display(uid: String) -> Dictionary:
 	return empty
 
 
-## UI загрузчика: кнопка выкл., пока на этом uid идёт queue[0] (даже если в очереди ещё задачи).
+## UI загрузчика: скачивает автоматически, ручной кнопки нет — только статус и прогресс.
 func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
-	target["action_text"] = "Из сети"
-	target["action_visible"] = not chain_file.is_empty()
-	target["action_enabled"] = _pipeline.can_download_at(uid)
+	target["action_visible"] = false
+	target["action_enabled"] = false
 	var queue := _data.get_download_queue()
 	if not queue.is_empty() and chain_file.get("downloader", "") == uid:
 		var job: FileTransferJob = queue[0]
@@ -111,11 +110,8 @@ func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dicti
 			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0)]
 		)
 		target["progress"] = job.progress
-		target["action_enabled"] = false  # блок: активное скачивание на модуле цепочки
 	elif _pipeline.can_download_at(uid):
-		target["status"] = "Готов: скачать %s из интернета" % FileDefs.get_type_label(
-			FileDefs.DEFAULT_TYPE
-		)
+		target["status"] = "Качает автоматически из интернета"
 	else:
 		target["status"] = _downloader_idle_hint(chain_file)
 

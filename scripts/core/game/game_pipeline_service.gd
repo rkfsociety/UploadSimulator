@@ -29,8 +29,19 @@ func _init(
 
 
 func tick(delta: float) -> void:
+	_auto_enqueue_download()
 	_tick_download_queue(delta)
 	_tick_upload_queue(delta)
+
+
+## Автоскачивание: пока цепочка собрана и есть место, загрузчик сам берёт следующий файл.
+## Один файл за раз (очередь пуста) — непрерывное скачивание без спама в лог.
+func _auto_enqueue_download() -> void:
+	if not _data.get_download_queue().is_empty():
+		return
+	if not can_enqueue_download():
+		return
+	enqueue_download()
 
 
 func download_speed_for(uid: String) -> float:

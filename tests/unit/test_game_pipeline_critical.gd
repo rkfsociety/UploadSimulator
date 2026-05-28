@@ -1,7 +1,7 @@
 extends RefCounted
 ## Критические сценарии пайплайна: переполнение очереди/диска, разрыв цепочки, загрузка сейва.
 
-var case_count := 4
+var case_count := 5
 
 
 func run() -> Array[String]:
@@ -10,7 +10,25 @@ func run() -> Array[String]:
 	_test_storage_overflow_clears_pending_downloads(errors)
 	_test_disconnect_cancels_active_transfer(errors)
 	_test_save_load_restores_queues(errors)
+	_test_tick_auto_enqueues_download(errors)
 	return errors
+
+
+## Автоскачивание: при собранной цепочке tick сам ставит задачу в очередь без кнопки.
+func _test_tick_auto_enqueues_download(errors: Array[String]) -> void:
+	var stack := _make_stack()
+	var data: GameStateData = stack.data
+	var pipeline: GamePipelineService = stack.pipeline
+	if _wire_file_chain(stack).is_empty():
+		errors.append("автоскачивание: размещение цепочки")
+		stack.host.free()
+		return
+	if not data.get_download_queue().is_empty():
+		errors.append("автоскачивание: очередь должна быть пуста до тика")
+	pipeline.tick(0.0)
+	if data.get_download_queue().size() != 1:
+		errors.append("автоскачивание: tick должен поставить ровно одну задачу")
+	stack.host.free()
 
 
 ## Полная очередь скачивания: активные задачи доигрываются до конца (FIFO).
