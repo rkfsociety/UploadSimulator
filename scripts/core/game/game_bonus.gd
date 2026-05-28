@@ -4,9 +4,10 @@ class_name GameBonus
 
 
 static func effect_at_level(type_id: String, level: int) -> float:
+	# Уровень 1 = база (без бонуса); бонус растёт с улучшениями, как и storage_capacity_bytes()
 	var lvl := maxi(1, level)
 	var per_level: float = float(BlockDefs.TYPES.get(type_id, {}).get("effect_per_level", 0.0))
-	return float(lvl) * per_level
+	return float(lvl - 1) * per_level
 
 
 static func speed_scaled(base_speed: float, type_id: String, level: int) -> float:

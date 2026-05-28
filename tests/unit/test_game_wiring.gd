@@ -21,8 +21,9 @@ func run() -> Array[String]:
 		errors.append("can_connect downloader→storage")
 	if not wiring.try_connect_ports(d_uid, "file_out", s_uid, "file_in").is_ok():
 		errors.append("try_connect downloader→storage")
-	if wiring.get_file_chain().is_empty():
-		errors.append("file_chain пуст после downloader→storage (нужен ещё storage→uploader)")
+	# Цепочка неполная (нет storage→uploader) — get_file_chain должна быть пустой
+	if not wiring.get_file_chain().is_empty():
+		errors.append("file_chain не должна быть полной только с downloader→storage")
 	if wiring.can_connect_ports(d_uid, "file_out", u_uid, "file_in"):
 		errors.append("downloader→uploader должно быть запрещено")
 	if wiring.try_connect_ports(s_uid, "file_out", u_uid, "file_in").is_ok():

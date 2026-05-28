@@ -13,14 +13,18 @@ func run() -> Array[String]:
 	var storage := GameStorageService.new(data, field)
 	var premium := PremiumCurrencyService.new(host)
 	var pipeline := GamePipelineService.new(data, host, field, wiring, storage, premium)
-	_test_buy_no_money(errors, field)
+	_test_buy_no_money(errors, field, data)
 	_test_download_queue_full(errors, data, field, wiring, pipeline)
 	_test_file_type(errors)
-	_test_place_occupied(errors, field, data)
+	_test_place_occupied(errors, host)
 	return errors
 
 
-func _test_buy_no_money(errors: Array[String], field: GameFieldService) -> void:
+func _test_buy_no_money(
+	errors: Array[String], field: GameFieldService, data: GameStateData
+) -> void:
+	# Свежая GameStateData стартует с кассой = стоимость набора ($315) — обнуляем для теста
+	data.set_money(0.0)
 	var check := field.check_buy_block("downloader")
 	if check.is_ok():
 		errors.append("покупка без денег должна падать")
@@ -70,9 +74,10 @@ func _test_file_type(errors: Array[String]) -> void:
 		errors.append("сообщение FILE_TYPE_UNSUPPORTED")
 
 
-func _test_place_occupied(
-	errors: Array[String], field: GameFieldService, data: GameStateData
-) -> void:
+func _test_place_occupied(errors: Array[String], host: Node) -> void:
+	# Изоляция: своё поле, чтобы клетки не были заняты из предыдущих подтестов
+	var data := GameStateData.new()
+	var field := GameFieldService.new(data, host)
 	data.add_block_stock("storage", 2)
 	var first := field.place_block("storage", 0, 0)
 	if not first.is_ok():

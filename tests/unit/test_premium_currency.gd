@@ -7,7 +7,7 @@ var case_count := 4
 
 func run() -> Array[String]:
 	var errors: Array[String] = []
-	var host := Node.new()
+	var host := _TestHost.new()
 	var premium := PremiumCurrencyService.new(host, GameConstants.START_DIAMONDS)
 
 	if premium.get_balance() != GameConstants.START_DIAMONDS:
@@ -39,3 +39,9 @@ func run() -> Array[String]:
 
 	host.free()
 	return errors
+
+
+class _TestHost:
+	extends Node
+
+	signal stats_changed
