@@ -11,7 +11,6 @@ var _selected_uid: String = ""
 var _press_uid: String = ""
 var _drag_uid: String = ""
 var _dragging: bool = false
-var _move_armed: bool = false
 var _hover_cell := Vector2i(-1, -1)
 var _ghost: ColorRect
 
@@ -38,7 +37,6 @@ func is_dragging() -> bool:
 
 
 func clear_selection() -> void:
-	_move_armed = false
 	_set_selected("")
 
 
@@ -52,12 +50,10 @@ func on_pointer_down(local_pos: Vector2) -> void:
 func try_begin_drag(local_pos: Vector2) -> bool:
 	if _placement.get_selected_type() != "":
 		return false
-	# Перенос только после повторного тапа по выделенному модулю (иначе — панорама)
-	if not _move_armed:
-		return false
+	# Перетаскивание уже выделенного модуля переносит модуль, а не камеру.
+	# Пустое место или невыделенный модуль — панорама камеры.
 	if _press_uid == "" or _press_uid != _selected_uid:
 		return false
-	_move_armed = false
 	_drag_uid = _press_uid
 	_dragging = true
 	_set_selected(_drag_uid)
@@ -103,7 +99,6 @@ func finish_drag(local_pos: Vector2) -> void:
 func cancel_drag() -> void:
 	_dragging = false
 	_drag_uid = ""
-	_move_armed = false
 	_hide_ghost()
 
 
@@ -111,12 +106,10 @@ func handle_tap(local_pos: Vector2) -> void:
 	if _placement.get_selected_type() != "":
 		return
 	var uid := _pick_uid_at_screen(local_pos)
-	if uid != "" and uid == _selected_uid:
-		_move_armed = true
-		GameState.log_message.emit("Перетащите модуль на новое место.")
-	else:
-		_move_armed = false
-		_set_selected(uid)
+	var changed := uid != _selected_uid
+	_set_selected(uid)
+	if uid != "" and changed:
+		GameState.log_message.emit("Перетащите модуль, чтобы переместить.")
 
 
 func sync_selection_visual() -> void:
