@@ -77,7 +77,7 @@ func _draw() -> void:
 	var offset := (size - vis) * 0.5
 	var tex := get_port_texture(_kind, _direction)
 	if tex != null:
-		draw_texture_rect(tex, Rect2(offset, vis))
+		draw_texture_rect(tex, Rect2(offset, vis), false)
 	else:
 		draw_set_transform(offset, 0.0, Vector2.ONE)
 		draw_port_visual(self, vis, _kind, _direction)
