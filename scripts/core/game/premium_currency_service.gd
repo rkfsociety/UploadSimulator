@@ -21,6 +21,11 @@ func get_balance() -> int:
 	return _wallet.get_balance()
 
 
+## Сброс к стартовому балансу алмазов (новая игра). Без эмита — хост уведомит после reset.
+func reset() -> void:
+	_wallet.set_balance(GameConstants.START_DIAMONDS)
+
+
 func can_afford(cost: int) -> bool:
 	return _wallet.can_afford(cost)
 

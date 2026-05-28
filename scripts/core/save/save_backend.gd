@@ -22,3 +22,8 @@ func write_save(_slot_id: String, _payload: Dictionary) -> bool:
 func read_save(_slot_id: String) -> Dictionary:
 	push_error("SaveBackend.read_save: переопределите в наследнике (%s)" % get_class())
 	return {}
+
+
+func delete_save(_slot_id: String) -> bool:
+	push_error("SaveBackend.delete_save: переопределите в наследнике (%s)" % get_class())
+	return false

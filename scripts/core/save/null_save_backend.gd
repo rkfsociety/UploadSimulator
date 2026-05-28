@@ -17,3 +17,7 @@ func write_save(_slot_id: String, _payload: Dictionary) -> bool:
 
 func read_save(_slot_id: String) -> Dictionary:
 	return {}
+
+
+func delete_save(_slot_id: String) -> bool:
+	return true

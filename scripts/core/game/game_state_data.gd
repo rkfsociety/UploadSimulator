@@ -26,10 +26,27 @@ var _uid_counter: int = 0
 
 
 func _init() -> void:
-	# Касса при старте — сумма shop_cost базового набора (см. BlockDefs.starter_kit_types)
+	reset_to_initial()
+
+
+## Сброс к стартовому состоянию (новая игра): касса = стоимость базового набора,
+## открыты только стартовые типы, поле/очереди/счётчики пусты.
+func reset_to_initial() -> void:
 	_money = float(BlockDefs.starter_kit_cost())
+	_uploader_balance = 0.0
+	_env_upgrade_levels.clear()
+	_unlocked_module_types.clear()
 	for type_id in BlockDefs.starter_kit_types():
 		_unlocked_module_types[type_id] = true
+	_block_stock.clear()
+	_placed_blocks.clear()
+	_wire_connections.clear()
+	_phase = Phase.IDLE
+	_uploaded_files = 0
+	_download_queue.clear()
+	_stored_files.clear()
+	_upload_queue.clear()
+	_uid_counter = 0
 
 
 func get_money() -> float:

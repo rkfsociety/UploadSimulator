@@ -48,6 +48,19 @@ func load(slot_id: String = SaveConstants.DEFAULT_SLOT) -> bool:
 	return true
 
 
+func delete_save(slot_id: String = SaveConstants.DEFAULT_SLOT) -> bool:
+	return _backend.delete_save(slot_id)
+
+
+## Новая игра: стартовое состояние в памяти + удаление слота на диске.
+func reset_progress(slot_id: String = SaveConstants.DEFAULT_SLOT) -> bool:
+	_data.reset_to_initial()
+	_premium.reset()
+	var deleted := _backend.delete_save(slot_id)
+	_notify_state_restored()
+	return deleted
+
+
 func _notify_state_restored() -> void:
 	# UI и поле подписаны на эти сигналы после загрузки/сохранения
 	_host.stats_changed.emit()

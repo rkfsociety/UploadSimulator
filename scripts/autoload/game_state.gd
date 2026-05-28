@@ -3,6 +3,9 @@ extends Node
 
 const _AsyncSafety := preload("res://scripts/core/async_safety.gd")
 
+## Периодическое автосохранение на случай некорректного завершения (краш, kill).
+const AUTOSAVE_INTERVAL_SEC := 30.0
+
 signal stats_changed
 signal queue_changed
 ## Лёгкое обновление UI модулей при прогрессе очереди (без полного field_changed).
@@ -37,6 +40,8 @@ var _display_svc: GameDisplayService
 var _environment_svc: GameEnvironmentService
 var _save_svc: GameSaveService
 
+var _autosave_accum: float = 0.0
+
 
 func _ready() -> void:
 	_data = GameStateData.new()
@@ -49,7 +54,7 @@ func _ready() -> void:
 		_data, self, _field_svc, _wiring_svc, _storage_svc, _premium_svc
 	)
 	_wiring_svc.bind_pipeline(_pipeline_svc)
-	_save_svc = GameSaveService.new(_data, _premium_svc, self, NullSaveBackend.new())
+	_save_svc = GameSaveService.new(_data, _premium_svc, self, FileSaveBackend.new())
 	_display_svc = GameDisplayService.new(_data, _field_svc, _wiring_svc, _storage_svc, _pipeline_svc)
 	access = GameStateAccess.new(_data)
 	field = GameStateField.new(_field_svc)
@@ -60,10 +65,38 @@ func _ready() -> void:
 	environment = GameStateEnvironment.new(_environment_svc)
 	premium = GameStatePremium.new(_premium_svc)
 	save = GameStateSave.new(_save_svc)
+	# Сохраняем прогресс при закрытии окна / сворачивании — обрабатываем сами в _notification
+	get_tree().auto_accept_quit = false
+	_load_on_start()
+
+
+## Автозагрузка слота по умолчанию при старте (если есть). UI читает состояние в своих _ready.
+func _load_on_start() -> void:
+	if save.has_save():
+		save.load()
 
 
 func _process(delta: float) -> void:
 	_pipeline_svc.tick(delta)
+	_autosave_accum += delta
+	if _autosave_accum >= AUTOSAVE_INTERVAL_SEC:
+		_autosave_accum = 0.0
+		_autosave()
+
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_WM_CLOSE_REQUEST, NOTIFICATION_WM_GO_BACK_REQUEST:
+			_autosave()
+			get_tree().quit()
+		NOTIFICATION_APPLICATION_PAUSED:
+			# Android: уход в фон — сохраняем сразу
+			_autosave()
+
+
+func _autosave() -> void:
+	if _save_svc != null and _save_svc.is_persistent():
+		_save_svc.save()
 
 
 func run_publish_pause(job: FileTransferJob) -> void:

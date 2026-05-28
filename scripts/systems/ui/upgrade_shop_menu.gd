@@ -3,10 +3,13 @@ extends Control
 
 signal closed
 
+const DANGER_COLOR := Color(1.0, 0.35, 0.4, 1.0)
+
 var _dim: ColorRect
 var _panel: PanelContainer
 var _list: VBoxContainer
 var _title: Label
+var _confirm_reset: ConfirmationDialog
 
 
 func _ready() -> void:
@@ -91,6 +94,17 @@ func _build_ui() -> void:
 	_list.add_theme_constant_override("separation", 8)
 	scroll.add_child(_list)
 
+	_confirm_reset = ConfirmationDialog.new()
+	_confirm_reset.title = "Сброс прогресса"
+	_confirm_reset.dialog_text = (
+		"Сбросить весь прогресс и начать заново?\nДеньги, алмазы, модули, провода и улучшения "
+		+ "вернутся к началу. Действие необратимо."
+	)
+	_confirm_reset.ok_button_text = "Сбросить"
+	_confirm_reset.get_cancel_button().text = "Отмена"
+	_confirm_reset.confirmed.connect(_on_reset_confirmed)
+	add_child(_confirm_reset)
+
 
 func _on_dim_input(event: InputEvent) -> void:
 	if PlatformInfo.is_primary_pointer_press(event):
@@ -107,6 +121,7 @@ func _refresh() -> void:
 		child.queue_free()
 	_append_module_unlock_section()
 	_append_env_upgrade_section()
+	_append_reset_section()
 
 
 func _append_module_unlock_section() -> void:
@@ -128,6 +143,32 @@ func _append_env_upgrade_section() -> void:
 	_list.add_child(_make_section_title("Улучшения среды"))
 	for upgrade_id in EnvironmentUpgradeDefs.get_upgrade_ids():
 		_list.add_child(_make_env_upgrade_row(upgrade_id))
+
+
+func _append_reset_section() -> void:
+	_list.add_child(_make_section_title("Сохранение"))
+	_list.add_child(
+		_make_row(
+			"⟲",
+			"Сбросить прогресс",
+			"Новая игра с нуля. Сохранение на диске будет удалено.",
+			"Сбросить",
+			0,
+			true,
+			_on_reset_pressed,
+			DANGER_COLOR,
+		)
+	)
+
+
+func _on_reset_pressed() -> void:
+	_confirm_reset.popup_centered()
+
+
+func _on_reset_confirmed() -> void:
+	GameState.save.reset()
+	GameState.log_message.emit("Прогресс сброшен — новая игра.")
+	_refresh()
 
 
 func _make_section_title(text: String) -> Label:

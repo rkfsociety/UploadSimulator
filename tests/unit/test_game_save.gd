@@ -1,13 +1,15 @@
 extends RefCounted
 ## Unit-тесты снимка состояния и in-memory бэкенда сохранений.
 
-var case_count := 4
+var case_count := 6
 
 
 func run() -> Array[String]:
 	var errors: Array[String] = []
 	_test_snapshot_roundtrip(errors)
 	_test_memory_backend(errors)
+	_test_file_backend(errors)
+	_test_reset_progress(errors)
 	return errors
 
 
@@ -59,6 +61,57 @@ func _test_memory_backend(errors: Array[String]) -> void:
 		errors.append("GameSaveService.load memory")
 	if fresh.get_money() != data.get_money():
 		errors.append("load restored money")
+	host.free()
+
+
+func _test_file_backend(errors: Array[String]) -> void:
+	var host := _SaveTestHost.new()
+	var data := GameStateData.new()
+	var premium := PremiumCurrencyService.new(host)
+	var backend := FileSaveBackend.new()
+	var svc := GameSaveService.new(data, premium, host, backend)
+	var slot := "test_file_slot"
+	backend.delete_save(slot)  # чистый старт
+	data.add_money(123.0)
+	if not svc.save(slot):
+		errors.append("FileSaveBackend: save")
+	if not backend.has_save(slot):
+		errors.append("FileSaveBackend: has_save после save")
+	var fresh := GameStateData.new()
+	var fresh_premium := PremiumCurrencyService.new(host, 0)
+	var load_svc := GameSaveService.new(fresh, fresh_premium, host, backend)
+	if not load_svc.load(slot):
+		errors.append("FileSaveBackend: load")
+	if fresh.get_money() != data.get_money():
+		errors.append("FileSaveBackend: восстановление money")
+	if not backend.delete_save(slot):
+		errors.append("FileSaveBackend: delete_save")
+	if backend.has_save(slot):
+		errors.append("FileSaveBackend: has_save после delete")
+	host.free()
+
+
+func _test_reset_progress(errors: Array[String]) -> void:
+	var host := _SaveTestHost.new()
+	var data := GameStateData.new()
+	var premium := PremiumCurrencyService.new(host)
+	var backend := MemorySaveBackend.new()
+	var svc := GameSaveService.new(data, premium, host, backend)
+	var starter := float(BlockDefs.starter_kit_cost())
+	data.add_money(500.0)
+	premium.grant(7, PremiumCurrencyService.Source.ADMIN)
+	data.get_placed_blocks().append(BlockInstance.create("downloader", 0, 0, "blk_x", 3))
+	svc.save("reset_slot")
+	if not svc.reset_progress("reset_slot"):
+		errors.append("reset_progress: возврат true")
+	if data.get_money() != starter:
+		errors.append("reset: money к стартовому")
+	if premium.get_balance() != GameConstants.START_DIAMONDS:
+		errors.append("reset: алмазы к стартовым")
+	if not data.get_placed_blocks().is_empty():
+		errors.append("reset: поле очищено")
+	if backend.has_save("reset_slot"):
+		errors.append("reset: слот удалён")
 	host.free()
 
 

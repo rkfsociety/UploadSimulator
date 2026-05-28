@@ -26,3 +26,8 @@ func read_save(slot_id: String) -> Dictionary:
 	if stored is Dictionary:
 		return (stored as Dictionary).duplicate(true)
 	return {}
+
+
+func delete_save(slot_id: String) -> bool:
+	_slots.erase(slot_id)
+	return true

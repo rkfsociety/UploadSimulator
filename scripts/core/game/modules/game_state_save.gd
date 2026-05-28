@@ -24,3 +24,12 @@ func save(slot_id: String = SaveConstants.DEFAULT_SLOT) -> bool:
 
 func load(slot_id: String = SaveConstants.DEFAULT_SLOT) -> bool:
 	return _svc.load(slot_id)
+
+
+func delete(slot_id: String = SaveConstants.DEFAULT_SLOT) -> bool:
+	return _svc.delete_save(slot_id)
+
+
+## Новая игра: сброс состояния и удаление слота.
+func reset(slot_id: String = SaveConstants.DEFAULT_SLOT) -> bool:
+	return _svc.reset_progress(slot_id)
