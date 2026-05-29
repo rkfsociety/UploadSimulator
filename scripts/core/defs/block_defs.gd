@@ -10,7 +10,7 @@ const TYPES := {
 		"color": Color(0.0, 0.88, 1.0, 1.0),
 		"desc": "Скачивает файлы из интернета",
 		"cells_w": 6,
-		"cells_h": 4,
+		"cells_h": 3,
 		"unlocked_at_start": true,
 		"diamond_unlock_cost": 0,
 		"shop_cost": 75,
@@ -26,7 +26,7 @@ const TYPES := {
 		"color": Color(0.58, 0.35, 1.0, 1.0),
 		"desc": "Диск для скачанных файлов",
 		"cells_w": 7,
-		"cells_h": 4,
+		"cells_h": 3,
 		"unlocked_at_start": true,
 		"diamond_unlock_cost": 0,
 		"shop_cost": 90,
@@ -48,7 +48,7 @@ const TYPES := {
 		"color": Color(0.25, 1.0, 0.55, 1.0),
 		"desc": "Выгружает в интернет, копит доход",
 		"cells_w": 6,
-		"cells_h": 4,
+		"cells_h": 3,
 		"unlocked_at_start": true,
 		"diamond_unlock_cost": 0,
 		"shop_cost": 85,
@@ -68,7 +68,7 @@ const TYPES := {
 		"color": Color(1.0, 0.78, 0.15, 1.0),
 		"desc": "Забирает деньги из сейфа аплоудера в общую кассу",
 		"cells_w": 5,
-		"cells_h": 4,
+		"cells_h": 3,
 		"unlocked_at_start": true,
 		"diamond_unlock_cost": 0,
 		"shop_cost": 65,
@@ -104,7 +104,7 @@ const _VALID_PORT_DIRS: Array[String] = ["in", "out"]
 
 # Размер следа модуля по умолчанию (клетки), если тип не задал свой
 const DEFAULT_CELLS_W := 6
-const DEFAULT_CELLS_H := 4
+const DEFAULT_CELLS_H := 3
 # Минимум: ширина под текст и порты; высота — хотя бы основная панель + полоса улучшения
 const MIN_CELLS_W := 3
 const MIN_CELLS_H := 2
