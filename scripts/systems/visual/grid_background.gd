@@ -23,10 +23,6 @@ func sync_view() -> void:
 	queue_redraw()
 
 
-func _minor_step() -> float:
-	return float(GridDefs.CELL_SIZE) / 8.0
-
-
 func _cell_step() -> float:
 	return float(GridDefs.CELL_SIZE)
 
@@ -84,14 +80,16 @@ func _snap_local(v: float) -> float:
 	return floorf(v) + 0.5
 
 
-## Шаг сетки по зуму: плотнее вблизи, реже вдали — один и тот же цвет линий.
+## Шаг сетки: один квадрат = одна клетка (CELL_SIZE). Вдали — реже, кратно клетке.
 func _line_step(zoom: float) -> float:
-	var minor := _minor_step()
-	if minor * zoom >= 0.75:
-		return minor
 	var cell := _cell_step()
 	if cell * zoom >= 1.0:
 		return cell
+	# Клетка мельче пикселя — рисуем реже, кратно клетке, чтобы не зашумлять
+	if cell * 4.0 * zoom >= 1.0:
+		return cell * 4.0
+	if cell * 16.0 * zoom >= 1.0:
+		return cell * 16.0
 	return 0.0
 
 
