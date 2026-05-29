@@ -90,13 +90,14 @@ func _draw_border() -> void:
 	if rect.size.x < 2.0 or rect.size.y < 2.0:
 		return
 	var px := _screen_pixel_thickness()
-	var sel_mul := 2.2 if map_selected else 1.0
-	var glow := Color(accent.r, accent.g, accent.b, 0.28 * sel_mul)
-	var glow2 := Color(accent.r, accent.g, accent.b, 0.14 * sel_mul)
+	# Тинт панели постоянный (не зависит от выделения), иначе залитый акцент топит текст
+	var glow := Color(accent.r, accent.g, accent.b, 0.28)
+	var glow2 := Color(accent.r, accent.g, accent.b, 0.14)
 	_border_draw.draw_rect(rect.grow_individual(px * 2.0, px * 2.0, px * 2.0, px * 2.0), glow2)
 	_border_draw.draw_rect(rect.grow_individual(px, px, px, px), glow)
-	var border_color := accent.lightened(0.35) if map_selected else accent
-	var border_px := px * (1.8 if map_selected else 1.0)
+	# Выделение — только рамка по краям: ярче и толще, текст не перекрывает
+	var border_color := accent.lightened(0.55) if map_selected else accent
+	var border_px := px * (2.6 if map_selected else 1.0)
 	_draw_border_rect_on(_border_draw, rect, border_color, border_px)
 
 
