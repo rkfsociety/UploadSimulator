@@ -142,7 +142,20 @@ func _on_field_changed() -> void:
 	if _blocks_layout_changed(prev_uids, curr_uids):
 		_wiring.collect_ports()
 		_wiring.rebuild_wires()
+		# Свежезаспавненные блоки раскладывают порты не сразу — уточняем концы проводов кадром позже
+		_refresh_wire_positions_deferred()
 	_block_drag.sync_selection_visual()
+
+
+## Пересчёт координат проводов после того, как контейнеры портов разложились (следующий кадр).
+func _refresh_wire_positions_deferred() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	await tree.process_frame
+	if not _AsyncSafety.is_node_in_scene(self):
+		return
+	_wiring.update_positions()
 
 
 func _on_blocks_refresh() -> void:
