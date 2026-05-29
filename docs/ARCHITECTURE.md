@@ -6,7 +6,7 @@
 
 ```
 scripts/
-  autoload/          # GameState, BgmPlayer, DebugOverlay
+  autoload/          # PlatformInfo, WindowBootstrap, GameState, BgmPlayer, DebugOverlay
   core/
     defs/            # BlockDefs, GridDefs, FileDefs, EnvironmentUpgradeDefs
     save/            # SaveBackend, снимок состояния, GameSaveService
@@ -62,7 +62,8 @@ Autoload `DebugOverlay` показывает FPS, кассу, фазы, очер
 | `storage` | `game_state_storage.gd` | диск |
 | `pipeline` | `game_state_pipeline.gd` | скачивание, выгрузка, сбор денег |
 | `environment` | `game_state_environment.gd` | открытие типов модулей и улучшения среды за алмазы |
-| `save` | `game_state_save.gd` | сохранение/загрузка снимка (`SaveBackend`, пока `NullSaveBackend`) |
+| `premium` | `game_state_premium.gd` | кошелёк алмазов ◆ |
+| `save` | `game_state_save.gd` | сохранение/загрузка снимка (`SaveBackend`, по умолчанию `FileSaveBackend`) |
 
 Логика — в сервисах (`GameFieldService`, …); модули только делегируют. Пример: `GameState.field.place_block(...)`, `GameState.access.get_money()`.
 
@@ -72,13 +73,14 @@ Autoload `DebugOverlay` показывает FPS, кассу, фазы, очер
 
 | Класс | Назначение |
 |-------|------------|
-| `SaveBackend` | абстрактный интерфейс: `has_save`, `write_save`, `read_save` |
-| `NullSaveBackend` | заглушка по умолчанию в `GameState` (ничего не пишет на диск) |
+| `SaveBackend` | абстрактный интерфейс: `has_save`, `write_save`, `read_save`, `delete_save`, `is_persistent` |
+| `FileSaveBackend` | бэкенд по умолчанию в `GameState`: JSON-слоты в `user://saves/` |
+| `NullSaveBackend` | заглушка (ничего не пишет на диск) |
 | `MemorySaveBackend` | in-memory для тестов |
-| `GameSaveSnapshot` | снимок `GameStateData` (`export_save_dict` / `import_save_dict`) |
-| `GameSaveService` | `save` / `load` слота, сигналы UI после загрузки |
+| `GameSaveSnapshot` | снимок `GameStateData` + алмазы (`capture` / `to_payload` / `from_payload`) |
+| `GameSaveService` | `save` / `load` / `delete_save` / `reset_progress` слота, сигналы UI после загрузки |
 
-Публичный API: `GameState.save.save(slot_id)`, `GameState.save.load(slot_id)`. Файловый бэкенд (user://) подключается позже через `GameSaveService.set_backend()` без правок сервисов поля и пайплайна.
+Публичный API: `GameState.save.save(slot_id)`, `GameState.save.load(slot_id)`. Бэкенд внедряется в конструктор `GameSaveService`; сменить его можно через `GameSaveService.set_backend()` без правок сервисов поля и пайплайна. Автосохранение — каждые 30 с и при закрытии окна / уходе в фон на Android.
 
 ## Поток данных
 
