@@ -64,15 +64,14 @@ func _test_full_download_queue_drains(errors: Array[String]) -> void:
 	stack.host.free()
 
 
-## Переполнение диска: завершённый файл не помещается — ожидающие задачи сбрасываются.
+## Нет хранилища: завершённый файл некуда класть — ожидающие задачи сбрасываются.
 func _test_storage_overflow_clears_pending_downloads(errors: Array[String]) -> void:
 	var stack := _make_stack()
 	var data: GameStateData = stack.data
-	var storage: GameStorageService = stack.storage
 	var pipeline: GamePipelineService = stack.pipeline
-	var cap := storage.get_storage_capacity_bytes()
+	# Хранилище на поле не размещено → вместимость 0 файлов
 	var filler := StoredFileEntry.new()
-	filler.size_bytes = GameValueBounds.size_bytes(cap - 50.0)
+	filler.size_bytes = 1000.0
 	filler.apply_bounds()
 	data.get_stored_files().append(filler)
 	var finishing := FileTransferJob.new()

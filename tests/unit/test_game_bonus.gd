@@ -19,10 +19,10 @@ func run() -> Array[String]:
 		GameConstants.BASE_DOWNLOAD_SPEED_BPS * 1.1,
 		"скорость ур.2 downloader +10%",
 	)
-	var cap_l1 := GameBonus.storage_capacity_bytes(1)
-	var cap_l2 := GameBonus.storage_capacity_bytes(2)
+	var cap_l1 := GameBonus.storage_capacity_files(1)
+	var cap_l2 := GameBonus.storage_capacity_files(2)
 	if cap_l2 <= cap_l1:
-		errors.append("ёмкость хранилища растёт с уровнем")
+		errors.append("вместимость хранилища растёт с уровнем")
 	return errors
 
 

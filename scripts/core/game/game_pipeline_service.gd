@@ -134,7 +134,7 @@ func check_collect_at(uid: String) -> GameOperationResult:
 	return check_collect_money()
 
 
-## Скачивание в очередь: IDLE, file_chain, очередь < MAX, запас MIN_DOWNLOAD_RESERVE на диске.
+## Скачивание в очередь: IDLE, file_chain, очередь < MAX, есть свободная ячейка на диске.
 func check_enqueue_download() -> GameOperationResult:
 	if _data.get_phase() != GameStateData.Phase.IDLE:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_PHASE_BUSY)
@@ -143,7 +143,7 @@ func check_enqueue_download() -> GameOperationResult:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_CHAIN)
 	if _data.get_download_queue().size() >= GameConstants.MAX_QUEUE_JOBS:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_DOWNLOAD_QUEUE_FULL)
-	if not _storage.has_storage_space(GameConstants.MIN_DOWNLOAD_RESERVE_BYTES):
+	if not _storage.has_storage_space(1):
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_STORAGE)
 	return GameOperationResult.ok()
 
@@ -218,10 +218,8 @@ func enqueue_download() -> GameOperationResult:
 	var dl_level := _field.get_instance_level(dl_uid)
 	var quality := 1.0 + float(dl_level) * GameConstants.QUALITY_PER_DOWNLOADER_LEVEL
 	var speed_bps := download_speed_for(dl_uid)
-	# Случайный размер: не дольше MAX_TRANSFER_JOB_DURATION_SEC и не выше потолка типа
+	# Случайный размер влияет на длительность и доход; на вместимость диска (в штуках) — нет
 	var total_bytes := FileDefs.random_download_size_bytes(file_type_id, speed_bps, _rng)
-	if not _storage.has_storage_space(total_bytes):
-		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_STORAGE)
 	var job := FileTransferJob.new()
 	job.file_type_id = file_type_id
 	job.title = FileDefs.get_type_label(file_type_id)
@@ -344,7 +342,8 @@ func cancel_file_transfer_queues() -> void:
 
 
 func _try_store_completed_download(job: FileTransferJob) -> bool:
-	if not _storage.has_storage_space(job.size_bytes):
+	# Завершённый файл переходит из очереди на диск (та же ячейка); места нет только без хранилища
+	if not _storage.has_storage_space(1):
 		return false
 	var stored := StoredFileEntry.new()
 	stored.title = job.title

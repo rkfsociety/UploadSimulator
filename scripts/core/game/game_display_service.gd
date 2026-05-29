@@ -40,7 +40,7 @@ func get_block_metric(uid: String) -> String:
 				% ByteFormat.format_speed_bps(_pipeline.download_speed_for(uid))
 			)
 		"storage":
-			return "Ёмкость: %s" % ByteFormat.format_bytes(_storage.storage_capacity_for(uid))
+			return "Вместимость: %d файл." % int(_storage.storage_capacity_for(uid))
 		"uploader":
 			return (
 				"Скорость: %s" % ByteFormat.format_speed_bps(_pipeline.upload_speed_for(uid))
@@ -127,12 +127,8 @@ func _downloader_idle_hint(chain_file: Dictionary) -> String:
 
 
 func _fill_storage_display(target: Dictionary) -> void:
-	var used_pct := 0.0
-	if _storage.get_storage_capacity_bytes() > 0.0:
-		used_pct = (
-			_storage.get_storage_used_bytes() / _storage.get_storage_capacity_bytes() * 100.0
-		)
-	target["status"] = "Занято: %.0f%% · %d файл." % [used_pct, _data.get_stored_files().size()]
+	var cap := int(_storage.get_storage_capacity_files())
+	target["status"] = "Занято: %d / %d файл." % [_storage.get_storage_used_files(), cap]
 	var dl_queue := _data.get_download_queue()
 	if not dl_queue.is_empty():
 		var job: FileTransferJob = dl_queue[0]

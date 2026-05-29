@@ -16,12 +16,12 @@ const USER_CONFIG_PATH := "user://game_balance.tres"
 static var BASE_DOWNLOAD_SPEED_BPS: float
 static var BASE_UPLOAD_SPEED_BPS: float
 static var BYTE_SIZE_SCALE: float
-static var BASE_STORAGE_BYTES: float
+static var BASE_STORAGE_FILES: int
+static var STORAGE_FILES_PER_LEVEL: int
 static var RAW_FILE_BYTES: float
 static var DOWNLOAD_SIZE_SPEED_MULTIPLIER: float
 static var TEXT_FILE_BYTES_MIN: float
 static var TEXT_FILE_BYTES_MAX: float
-static var MIN_DOWNLOAD_RESERVE_BYTES: float
 static var START_DIAMONDS: int
 static var DIAMONDS_PER_UPLOAD: int
 static var DEFAULT_STORED_FILE_BYTES: float
@@ -62,13 +62,13 @@ static func _apply_config(cfg: Resource) -> void:
 	BASE_DOWNLOAD_SPEED_BPS = cfg.base_download_speed_bps
 	BASE_UPLOAD_SPEED_BPS = cfg.base_upload_speed_bps
 	BYTE_SIZE_SCALE = cfg.byte_size_scale()
-	BASE_STORAGE_BYTES = cfg.base_storage_bytes()
+	BASE_STORAGE_FILES = cfg.base_storage_files
+	STORAGE_FILES_PER_LEVEL = cfg.storage_files_per_level
 	RAW_FILE_BYTES = cfg.raw_file_bytes()
 	MAX_TRANSFER_JOB_DURATION_SEC = cfg.max_transfer_job_duration_sec
 	DOWNLOAD_SIZE_SPEED_MULTIPLIER = MAX_TRANSFER_JOB_DURATION_SEC
 	TEXT_FILE_BYTES_MIN = cfg.text_file_bytes_min
 	TEXT_FILE_BYTES_MAX = cfg.text_file_bytes_max
-	MIN_DOWNLOAD_RESERVE_BYTES = cfg.min_download_reserve_bytes
 	START_DIAMONDS = cfg.start_diamonds
 	DIAMONDS_PER_UPLOAD = cfg.diamonds_per_upload
 	DEFAULT_STORED_FILE_BYTES = cfg.default_stored_file_bytes

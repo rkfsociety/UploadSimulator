@@ -19,15 +19,13 @@ class_name GameBalanceConfig
 @export var legacy_speed_mbps: float = 3.5
 
 @export_group("Хранилище и файлы")
-## Базовая ёмкость диска (условные КБ до масштабирования BYTE_SIZE_SCALE).
-@export var base_storage_legacy_kb: float = 32.0
-## Прирост ёмкости хранилища за уровень (условные КБ × BYTE_SIZE_SCALE).
-@export var storage_capacity_legacy_kb_per_level: float = 40.0
+## Базовая вместимость диска в штуках файлов (1-й уровень хранилища).
+@export var base_storage_files: int = 12
+## Прирост вместимости хранилища за уровень (штук файлов).
+@export var storage_files_per_level: int = 6
 ## Размер «сырого» файла в условных МБ (для совместимости, если понадобится).
 @export var raw_file_legacy_mb: float = 18.0
-## Минимум свободного места, чтобы разрешить новое скачивание (байт).
-@export var min_download_reserve_bytes: float = 96_000.0
-## Диапазон размера текстового файла при скачивании (байт).
+## Диапазон размера текстового файла при скачивании (байт) — влияет на длительность и доход.
 @export var text_file_bytes_min: float = 400.0
 @export var text_file_bytes_max: float = 3_200.0
 ## Размер файла по умолчанию в хранилище (если не задан явно).
@@ -54,10 +52,6 @@ class_name GameBalanceConfig
 # Масштаб байт из старых сохранений в «МБ»
 func byte_size_scale() -> float:
 	return base_download_speed_bps / maxf(legacy_speed_mbps, 0.001)
-
-
-func base_storage_bytes() -> float:
-	return base_storage_legacy_kb * 1024.0 * byte_size_scale()
 
 
 func raw_file_bytes() -> float:

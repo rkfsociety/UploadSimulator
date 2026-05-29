@@ -32,8 +32,9 @@ const TYPES := {
 		"shop_cost": 90,
 		"upgrade_base": 40,
 		"upgrade_mult": 1.5,
-		# Значение задаётся в sync_limits_from_balance() из GameBalanceConfig
-		"capacity_bytes_per_level": 1.0,
+		# Маркер модуля-хранилища: вместимость в штуках файлов растёт с уровнем
+		# (база и прирост за уровень — из GameBalanceConfig).
+		"capacity_files_per_level": 1.0,
 		"ports":
 		{
 			"file_in": {"kind": "file", "dir": "in"},
@@ -117,14 +118,9 @@ static func _static_init() -> void:
 	_validate_defs()
 
 
-# Ёмкость диска за уровень — из GameBalanceConfig (без записи в const TYPES)
+# Вместимость диска за уровень — из GameBalanceConfig (без записи в const TYPES)
 static func sync_limits_from_balance() -> void:
 	pass
-
-
-static func storage_capacity_bytes_per_level() -> float:
-	var cfg := GameConstants.get_balance_config()
-	return cfg.storage_capacity_legacy_kb_per_level * 1024.0 * GameConstants.BYTE_SIZE_SCALE
 
 
 static func get_block_color(type_id: String) -> Color:
@@ -259,9 +255,9 @@ static func _validate_type(type_id: String, type_def: Dictionary) -> void:
 	for key in _REQUIRED_TYPE_KEYS:
 		if not type_def.has(key):
 			push_error("BlockDefs: тип «%s» не содержит обязательное поле «%s»." % [type_id, key])
-	if not type_def.has("effect_per_level") and not type_def.has("capacity_bytes_per_level"):
+	if not type_def.has("effect_per_level") and not type_def.has("capacity_files_per_level"):
 		push_error(
-			"BlockDefs: тип «%s» должен иметь effect_per_level или capacity_bytes_per_level." % type_id
+			"BlockDefs: тип «%s» должен иметь effect_per_level или capacity_files_per_level." % type_id
 		)
 	if cells_w(type_id) < MIN_CELLS_W or cells_h(type_id) < MIN_CELLS_H:
 		push_error(
