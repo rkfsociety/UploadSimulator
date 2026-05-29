@@ -133,13 +133,14 @@ func get_view_center_cell() -> Vector2i:
 func _on_field_changed() -> void:
 	if _block_drag.is_dragging():
 		_block_drag.cancel_drag()
-	var prev_uids: Array = _blocks.get_nodes().keys()
+	# Снимок раскладки ДО пересборки: sync_from_state переставит узлы, поэтому
+	# сравнивать позиции после неё бесполезно (они уже совпадут с целевыми).
+	var prev_layout := _capture_block_layout()
 	_blocks.sync_from_state()
-	var curr_uids: Array = _blocks.get_nodes().keys()
 	# Порты и провода — только при изменении набора/раскладки блоков.
 	# rebuild_wires (а не update_positions): после загрузки сейва сегментов ещё нет,
 	# их надо собрать заново из восстановленных соединений GameState.
-	if _blocks_layout_changed(prev_uids, curr_uids):
+	if _block_layout_changed(prev_layout):
 		_wiring.collect_ports()
 		_wiring.rebuild_wires()
 		# Свежезаспавненные блоки раскладывают порты не сразу — уточняем концы проводов кадром позже
@@ -171,19 +172,25 @@ func _on_wiring_changed() -> void:
 	_wiring.rebuild_wires()
 
 
-## Сравнивает uid и позиции блоков до/после sync_from_state.
-func _blocks_layout_changed(prev_uids: Array, curr_uids: Array) -> bool:
-	if prev_uids.size() != curr_uids.size():
-		return true
-	for uid in curr_uids:
-		if uid not in prev_uids:
-			return true
-	for uid in curr_uids:
-		var inst := GameState.field.get_instance(str(uid))
-		if not inst.is_valid():
-			continue
+## Снимок раскладки: uid → позиция узла (до пересборки блоков).
+func _capture_block_layout() -> Dictionary:
+	var layout := {}
+	for uid in _blocks.get_nodes().keys():
 		var block: PlacedBlock = _blocks.get_nodes()[uid] as PlacedBlock
-		if block.position != GridDefs.cell_to_pixel(inst.gx, inst.gy):
+		layout[uid] = block.position
+	return layout
+
+
+## Изменился ли набор или позиции блоков относительно снимка (после sync_from_state).
+func _block_layout_changed(prev_layout: Dictionary) -> bool:
+	var nodes := _blocks.get_nodes()
+	if nodes.size() != prev_layout.size():
+		return true
+	for uid in nodes.keys():
+		if not prev_layout.has(uid):
+			return true
+		var block: PlacedBlock = nodes[uid] as PlacedBlock
+		if block.position != prev_layout[uid]:
 			return true
 	return false
 
