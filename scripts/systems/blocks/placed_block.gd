@@ -33,7 +33,7 @@ var block_type: String = ""
 var _view: PlacedBlockView
 
 
-## Размер модуля на карте в пикселях (10×6 клеток, альбом).
+## Размер модуля на карте в пикселях (8×5 клеток, альбом).
 static func pixel_size() -> Vector2:
 	return GridDefs.block_pixel_size()
 

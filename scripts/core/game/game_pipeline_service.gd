@@ -30,8 +30,10 @@ func _init(
 
 func tick(delta: float) -> void:
 	_auto_enqueue_download()
+	_auto_enqueue_upload()
 	_tick_download_queue(delta)
 	_tick_upload_queue(delta)
+	_auto_collect_money()
 
 
 ## Автоскачивание: пока цепочка собрана и есть место, загрузчик сам берёт следующий файл.
@@ -42,6 +44,28 @@ func _auto_enqueue_download() -> void:
 	if not can_enqueue_download():
 		return
 	enqueue_download()
+
+
+## Автовыгрузка: пока цепочка собрана и на диске есть файлы, аплоудер сам берёт следующий.
+## Один файл за раз (очередь пуста) — непрерывная выгрузка без спама в лог.
+func _auto_enqueue_upload() -> void:
+	if not _data.get_upload_queue().is_empty():
+		return
+	if not can_enqueue_upload():
+		return
+	enqueue_upload()
+
+
+## Автосбор: как только в сейфе аплоудера накопилось ≥ MIN_COLLECT_BALANCE, коллектор сам
+## переводит доход в кассу (нужен провод money_out → money_in).
+func _auto_collect_money() -> void:
+	var chain := _wiring.get_money_chain()
+	var collector_uid := str(chain.get("to_uid", ""))
+	if collector_uid == "":
+		return
+	if not can_collect_money():
+		return
+	collect_money(collector_uid)
 
 
 func download_speed_for(uid: String) -> float:
@@ -86,7 +110,7 @@ func can_collect_money() -> bool:
 	return check_collect_money().is_ok()
 
 
-## Кнопка «Из сети»: uid должен быть file_chain.downloader; иначе PIPELINE_WRONG_MODULE.
+## Проверка загрузчика: uid должен быть file_chain.downloader; иначе PIPELINE_WRONG_MODULE.
 func check_download_at(uid: String) -> GameOperationResult:
 	var chain := _wiring.get_file_chain()
 	if chain.get("downloader", "") != uid:
@@ -94,7 +118,7 @@ func check_download_at(uid: String) -> GameOperationResult:
 	return check_enqueue_download()
 
 
-## Кнопка «В сеть»: uid — file_chain.uploader.
+## Проверка аплоудера: uid — file_chain.uploader.
 func check_upload_at(uid: String) -> GameOperationResult:
 	var chain := _wiring.get_file_chain()
 	if chain.get("uploader", "") != uid:
@@ -102,7 +126,7 @@ func check_upload_at(uid: String) -> GameOperationResult:
 	return check_enqueue_upload()
 
 
-## Кнопка «В кассу»: uid — money_chain.to_uid (коллектор на money_in).
+## Проверка коллектора: uid — money_chain.to_uid (коллектор на money_in).
 func check_collect_at(uid: String) -> GameOperationResult:
 	var chain := _wiring.get_money_chain()
 	if chain.get("to_uid", "") != uid:

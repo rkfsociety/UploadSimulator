@@ -143,11 +143,10 @@ func _fill_storage_display(target: Dictionary) -> void:
 		target["progress"] = job.progress
 
 
-## UI аплоудера: кнопка выкл. на время активной выгрузки (queue[0] на uploader цепочки).
+## UI аплоудера: выгружает автоматически, ручной кнопки нет — только статус и прогресс.
 func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
-	target["action_text"] = "В сеть"
-	target["action_visible"] = not chain_file.is_empty()
-	target["action_enabled"] = _pipeline.can_upload_at(uid)
+	target["action_visible"] = false
+	target["action_enabled"] = false
 	var queue := _data.get_upload_queue()
 	if not queue.is_empty() and chain_file.get("uploader", "") == uid:
 		var job: FileTransferJob = queue[0]
@@ -156,26 +155,30 @@ func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Diction
 			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0)]
 		)
 		target["progress"] = job.progress
-		target["action_enabled"] = false  # блок: идёт выгрузка с этого аплоудера
-	elif not _data.get_stored_files().is_empty():
+		return
+	if _pipeline.can_upload_at(uid):
+		target["status"] = "Выгружает автоматически в сеть"
+		return
+	if chain_file.is_empty():
+		target["status"] = GameOperationResult.fail(
+			GameOperationResult.Code.PIPELINE_NO_CHAIN
+		).get_message()
+		return
+	if not _data.get_stored_files().is_empty():
 		var next: StoredFileEntry = _data.get_stored_files()[0]
 		target["status"] = "На диске: %s" % FileDefs.get_type_label(next.file_type_id)
-	elif not _pipeline.can_upload_at(uid):
-		var hint := _pipeline.check_upload_at(uid)
-		target["status"] = hint.get_message() if not hint.is_ok() else "Выгрузка недоступна"
+		return
+	var safe := _data.get_uploader_balance()
+	if safe >= GameConstants.MIN_COLLECT_BALANCE and not _wiring.get_money_chain().is_empty():
+		target["status"] = "В сейфе $%.0f → коллектор" % safe
 	else:
-		var safe := _data.get_uploader_balance()
-		if safe >= GameConstants.MIN_COLLECT_BALANCE and not _wiring.get_money_chain().is_empty():
-			target["status"] = "В сейфе $%.0f → коллектор в кассу" % safe
-		else:
-			target["status"] = "Сейф пуст"
+		target["status"] = "Сейф пуст"
 
 
-## UI коллектора: action_enabled только при can_collect_at (сейф, провод, фаза IDLE).
+## UI коллектора: собирает доход автоматически, ручной кнопки нет — только статус.
 func _fill_collector_display(target: Dictionary, uid: String, chain_money: Dictionary) -> void:
-	target["action_text"] = "В кассу"
-	target["action_visible"] = not chain_money.is_empty()
-	target["action_enabled"] = _pipeline.can_collect_at(uid)
+	target["action_visible"] = false
+	target["action_enabled"] = false
 	if chain_money.is_empty():
 		target["status"] = GameOperationResult.fail(
 			GameOperationResult.Code.PIPELINE_NO_MONEY_CHAIN
@@ -183,19 +186,12 @@ func _fill_collector_display(target: Dictionary, uid: String, chain_money: Dicti
 		return
 	var safe := _data.get_uploader_balance()
 	if safe < GameConstants.MIN_COLLECT_BALANCE:
-		target["status"] = GameOperationResult.fail(
-			GameOperationResult.Code.PIPELINE_SAFE_EMPTY
-		).get_message()
+		target["status"] = "Собирает доход в кассу автоматически"
 		return
-	if not _pipeline.can_collect_at(uid):
-		var hint := _pipeline.check_collect_at(uid)
-		if not hint.is_ok():
-			target["status"] = hint.get_message()
-			return
 	var inst := _field.get_instance(uid)
 	var bonus: float = GameBonus.effect_at_level("collector", inst.level)
 	var payout: float = safe * (1.0 + bonus)
 	if bonus > 0.0:
-		target["status"] = "Забрать $%.0f из аплоудера → касса (+%.0f%%)" % [payout, bonus * 100.0]
+		target["status"] = "Забирает $%.0f → касса (+%.0f%%)" % [payout, bonus * 100.0]
 	else:
-		target["status"] = "Забрать $%.0f из аплоудера → касса" % payout
+		target["status"] = "Забирает $%.0f → касса" % payout

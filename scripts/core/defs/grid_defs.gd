@@ -7,8 +7,8 @@ const CELL_SIZE := 64
 const GRID_CELLS := 100
 const GRID_HALF := GRID_CELLS / 2
 # Единый след модуля на поле: альбомная ориентация, в пределах 8×5 … 20×20
-const BLOCK_CELLS_W := 10
-const BLOCK_CELLS_H := 6
+const BLOCK_CELLS_W := 8
+const BLOCK_CELLS_H := 5
 const BLOCK_UPGRADE_CELLS_H := 1
 const BLOCK_MAIN_CELLS_H := BLOCK_CELLS_H - BLOCK_UPGRADE_CELLS_H
 
@@ -40,7 +40,7 @@ static func snap_cell_from_world(world_px: Vector2) -> Vector2i:
 
 
 static func block_pixel_size() -> Vector2:
-	# Размер модуля на карте: 10×6 клеток (горизонтально)
+	# Размер модуля на карте: 8×5 клеток (горизонтально)
 	return Vector2(BLOCK_CELLS_W * CELL_SIZE, BLOCK_CELLS_H * CELL_SIZE)
 
 

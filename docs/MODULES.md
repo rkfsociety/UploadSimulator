@@ -13,7 +13,7 @@
    - `diamond_unlock_cost: <цена в ◆>`
    - `shop_cost`, порты, `ALLOWED_WIRES`, баланс как у соседних модулей.
 2. Стартовый набор (`starter_kit_types`) не трогать — только модули с `unlocked_at_start: true`.
-3. При необходимости — метрики в `GameDisplayService` и действие в `GamePipelineService.run_block_action`.
+3. При необходимости — метрики в `GameDisplayService` и автоматическое поведение в `GamePipelineService.tick` (модули работают сами, без кнопок действия; `run_block_action` оставлен для возможных будущих ручных действий).
 
 Пример полей:
 
