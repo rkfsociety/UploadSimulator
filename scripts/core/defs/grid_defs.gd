@@ -21,9 +21,8 @@ static func is_in_bounds(gx: int, gy: int) -> bool:
 
 
 static func cell_to_pixel(gx: int, gy: int) -> Vector2:
-	# Центр клетки (gx, gy) в мировых координатах; (0,0) — центр карты
-	var half_cell := float(CELL_SIZE) * 0.5
-	return Vector2(gx * CELL_SIZE, gy * CELL_SIZE) - Vector2(half_cell, half_cell)
+	# Левый-верхний угол клетки (gx, gy) — точно на линии сетки (кратно CELL_SIZE)
+	return Vector2(gx * CELL_SIZE, gy * CELL_SIZE)
 
 
 static func cell_rect(gx: int, gy: int) -> Rect2:
@@ -31,10 +30,9 @@ static func cell_rect(gx: int, gy: int) -> Rect2:
 
 
 static func pixel_to_cell(world_px: Vector2) -> Vector2i:
-	var half_cell := float(CELL_SIZE) * 0.5
 	return Vector2i(
-		floori((world_px.x + half_cell) / float(CELL_SIZE)),
-		floori((world_px.y + half_cell) / float(CELL_SIZE))
+		floori(world_px.x / float(CELL_SIZE)),
+		floori(world_px.y / float(CELL_SIZE))
 	)
 
 
