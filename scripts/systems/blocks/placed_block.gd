@@ -18,7 +18,6 @@ var block_type: String = ""
 @onready var _upgrade_panel: NeonFrame = %UpgradePanel
 @onready var _title_label: Label = %TitleLabel
 @onready var _metric_label: Label = %MetricLabel
-@onready var _state_label: Label = %StateLabel
 @onready var _progress_bar: ProgressBar = %ProgressBar
 @onready var _action_btn: Button = %ActionButton
 @onready var _upgrade_btn: Button = %UpgradeButton
@@ -79,7 +78,6 @@ func _ready() -> void:
 		_upgrade_panel,
 		_title_label,
 		_metric_label,
-		_state_label,
 		_progress_bar,
 		_action_btn,
 		_upgrade_btn,

@@ -6,7 +6,6 @@ var _main_panel: NeonFrame
 var _upgrade_panel: NeonFrame
 var _title_label: Label
 var _metric_label: Label
-var _state_label: Label
 var _progress_bar: ProgressBar
 var _action_btn: Button
 var _upgrade_btn: Button
@@ -17,7 +16,6 @@ func _init(
 	upgrade_panel: NeonFrame,
 	title_label: Label,
 	metric_label: Label,
-	state_label: Label,
 	progress_bar: ProgressBar,
 	action_btn: Button,
 	upgrade_btn: Button,
@@ -26,7 +24,6 @@ func _init(
 	_upgrade_panel = upgrade_panel
 	_title_label = title_label
 	_metric_label = metric_label
-	_state_label = state_label
 	_progress_bar = progress_bar
 	_action_btn = action_btn
 	_upgrade_btn = upgrade_btn
@@ -41,7 +38,6 @@ func apply(data: PlacedBlockViewData) -> void:
 	_title_label.add_theme_color_override("font_color", accent)
 	_metric_label.text = data.metric
 	_metric_label.add_theme_color_override("font_color", accent.lightened(0.12))
-	_state_label.text = data.status
 	_action_btn.visible = data.action_visible
 	if data.action_visible:
 		_action_btn.text = data.action_text
