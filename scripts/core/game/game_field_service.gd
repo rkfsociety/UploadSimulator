@@ -80,13 +80,13 @@ func check_place_block(type_id: String, gx: int, gy: int) -> GameOperationResult
 		return GameOperationResult.fail(GameOperationResult.Code.FIELD_MODULE_LOCKED)
 	if _data.get_block_stock(type_id) <= 0:
 		return GameOperationResult.fail(GameOperationResult.Code.FIELD_NO_STOCK)
-	if not GridDefs.footprint_in_bounds(gx, gy):
+	if not GridDefs.footprint_in_bounds(gx, gy, type_id):
 		return GameOperationResult.fail(
 			GameOperationResult.Code.FIELD_OUT_OF_BOUNDS,
 			"За пределами карты (%d…%d)."
 			% [-GridDefs.GRID_HALF, GridDefs.GRID_HALF - 1]
 		)
-	for cell in GridDefs.block_footprint_cells(gx, gy):
+	for cell in GridDefs.block_footprint_cells(gx, gy, type_id):
 		if get_block_at(cell.x, cell.y).is_valid():
 			return GameOperationResult.fail(GameOperationResult.Code.FIELD_CELL_OCCUPIED)
 	return GameOperationResult.ok()
@@ -94,11 +94,12 @@ func check_place_block(type_id: String, gx: int, gy: int) -> GameOperationResult
 
 func get_block_at(gx: int, gy: int) -> BlockInstance:
 	for inst: BlockInstance in _data.get_placed_blocks():
+		var c := GridDefs.block_cells(inst.type_id)
 		if (
 			gx >= inst.gx
-			and gx < inst.gx + GridDefs.BLOCK_CELLS_W
+			and gx < inst.gx + c.x
 			and gy >= inst.gy
-			and gy < inst.gy + GridDefs.BLOCK_CELLS_H
+			and gy < inst.gy + c.y
 		):
 			return inst
 	return BlockInstance.new()
@@ -112,9 +113,9 @@ func check_relocate_block(uid: String, gx: int, gy: int) -> GameOperationResult:
 	var inst := get_instance(uid)
 	if not inst.is_valid():
 		return GameOperationResult.fail(GameOperationResult.Code.FIELD_INVALID_INSTANCE)
-	if not GridDefs.footprint_in_bounds(gx, gy):
+	if not GridDefs.footprint_in_bounds(gx, gy, inst.type_id):
 		return GameOperationResult.fail(GameOperationResult.Code.FIELD_OUT_OF_BOUNDS)
-	for cell in GridDefs.block_footprint_cells(gx, gy):
+	for cell in GridDefs.block_footprint_cells(gx, gy, inst.type_id):
 		var other := get_block_at(cell.x, cell.y)
 		if other.is_valid() and other.uid != uid:
 			return GameOperationResult.fail(GameOperationResult.Code.FIELD_CELL_OCCUPIED)

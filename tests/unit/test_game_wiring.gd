@@ -40,7 +40,7 @@ func _place_modules(field: GameFieldService, data: GameStateData) -> Dictionary:
 		data.add_block_stock(type_id, 1)
 		var place := field.place_block(type_id, gx, 0)
 		uids[type_id] = place.get_uid() if place.is_ok() else ""
-		gx += GridDefs.BLOCK_CELLS_W
+		gx += GridDefs.block_cells(type_id).x
 	return uids
 
 

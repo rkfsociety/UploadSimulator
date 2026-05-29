@@ -12,6 +12,7 @@
    - `unlocked_at_start: false`
    - `diamond_unlock_cost: <цена в ◆>`
    - `shop_cost`, порты, `ALLOWED_WIRES`, баланс как у соседних модулей.
+   - `cells_w` / `cells_h` — размер следа модуля в клетках (необязательно; по умолчанию `BlockDefs.DEFAULT_CELLS_W`×`DEFAULT_CELLS_H`, минимум `MIN_CELLS_W`×`MIN_CELLS_H`).
 2. Стартовый набор (`starter_kit_types`) не трогать — только модули с `unlocked_at_start: true`.
 3. При необходимости — метрики в `GameDisplayService` и автоматическое поведение в `GamePipelineService.tick` (модули работают сами, без кнопок действия; `run_block_action` оставлен для возможных будущих ручных действий).
 
@@ -24,6 +25,8 @@
     "unlocked_at_start": false,
     "diamond_unlock_cost": 12,
     "shop_cost": 95,
+    "cells_w": 6,
+    "cells_h": 4,
     # ... ports, upgrade_base, ...
 },
 ```

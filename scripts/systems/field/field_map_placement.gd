@@ -31,12 +31,12 @@ func update_preview(screen_pos: Vector2) -> void:
 		return
 	var cell := GridDefs.snap_cell_from_world(_camera.screen_to_world(screen_pos))
 	hover_cell = cell
-	if not GridDefs.footprint_in_bounds(cell.x, cell.y):
+	if not GridDefs.footprint_in_bounds(cell.x, cell.y, _selected_type):
 		hide_preview()
 		return
 	_preview.visible = true
 	_preview.position = GridDefs.cell_to_pixel(cell.x, cell.y)
-	_preview.size = GridDefs.block_pixel_size()
+	_preview.size = GridDefs.block_pixel_size(_selected_type)
 	var occupied := not GameState.field.can_place_block(_selected_type, cell.x, cell.y)
 	var accent := BlockDefs.get_block_color(_selected_type)
 	if occupied:
@@ -75,7 +75,7 @@ func try_place_at_screen(screen_pos: Vector2) -> String:
 func place_at_view_center(type_id: String, spawn_block: Callable) -> bool:
 	set_selected_type("")
 	var center := _camera.view_center_cell()
-	var anchor := GridDefs.block_anchor_for_center(center)
+	var anchor := GridDefs.block_anchor_for_center(center, type_id)
 	for cell in _cells_near(anchor, FieldMapConstants.PLACE_SEARCH_RADIUS):
 		if not GridDefs.is_in_bounds(cell.x, cell.y):
 			continue

@@ -9,6 +9,8 @@ const TYPES := {
 		"icon": "⬇",
 		"color": Color(0.0, 0.88, 1.0, 1.0),
 		"desc": "Скачивает файлы из интернета",
+		"cells_w": 6,
+		"cells_h": 4,
 		"unlocked_at_start": true,
 		"diamond_unlock_cost": 0,
 		"shop_cost": 75,
@@ -23,6 +25,8 @@ const TYPES := {
 		"icon": "💾",
 		"color": Color(0.58, 0.35, 1.0, 1.0),
 		"desc": "Диск для скачанных файлов",
+		"cells_w": 7,
+		"cells_h": 4,
 		"unlocked_at_start": true,
 		"diamond_unlock_cost": 0,
 		"shop_cost": 90,
@@ -42,6 +46,8 @@ const TYPES := {
 		"icon": "⬆",
 		"color": Color(0.25, 1.0, 0.55, 1.0),
 		"desc": "Выгружает в интернет, копит доход",
+		"cells_w": 6,
+		"cells_h": 4,
 		"unlocked_at_start": true,
 		"diamond_unlock_cost": 0,
 		"shop_cost": 85,
@@ -60,6 +66,8 @@ const TYPES := {
 		"icon": "💰",
 		"color": Color(1.0, 0.78, 0.15, 1.0),
 		"desc": "Забирает деньги из сейфа аплоудера в общую кассу",
+		"cells_w": 5,
+		"cells_h": 4,
 		"unlocked_at_start": true,
 		"diamond_unlock_cost": 0,
 		"shop_cost": 65,
@@ -93,6 +101,13 @@ const _REQUIRED_TYPE_KEYS: Array[String] = [
 const _VALID_PORT_KINDS: Array[String] = ["file", "money"]
 const _VALID_PORT_DIRS: Array[String] = ["in", "out"]
 
+# Размер следа модуля по умолчанию (клетки), если тип не задал свой
+const DEFAULT_CELLS_W := 6
+const DEFAULT_CELLS_H := 4
+# Минимум: ширина под текст и порты; высота — хотя бы основная панель + полоса улучшения
+const MIN_CELLS_W := 3
+const MIN_CELLS_H := 2
+
 # Собирается из TYPES["ports"] при загрузке класса
 static var PORT_DEFS: Dictionary = {}
 
@@ -114,6 +129,21 @@ static func storage_capacity_bytes_per_level() -> float:
 
 static func get_block_color(type_id: String) -> Color:
 	return TYPES.get(type_id, {}).get("color", Color(0.0, 0.88, 1.0, 1.0))
+
+
+## Ширина следа модуля в клетках (своя у каждого типа; иначе значение по умолчанию).
+static func cells_w(type_id: String) -> int:
+	return int(TYPES.get(type_id, {}).get("cells_w", DEFAULT_CELLS_W))
+
+
+## Высота следа модуля в клетках.
+static func cells_h(type_id: String) -> int:
+	return int(TYPES.get(type_id, {}).get("cells_h", DEFAULT_CELLS_H))
+
+
+## Размер следа модуля в клетках (ширина, высота).
+static func cells_size(type_id: String) -> Vector2i:
+	return Vector2i(cells_w(type_id), cells_h(type_id))
 
 
 static func starter_kit_types() -> Array[String]:
@@ -232,6 +262,11 @@ static func _validate_type(type_id: String, type_def: Dictionary) -> void:
 	if not type_def.has("effect_per_level") and not type_def.has("capacity_bytes_per_level"):
 		push_error(
 			"BlockDefs: тип «%s» должен иметь effect_per_level или capacity_bytes_per_level." % type_id
+		)
+	if cells_w(type_id) < MIN_CELLS_W or cells_h(type_id) < MIN_CELLS_H:
+		push_error(
+			"BlockDefs: тип «%s» — размер %dx%d меньше минимума %dx%d клеток."
+			% [type_id, cells_w(type_id), cells_h(type_id), MIN_CELLS_W, MIN_CELLS_H]
 		)
 	var ports: Dictionary = PORT_DEFS.get(type_id, {})
 	for port_id in ports:

@@ -35,7 +35,7 @@ func spawn(uid: String) -> void:
 	if not inst.is_valid():
 		return
 	var block := PlacedBlock.instantiate_block()
-	var sz := PlacedBlock.pixel_size()
+	var sz := PlacedBlock.pixel_size(inst.type_id)
 	block.custom_minimum_size = sz
 	block.size = sz
 	block.position = GridDefs.cell_to_pixel(inst.gx, inst.gy)
@@ -68,12 +68,12 @@ func get_block(uid: String) -> PlacedBlock:
 
 
 func _relayout() -> void:
-	var sz := PlacedBlock.pixel_size()
 	for uid in _nodes.keys():
 		var block: PlacedBlock = _nodes[uid]
 		var inst := GameState.field.get_instance(uid)
 		if not inst.is_valid():
 			continue
+		var sz := PlacedBlock.pixel_size(inst.type_id)
 		block.custom_minimum_size = sz
 		block.size = sz
 		block.position = GridDefs.cell_to_pixel(inst.gx, inst.gy)

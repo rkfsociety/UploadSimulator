@@ -6,11 +6,14 @@ class_name GridDefs
 const CELL_SIZE := 64
 const GRID_CELLS := 100
 const GRID_HALF := GRID_CELLS / 2
-# Единый след модуля на поле: альбомная ориентация, в пределах 8×5 … 20×20
-const BLOCK_CELLS_W := 8
-const BLOCK_CELLS_H := 5
+# Размер следа модуля задаётся отдельно для каждого типа в BlockDefs (cells_w/cells_h).
+# Нижняя полоса улучшения — 1 клетка по высоте у всех типов.
 const BLOCK_UPGRADE_CELLS_H := 1
-const BLOCK_MAIN_CELLS_H := BLOCK_CELLS_H - BLOCK_UPGRADE_CELLS_H
+
+
+## Размер следа модуля данного типа в клетках (ширина, высота).
+static func block_cells(type_id: String) -> Vector2i:
+	return BlockDefs.cells_size(type_id)
 
 
 static func is_in_bounds(gx: int, gy: int) -> bool:
@@ -39,29 +42,32 @@ static func snap_cell_from_world(world_px: Vector2) -> Vector2i:
 	return pixel_to_cell(world_px)
 
 
-static func block_pixel_size() -> Vector2:
-	# Размер модуля на карте: 8×5 клеток (горизонтально)
-	return Vector2(BLOCK_CELLS_W * CELL_SIZE, BLOCK_CELLS_H * CELL_SIZE)
+static func block_pixel_size(type_id: String) -> Vector2:
+	# Размер модуля на карте в пикселях (свой для каждого типа)
+	var c := block_cells(type_id)
+	return Vector2(c.x * CELL_SIZE, c.y * CELL_SIZE)
 
 
-static func block_footprint_cells(gx: int, gy: int) -> Array[Vector2i]:
+static func block_footprint_cells(gx: int, gy: int, type_id: String) -> Array[Vector2i]:
+	var c := block_cells(type_id)
 	var cells: Array[Vector2i] = []
-	for dx in range(BLOCK_CELLS_W):
-		for dy in range(BLOCK_CELLS_H):
+	for dx in range(c.x):
+		for dy in range(c.y):
 			cells.append(Vector2i(gx + dx, gy + dy))
 	return cells
 
 
-static func footprint_in_bounds(gx: int, gy: int) -> bool:
-	for cell in block_footprint_cells(gx, gy):
+static func footprint_in_bounds(gx: int, gy: int, type_id: String) -> bool:
+	for cell in block_footprint_cells(gx, gy, type_id):
 		if not is_in_bounds(cell.x, cell.y):
 			return false
 	return true
 
 
-static func block_anchor_for_center(center: Vector2i) -> Vector2i:
+static func block_anchor_for_center(center: Vector2i, type_id: String) -> Vector2i:
 	# Якорь (левый верх) так, чтобы блок был по центру клетки center
-	return center - Vector2i(BLOCK_CELLS_W / 2, BLOCK_CELLS_H / 2)
+	var c := block_cells(type_id)
+	return center - Vector2i(c.x / 2, c.y / 2)
 
 
 static func world_bounds_rect() -> Rect2:

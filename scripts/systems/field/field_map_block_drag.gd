@@ -64,15 +64,15 @@ func try_begin_drag(local_pos: Vector2) -> bool:
 func update_drag(local_pos: Vector2) -> void:
 	if not _dragging or _drag_uid == "":
 		return
+	var inst := GameState.field.get_instance(_drag_uid)
 	var cell := GridDefs.snap_cell_from_world(_camera.screen_to_world(local_pos))
 	_hover_cell = cell
-	if not GridDefs.footprint_in_bounds(cell.x, cell.y):
+	if not GridDefs.footprint_in_bounds(cell.x, cell.y, inst.type_id):
 		_hide_ghost()
 		return
 	_ghost.visible = true
 	_ghost.position = GridDefs.cell_to_pixel(cell.x, cell.y)
-	_ghost.size = GridDefs.block_pixel_size()
-	var inst := GameState.field.get_instance(_drag_uid)
+	_ghost.size = GridDefs.block_pixel_size(inst.type_id)
 	var accent := BlockDefs.get_block_color(inst.type_id) if inst.is_valid() else Color.WHITE
 	if GameState.field.can_relocate_block(_drag_uid, cell.x, cell.y):
 		_ghost.color = Color(accent.r, accent.g, accent.b, FieldMapConstants.PREVIEW_VALID_ALPHA)
@@ -84,9 +84,10 @@ func finish_drag(local_pos: Vector2) -> void:
 	if not _dragging:
 		return
 	update_drag(local_pos)
+	var drag_type := GameState.field.get_instance(_drag_uid).type_id
 	if (
 		_drag_uid != ""
-		and GridDefs.footprint_in_bounds(_hover_cell.x, _hover_cell.y)
+		and GridDefs.footprint_in_bounds(_hover_cell.x, _hover_cell.y, drag_type)
 		and GameState.field.can_relocate_block(_drag_uid, _hover_cell.x, _hover_cell.y)
 	):
 		GameState.field.relocate_block(_drag_uid, _hover_cell.x, _hover_cell.y)
