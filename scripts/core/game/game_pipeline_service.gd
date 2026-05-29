@@ -134,10 +134,9 @@ func check_collect_at(uid: String) -> GameOperationResult:
 	return check_collect_money()
 
 
-## Скачивание в очередь: IDLE, file_chain, очередь < MAX, есть свободная ячейка на диске.
+## Скачивание в очередь: file_chain, очередь < MAX, есть свободная ячейка на диске.
+## Не зависит от фазы выгрузки — приём и отдача файлов идут одновременно.
 func check_enqueue_download() -> GameOperationResult:
-	if _data.get_phase() != GameStateData.Phase.IDLE:
-		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_PHASE_BUSY)
 	var chain := _wiring.get_file_chain()
 	if chain.is_empty():
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_CHAIN)
@@ -259,20 +258,23 @@ func enqueue_upload() -> GameOperationResult:
 
 
 func get_phase_label() -> String:
-	match _data.get_phase():
-		GameStateData.Phase.SETTLING:
-			return "Завершение выгрузки"
-		_:
-			if not _data.get_download_queue().is_empty():
-				return "Скачивание"
-			if not _data.get_upload_queue().is_empty():
-				return "Выгрузка"
-			return "Свободен"
+	var dl := not _data.get_download_queue().is_empty()
+	var up := not _data.get_upload_queue().is_empty()
+	if _data.get_phase() == GameStateData.Phase.SETTLING:
+		return "Завершение выгрузки + скачивание" if dl else "Завершение выгрузки"
+	if dl and up:
+		return "Скачивание + выгрузка"
+	if dl:
+		return "Скачивание"
+	if up:
+		return "Выгрузка"
+	return "Свободен"
 
 
-## Очередь скачивания: FIFO — прогресс только у queue[0]; при phase != IDLE тик не идёт.
+## Очередь скачивания: FIFO — прогресс только у queue[0].
+## Идёт независимо от фазы выгрузки (приём и отдача файлов одновременно).
 func _tick_download_queue(delta: float) -> void:
-	if _data.get_phase() != GameStateData.Phase.IDLE or _data.get_download_queue().is_empty():
+	if _data.get_download_queue().is_empty():
 		return
 	var queue := _data.get_download_queue()
 	var job: FileTransferJob = queue[0]  # приоритет: первый добавленный

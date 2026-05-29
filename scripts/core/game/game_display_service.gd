@@ -53,11 +53,10 @@ func get_block_metric(uid: String) -> String:
 	return ""
 
 
-## Uid модулей, у которых меняется прогресс/статус во время активной очереди.
+## Uid модулей, у которых меняется прогресс/статус во время активных очередей.
+## Скачивание и выгрузка идут одновременно — обновляем оба конца сразу.
 func get_progress_block_uids() -> Array[String]:
 	var out: Array[String] = []
-	if _data.get_phase() != GameStateData.Phase.IDLE:
-		return out
 	var chain_file := _wiring.get_file_chain()
 	if not _data.get_download_queue().is_empty():
 		var dl_uid: String = str(chain_file.get("downloader", ""))
@@ -66,10 +65,14 @@ func get_progress_block_uids() -> Array[String]:
 		for inst: BlockInstance in _data.get_placed_blocks():
 			if inst.type_id == "storage":
 				out.append(inst.uid)
-	elif not _data.get_upload_queue().is_empty():
+	if not _data.get_upload_queue().is_empty():
 		var up_uid: String = str(chain_file.get("uploader", ""))
 		if up_uid != "":
 			out.append(up_uid)
+		# Хранилище отдаёт файл — обновляем и его статус
+		for inst: BlockInstance in _data.get_placed_blocks():
+			if inst.type_id == "storage" and inst.uid not in out:
+				out.append(inst.uid)
 	return out
 
 
