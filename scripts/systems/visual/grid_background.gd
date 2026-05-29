@@ -76,10 +76,6 @@ func _world_to_local_y(world_y: float) -> float:
 	return world_y - _world_bounds.position.y
 
 
-func _snap_local(v: float) -> float:
-	return floorf(v) + 0.5
-
-
 ## Шаг сетки: один квадрат = одна клетка (CELL_SIZE). Вдали — реже, кратно клетке.
 func _line_step(zoom: float) -> float:
 	var cell := _cell_step()
@@ -112,11 +108,14 @@ func _draw() -> void:
 	var clip := Rect2(vis_l0, vis_t0, vis_l1 - vis_l0, vis_b1 - vis_t0)
 	var step := _line_step(zoom)
 	if step > 0.0:
-		_draw_grid_lines(step, wx0, wx1, wy0, wy1, vis, clip, COL_LINE)
+		# Толщина в мировых единицах так, чтобы на экране всегда был ~1px (не зависит от зума)
+		var th := maxf(1.0 / zoom, 0.01)
+		_draw_grid_lines(step, th, wx0, wx1, wy0, wy1, vis, clip, COL_LINE)
 
 
 func _draw_grid_lines(
 	step: float,
+	th: float,
 	wx0: float,
 	wx1: float,
 	wy0: float,
@@ -131,21 +130,21 @@ func _draw_grid_lines(
 	var y_end := mini(wy1, vis.position.y + vis.size.y)
 	var x := x_start
 	while x <= x_end + 0.001:
-		_draw_v_local(_snap_local(_world_to_local_x(x)), clip, col)
+		_draw_v_local(_world_to_local_x(x), th, clip, col)
 		x += step
 	var y := y_start
 	while y <= y_end + 0.001:
-		_draw_h_local(_snap_local(_world_to_local_y(y)), clip, col)
+		_draw_h_local(_world_to_local_y(y), th, clip, col)
 		y += step
 
 
-func _draw_v_local(local_x: float, clip: Rect2, col: Color) -> void:
-	if local_x < clip.position.x - 1.0 or local_x > clip.position.x + clip.size.x + 1.0:
+func _draw_v_local(local_x: float, th: float, clip: Rect2, col: Color) -> void:
+	if local_x < clip.position.x - th or local_x > clip.position.x + clip.size.x + th:
 		return
-	draw_rect(Rect2(local_x - 0.5, clip.position.y, 1.0, clip.size.y), col)
+	draw_rect(Rect2(local_x - th * 0.5, clip.position.y, th, clip.size.y), col)
 
 
-func _draw_h_local(local_y: float, clip: Rect2, col: Color) -> void:
-	if local_y < clip.position.y - 1.0 or local_y > clip.position.y + clip.size.y + 1.0:
+func _draw_h_local(local_y: float, th: float, clip: Rect2, col: Color) -> void:
+	if local_y < clip.position.y - th or local_y > clip.position.y + clip.size.y + th:
 		return
-	draw_rect(Rect2(clip.position.x, local_y - 0.5, clip.size.x, 1.0), col)
+	draw_rect(Rect2(clip.position.x, local_y - th * 0.5, clip.size.x, th), col)
