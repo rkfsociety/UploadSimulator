@@ -62,8 +62,9 @@ func reset_progress(slot_id: String = SaveConstants.DEFAULT_SLOT) -> bool:
 
 
 func _notify_state_restored() -> void:
-	# UI и поле подписаны на эти сигналы после загрузки/сохранения
+	# UI и поле подписаны на эти сигналы после загрузки/сохранения.
+	# Порядок важен: сначала блоки (создаёт узлы и порты), затем провода (рисуются по портам).
+	_host.field_changed.emit()
+	_host.wiring_changed.emit()
 	_host.stats_changed.emit()
 	_host.queue_changed.emit()
-	_host.wiring_changed.emit()
-	_host.field_changed.emit()

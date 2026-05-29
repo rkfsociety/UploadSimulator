@@ -136,10 +136,12 @@ func _on_field_changed() -> void:
 	var prev_uids: Array = _blocks.get_nodes().keys()
 	_blocks.sync_from_state()
 	var curr_uids: Array = _blocks.get_nodes().keys()
-	# Порты и координаты проводов — только при изменении набора/раскладки блоков
+	# Порты и провода — только при изменении набора/раскладки блоков.
+	# rebuild_wires (а не update_positions): после загрузки сейва сегментов ещё нет,
+	# их надо собрать заново из восстановленных соединений GameState.
 	if _blocks_layout_changed(prev_uids, curr_uids):
 		_wiring.collect_ports()
-		_wiring.update_positions()
+		_wiring.rebuild_wires()
 	_block_drag.sync_selection_visual()
 
 
