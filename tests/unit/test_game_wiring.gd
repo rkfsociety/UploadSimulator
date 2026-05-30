@@ -21,6 +21,8 @@ func run() -> Array[String]:
 		errors.append("can_connect network→downloader")
 	if not wiring.try_connect_ports(n_uid, "net_out", d_uid, "net_in").is_ok():
 		errors.append("try_connect network→downloader")
+	if wiring.get_download_chain().is_empty():
+		errors.append("download_chain пуста после network→downloader")
 	if not wiring.try_connect_ports(d_uid, "file_out", u_uid, "file_in").is_ok():
 		errors.append("try_connect downloader→uploader")
 	if not wiring.get_file_chain().is_empty():

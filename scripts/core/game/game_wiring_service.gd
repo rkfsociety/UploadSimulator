@@ -111,11 +111,26 @@ func disconnect_ports(from_uid: String, from_port: String, to_uid: String, to_po
 
 
 func _notify_topology_changed() -> void:
-	if _pipeline != null and get_file_chain().is_empty():
-		_pipeline.cancel_file_transfer_queues()
+	if _pipeline == null:
+		return
+	if get_download_chain().is_empty():
+		_pipeline.cancel_download_queues()
+	if get_file_chain().is_empty():
+		_pipeline.cancel_upload_transfers()
 
 
-## Полная цепочка: сеть→загрузчик→аплоудер→сеть.
+## Скачивание: сеть → Text Downloader (достаточно для накопления файлов).
+func get_download_chain() -> Dictionary:
+	var net_dl := _find_network_to_downloader()
+	if net_dl.is_empty():
+		return {}
+	return {
+		"network": str(net_dl.get("from_uid", "")),
+		"downloader": str(net_dl.get("to_uid", "")),
+	}
+
+
+## Полная цепочка выгрузки: сеть→загрузчик→аплоудер→сеть.
 func get_file_chain() -> Dictionary:
 	var files_a := _find_downloader_to_uploader()
 	if files_a.is_empty():

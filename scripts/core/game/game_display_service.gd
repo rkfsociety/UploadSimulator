@@ -40,7 +40,7 @@ func get_block_metric(uid: String) -> String:
 		_:
 			if BlockDefs.is_downloader_type(inst.type_id):
 				var cap := _storage.max_files_for(uid)
-				var used := _storage.get_module_used_files(uid, _wiring.get_file_chain())
+				var used := _storage.get_module_used_files(uid, _wiring.get_download_chain())
 				return "Файлы: %d / %d · %s" % [
 					used,
 					cap,
@@ -62,10 +62,11 @@ func get_block_metric(uid: String) -> String:
 
 func get_progress_block_uids() -> Array[String]:
 	var out: Array[String] = []
+	var dl_chain := _wiring.get_download_chain()
 	var chain_file := _wiring.get_file_chain()
 	if not _data.get_download_queue().is_empty():
 		for key in ["network", "downloader"]:
-			var uid: String = str(chain_file.get(key, ""))
+			var uid: String = str(dl_chain.get(key, ""))
 			if uid != "" and uid not in out:
 				out.append(uid)
 	var up_uid: String = str(chain_file.get("uploader", ""))
@@ -104,44 +105,49 @@ func get_block_display(uid: String) -> Dictionary:
 	var chain_money := _wiring.get_money_chain()
 	match inst.type_id:
 		"network":
-			_fill_network_display(empty, uid, chain_file)
+			_fill_network_display(empty, uid, chain_file, _wiring.get_download_chain())
 		"uploader":
 			_fill_uploader_display(empty, uid, chain_file)
 		"collector":
 			_fill_collector_display(empty, uid, chain_money)
 		_:
 			if BlockDefs.is_downloader_type(inst.type_id):
-				_fill_downloader_display(empty, uid, chain_file)
+				_fill_downloader_display(empty, uid, chain_file, _wiring.get_download_chain())
 	return empty
 
 
-func _fill_network_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
+func _fill_network_display(
+	target: Dictionary, uid: String, chain_file: Dictionary, dl_chain: Dictionary
+) -> void:
 	target["action_visible"] = false
 	target["action_enabled"] = false
-	var in_chain: bool = chain_file.get("network", "") == uid
-	if not _data.get_download_queue().is_empty() and in_chain:
+	var in_download: bool = dl_chain.get("network", "") == uid
+	var in_upload: bool = chain_file.get("network", "") == uid
+	if not _data.get_download_queue().is_empty() and in_download:
 		target["status"] = "Канал: скачивание"
 		return
-	if not _data.get_upload_queue().is_empty() and in_chain:
+	if not _data.get_upload_queue().is_empty() and in_upload:
 		target["status"] = "Канал: выгрузка"
 		return
 	var up_uid: String = str(chain_file.get("uploader", ""))
-	if _data.find_upload_wire_transfer(up_uid) != null and in_chain:
+	if _data.find_upload_wire_transfer(up_uid) != null and in_upload:
 		target["status"] = "Канал: выгрузка"
 		return
-	if in_chain:
+	if in_download or in_upload:
 		target["status"] = "Канал готов"
 		return
-	target["status"] = "Подключите Text Downloader и Загрузчик"
+	target["status"] = "Подключите Text Downloader к сети"
 
 
-func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
+func _fill_downloader_display(
+	target: Dictionary, uid: String, chain_file: Dictionary, dl_chain: Dictionary
+) -> void:
 	target["action_visible"] = false
 	target["action_enabled"] = false
 	var cap := _storage.max_files_for(uid)
-	var used := _storage.get_module_used_files(uid, chain_file)
+	var used := _storage.get_module_used_files(uid, dl_chain)
 	var queue := _data.get_download_queue()
-	if not queue.is_empty() and chain_file.get("downloader", "") == uid:
+	if not queue.is_empty() and dl_chain.get("downloader", "") == uid:
 		var job: FileTransferJob = queue[0]
 		target["status"] = (
 			"Качает: %s · %d%% · %d/%d"
@@ -164,14 +170,14 @@ func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dicti
 		var ft := FileDefs.get_type_label(BlockDefs.get_downloader_file_type(_field.get_instance_type(uid)))
 		target["status"] = "Качает %s · %d/%d" % [ft, used, cap]
 	elif not _data.get_module_files(uid).is_empty():
-		target["status"] = "Хранит %d/%d файлов" % [used, cap]
+		target["status"] = "Хранит %d/%d · ждёт выгрузку" % [used, cap]
 	else:
-		target["status"] = _downloader_idle_hint(chain_file)
+		target["status"] = _downloader_idle_hint(dl_chain)
 
 
-func _downloader_idle_hint(chain_file: Dictionary) -> String:
-	if chain_file.is_empty():
-		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_CHAIN).get_message()
+func _downloader_idle_hint(dl_chain: Dictionary) -> String:
+	if dl_chain.is_empty():
+		return "Подключите к сети (net_out → net_in)"
 	var check := _pipeline.check_enqueue_download()
 	if not check.is_ok():
 		return check.get_message()

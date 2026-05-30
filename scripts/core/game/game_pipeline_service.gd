@@ -108,7 +108,7 @@ func can_collect_money() -> bool:
 
 
 func check_download_at(uid: String) -> GameOperationResult:
-	var chain := _wiring.get_file_chain()
+	var chain := _wiring.get_download_chain()
 	if chain.get("downloader", "") != uid:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_WRONG_MODULE)
 	return check_enqueue_download()
@@ -129,9 +129,12 @@ func check_collect_at(uid: String) -> GameOperationResult:
 
 
 func check_enqueue_download() -> GameOperationResult:
-	var chain := _wiring.get_file_chain()
+	var chain := _wiring.get_download_chain()
 	if chain.is_empty():
-		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_CHAIN)
+		return GameOperationResult.fail(
+			GameOperationResult.Code.PIPELINE_NO_CHAIN,
+			"Подключите Text Downloader к сети (net_out → net_in).",
+		)
 	if _data.get_download_queue().size() >= GameConstants.MAX_QUEUE_JOBS:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_DOWNLOAD_QUEUE_FULL)
 	var dl_uid: String = str(chain.get("downloader", ""))
@@ -204,7 +207,7 @@ func enqueue_download() -> GameOperationResult:
 	var check := check_enqueue_download()
 	if not check.is_ok():
 		return check
-	var chain := _wiring.get_file_chain()
+	var chain := _wiring.get_download_chain()
 	var dl_uid: String = chain.get("downloader", "")
 	var dl_type := _field.get_instance_type(dl_uid)
 	var file_type_id := BlockDefs.get_downloader_file_type(dl_type)
@@ -363,18 +366,30 @@ func finish_publish_pause() -> void:
 
 
 func cancel_file_transfer_queues() -> void:
-	_return_upload_queue_to_storage()
-	_return_upload_wire_transfers_to_storage()
-	_data.get_download_queue().clear()
-	_data.get_wire_transfers().clear()
+	cancel_upload_transfers()
+	cancel_download_queues()
 	if _data.get_phase() == GameStateData.Phase.SETTLING:
 		_data.set_phase(GameStateData.Phase.IDLE)
 	_notify_queue_and_field()
 	_notify_wire_transfers()
 
 
+func cancel_download_queues() -> void:
+	_data.get_download_queue().clear()
+	_notify_queue_and_field()
+
+
+func cancel_upload_transfers() -> void:
+	_return_upload_queue_to_storage()
+	_return_upload_wire_transfers_to_storage()
+	if _data.get_phase() == GameStateData.Phase.SETTLING:
+		_data.set_phase(GameStateData.Phase.IDLE)
+	_notify_wire_transfers()
+	_host.field_changed.emit()
+
+
 func _try_store_completed_download(job: FileTransferJob) -> bool:
-	var chain := _wiring.get_file_chain()
+	var chain := _wiring.get_download_chain()
 	var dl_uid: String = str(chain.get("downloader", ""))
 	if dl_uid == "" or not _storage.can_store_in_module(dl_uid, 1):
 		return false
@@ -393,6 +408,7 @@ func _start_network_upload_from_transit(transfer: WireFileTransfer) -> void:
 	var up_uid: String = str(chain.get("uploader", ""))
 	var net_uid: String = str(chain.get("network", ""))
 	if up_uid == "" or net_uid == "":
+		_restore_wire_transfer_to_downloader(transfer)
 		return
 	var up_speed := upload_speed_for(up_uid)
 	var duration := GameValueBounds.job_duration_from_bytes(transfer.size_bytes, up_speed)
@@ -413,6 +429,19 @@ func _start_network_upload_from_transit(transfer: WireFileTransfer) -> void:
 	)
 	_data.get_wire_transfers().append(net_transfer)
 	_notify_wire_transfers()
+
+
+func _restore_wire_transfer_to_downloader(transfer: WireFileTransfer) -> void:
+	var dl_uid := transfer.from_uid
+	if dl_uid == "":
+		return
+	var entry := StoredFileEntry.new()
+	entry.title = transfer.title
+	entry.file_type_id = transfer.file_type_id
+	entry.quality = transfer.quality
+	entry.size_bytes = transfer.size_bytes
+	entry.apply_bounds()
+	_data.get_module_files(dl_uid).insert(0, entry)
 
 
 func _return_upload_wire_transfers_to_storage() -> void:
@@ -476,11 +505,17 @@ func _notify_wire_transfers() -> void:
 
 
 func _network_transfer_speed(is_download: bool) -> float:
+	if is_download:
+		var chain := _wiring.get_download_chain()
+		var net_uid: String = str(chain.get("network", ""))
+		if net_uid == "":
+			return 0.0
+		return _speed_for_network_uid(net_uid, true)
 	var chain := _wiring.get_file_chain()
 	var net_uid: String = str(chain.get("network", ""))
 	if net_uid == "":
 		return 0.0
-	return _speed_for_network_uid(net_uid, is_download)
+	return _speed_for_network_uid(net_uid, false)
 
 
 func _speed_for_network_uid(network_uid: String, is_download: bool) -> float:

@@ -35,12 +35,13 @@ static func from_instance(uid: String, type_id: String) -> PlacedBlockViewData:
 		data.use_network_panel = true
 		data.network_download_bps = GameState.pipeline.network_download_speed(uid)
 		data.network_upload_bps = GameState.pipeline.network_upload_speed(uid)
-		var chain: Dictionary = GameState.wiring.get_file_chain()
-		var in_chain: bool = str(chain.get("network", "")) == uid
+		var dl_chain: Dictionary = GameState.wiring.get_download_chain()
+		var file_chain: Dictionary = GameState.wiring.get_file_chain()
 		data.network_download_active = (
-			in_chain and not GameState.access.get_download_queue().is_empty()
+			str(dl_chain.get("network", "")) == uid
+			and not GameState.access.get_download_queue().is_empty()
 		)
-		var up_uid := str(chain.get("uploader", ""))
+		var up_uid := str(file_chain.get("uploader", ""))
 		var upload_transfer := GameState.access.get_wire_transfers()
 		var upload_active := false
 		for transfer: WireFileTransfer in upload_transfer:
@@ -51,7 +52,7 @@ static func from_instance(uid: String, type_id: String) -> PlacedBlockViewData:
 				upload_active = true
 				break
 		data.network_upload_active = (
-			in_chain
+			str(file_chain.get("network", "")) == uid
 			and (
 				upload_active or not GameState.access.get_upload_queue().is_empty()
 			)

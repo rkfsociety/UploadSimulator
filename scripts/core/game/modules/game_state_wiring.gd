@@ -47,6 +47,10 @@ func disconnect_ports(from_uid: String, from_port: String, to_uid: String, to_po
 	_svc.disconnect_ports(from_uid, from_port, to_uid, to_port)
 
 
+func get_download_chain() -> Dictionary:
+	return _svc.get_download_chain()
+
+
 func get_file_chain() -> Dictionary:
 	return _svc.get_file_chain()
 

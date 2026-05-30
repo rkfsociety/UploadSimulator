@@ -36,7 +36,7 @@ func _has_active_motion() -> bool:
 
 
 func _draw() -> void:
-	var chain := GameState.wiring.get_file_chain()
+	var chain := GameState.wiring.get_download_chain()
 	if not chain.is_empty() and not GameState.access.get_download_queue().is_empty():
 		var job: FileTransferJob = GameState.access.get_download_queue()[0]
 		_draw_token(

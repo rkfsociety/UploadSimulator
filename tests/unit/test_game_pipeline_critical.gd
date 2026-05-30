@@ -1,7 +1,7 @@
 extends RefCounted
 ## Критические сценарии пайплайна: переполнение очереди/загрузчика, разрыв цепочки, загрузка сейва.
 
-var case_count := 5
+var case_count := 6
 
 
 func run() -> Array[String]:
@@ -11,7 +11,37 @@ func run() -> Array[String]:
 	_test_disconnect_cancels_active_transfer(errors)
 	_test_save_load_restores_queues(errors)
 	_test_tick_auto_enqueues_download(errors)
+	_test_download_with_network_only(errors)
 	return errors
+
+
+func _test_download_with_network_only(errors: Array[String]) -> void:
+	var stack := _make_stack()
+	var data: GameStateData = stack.data
+	var pipeline: GamePipelineService = stack.pipeline
+	var wiring: GameWiringService = stack.wiring
+	var uids := _wire_download_only(stack)
+	if uids.is_empty():
+		errors.append("скачивание без uploader: размещение")
+		stack.host.free()
+		return
+	if not pipeline.check_enqueue_download().is_ok():
+		errors.append("скачивание без uploader: check_enqueue_download")
+	stack.host.free()
+
+
+func _wire_download_only(stack: Dictionary) -> Dictionary:
+	var field: GameFieldService = stack.field
+	var wiring: GameWiringService = stack.wiring
+	var data: GameStateData = stack.data
+	data.add_block_stock("network", 1)
+	data.add_block_stock("text_downloader", 1)
+	var n := field.place_block("network", 0, 0)
+	var d := field.place_block("text_downloader", 8, 0)
+	if not n.is_ok() or not d.is_ok():
+		return {}
+	wiring.try_connect_ports(n.get_uid(), "net_out", d.get_uid(), "net_in")
+	return {"network": n.get_uid(), "downloader": d.get_uid()}
 
 
 func _test_tick_auto_enqueues_download(errors: Array[String]) -> void:
@@ -120,9 +150,9 @@ func _test_disconnect_cancels_active_transfer(errors: Array[String]) -> void:
 	job.progress = 0.4
 	job.apply_bounds()
 	data.get_download_queue().append(job)
-	wiring.disconnect_output_port(uids.downloader, "file_out")
+	wiring.disconnect_output_port(uids.network, "net_out")
 	if not data.get_download_queue().is_empty():
-		errors.append("после отключения загрузчика очередь скачивания должна быть пуста")
+		errors.append("после отключения сети очередь скачивания должна быть пуста")
 	if not data.get_upload_queue().is_empty():
 		errors.append("после отключения очередь выгрузки должна быть пуста")
 	if not data.get_wire_transfers().is_empty():
