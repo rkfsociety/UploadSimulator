@@ -52,6 +52,9 @@ func _upgrade_panel_size() -> Vector2:
 		return Vector2.ZERO
 	var c := GridDefs.block_cells(block_type)
 	return Vector2(
+		float(c.x * GridDefs.CELL_SIZE),
+		float(GridDefs.BLOCK_UPGRADE_CELLS_H * GridDefs.CELL_SIZE),
+	)
 
 
 static func get_scene() -> PackedScene:
