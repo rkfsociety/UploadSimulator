@@ -31,6 +31,54 @@ func can_connect_ports(
 	return check_connect_ports(from_uid, from_port, to_uid, to_port).is_ok()
 
 
+## --- Соединения на уровне модулей (один центральный порт на модуль) ---
+## Тип данных и направление выбираются автоматически по паре типов модулей.
+
+
+## Подбирает логические порты для соединения двух модулей: пробует A→B, затем B→A.
+## Возвращает {from_uid, from_port, to_uid, to_port} или {} если пара несоединима.
+func resolve_module_connection(a_uid: String, b_uid: String) -> Dictionary:
+	if a_uid == "" or b_uid == "" or a_uid == b_uid:
+		return {}
+	var a_type := _field.get_instance_type(a_uid)
+	var b_type := _field.get_instance_type(b_uid)
+	var ab := BlockDefs.resolve_wire_ports(a_type, b_type)
+	if not ab.is_empty():
+		return {
+			"from_uid": a_uid, "from_port": ab["from_port"],
+			"to_uid": b_uid, "to_port": ab["to_port"],
+		}
+	var ba := BlockDefs.resolve_wire_ports(b_type, a_type)
+	if not ba.is_empty():
+		return {
+			"from_uid": b_uid, "from_port": ba["from_port"],
+			"to_uid": a_uid, "to_port": ba["to_port"],
+		}
+	return {}
+
+
+## Можно ли соединить (или уже соединены — тоггл) два модуля. Для подсветки и превью.
+func can_connect_modules(a_uid: String, b_uid: String) -> bool:
+	var r := resolve_module_connection(a_uid, b_uid)
+	if r.is_empty():
+		return false
+	if is_wired(r["from_uid"], r["from_port"], r["to_uid"], r["to_port"]):
+		return true
+	return can_connect_ports(r["from_uid"], r["from_port"], r["to_uid"], r["to_port"])
+
+
+## Тоггл соединения двух модулей: есть — снимает, иначе создаёт. Порты подбираются сами.
+func try_connect_modules(a_uid: String, b_uid: String) -> GameOperationResult:
+	var r := resolve_module_connection(a_uid, b_uid)
+	if r.is_empty():
+		var a_type := _field.get_instance_type(a_uid)
+		var b_type := _field.get_instance_type(b_uid)
+		return GameOperationResult.fail(
+			GameOperationResult.Code.WIRING_TYPE_NOT_ALLOWED, _connection_error(a_type, b_type)
+		)
+	return try_connect_ports(r["from_uid"], r["from_port"], r["to_uid"], r["to_port"])
+
+
 ## Проверка нового провода out→in.
 ## Один провод на порт: WIRING_OUTPUT_BUSY / WIRING_INPUT_BUSY — линейный пайплайн без разветвлений.
 ## Типы только из ALLOWED_WIRES; направление out→in и одинаковый kind (file/money/net).

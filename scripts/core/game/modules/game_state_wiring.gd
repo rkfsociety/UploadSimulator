@@ -39,6 +39,18 @@ func try_connect_ports(
 	return _svc.try_connect_ports(from_uid, from_port, to_uid, to_port)
 
 
+func resolve_module_connection(a_uid: String, b_uid: String) -> Dictionary:
+	return _svc.resolve_module_connection(a_uid, b_uid)
+
+
+func can_connect_modules(a_uid: String, b_uid: String) -> bool:
+	return _svc.can_connect_modules(a_uid, b_uid)
+
+
+func try_connect_modules(a_uid: String, b_uid: String) -> GameOperationResult:
+	return _svc.try_connect_modules(a_uid, b_uid)
+
+
 func disconnect_output_port(uid: String, port_id: String) -> void:
 	_svc.disconnect_output_port(uid, port_id)
 

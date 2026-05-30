@@ -23,8 +23,7 @@ var block_type: String = ""
 @onready var _progress_bar: ProgressBar = %ProgressBar
 @onready var _action_btn: Button = %ActionButton
 @onready var _upgrade_btn: Button = %UpgradeButton
-@onready var _left_ports: HBoxContainer = %LeftPorts
-@onready var _right_ports: HBoxContainer = %RightPorts
+@onready var _ports_center: CenterContainer = %PortsCenter
 
 var _view: PlacedBlockView
 
@@ -117,33 +116,21 @@ func _apply_root_layout() -> void:
 
 
 func _build_ports() -> void:
-	for child in _left_ports.get_children():
+	# Один центральный разъём на модуль. Какой тип данных и в какую сторону передавать —
+	# сервис проводов решает по паре типов модулей при соединении (resolve_wire_ports).
+	for child in _ports_center.get_children():
 		child.queue_free()
-	for child in _right_ports.get_children():
-		child.queue_free()
-	var defs: Dictionary = BlockDefs.PORT_DEFS.get(block_type, {})
-	for port_id in defs.keys():
-		var def: Dictionary = defs[port_id]
-		var port := _make_port(port_id, def)
-		if def.get("dir", "") == "in":
-			_left_ports.add_child(port)
-		else:
-			_right_ports.add_child(port)
-	_left_ports.visible = _left_ports.get_child_count() > 0
-	_right_ports.visible = _right_ports.get_child_count() > 0
-
-
-func _make_port(port_id: String, def: Dictionary) -> ConnectionPort:
+	# Модуль без портов в defs (если такой появится) центральный разъём не получает.
+	if BlockDefs.PORT_DEFS.get(block_type, {}).is_empty():
+		_ports_center.visible = false
+		return
 	var port := ConnectionPort.new()
 	# Зона нажатия порта — не меньше touch target (визуал остаётся 30px)
 	var hit := float(PlatformInfo.port_hit_size())
 	port.custom_minimum_size = Vector2(hit, hit)
-	var p_kind := (
-		ConnectionPort.Kind.MONEY if def.get("kind", "") == "money" else ConnectionPort.Kind.FILE
-	)
-	var p_dir := ConnectionPort.Dir.IN if def.get("dir", "") == "in" else ConnectionPort.Dir.OUT
-	port.configure(instance_uid, block_type, port_id, p_kind, p_dir)
-	return port
+	port.configure_module(instance_uid, block_type)
+	_ports_center.add_child(port)
+	_ports_center.visible = true
 
 
 ## Перечитывает GameState и применяет PlacedBlockViewData к узлам сцены.

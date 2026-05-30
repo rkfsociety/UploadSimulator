@@ -42,11 +42,11 @@ func rebuild_wires() -> void:
 	WirePool.release_segments(_segments)
 	_segments.clear()
 	for link: WireLink in GameState.access.get_wire_connections():
-		var from_p := PortUtils.find_port(_ports, link.from_uid, link.from_port)
-		var to_p := PortUtils.find_port(_ports, link.to_uid, link.to_port)
+		var from_p := PortUtils.find_module_port(_ports, link.from_uid)
+		var to_p := PortUtils.find_module_port(_ports, link.to_uid)
 		if from_p == null or to_p == null:
 			continue
-		var kind: String = "money" if from_p.kind == ConnectionPort.Kind.MONEY else "file"
+		var kind: String = _link_kind(link)
 		var pooled := WirePool.acquire_link()
 		pooled.copy_from(link)
 		var seg := WirePool.acquire_segment()
@@ -67,22 +67,34 @@ func update_positions() -> void:
 		if link is not WireLink:
 			continue
 		var wire: WireLink = link
-		var from_p := PortUtils.find_port(_ports, wire.from_uid, wire.from_port)
-		var to_p := PortUtils.find_port(_ports, wire.to_uid, wire.to_port)
+		var from_p := PortUtils.find_module_port(_ports, wire.from_uid)
+		var to_p := PortUtils.find_module_port(_ports, wire.to_uid)
 		if from_p == null or to_p == null:
 			continue
 		seg["from"] = PortUtils.port_center_in_local(from_p, _wires_root)
 		seg["to"] = PortUtils.port_center_in_local(to_p, _wires_root)
-		seg["path"] = WireRouteUtils.build_path(
+		var path := WireRouteUtils.build_path(
 			seg["from"],
 			seg["to"],
-			from_p.direction,
-			to_p.direction,
+			ConnectionPort.Dir.OUT,
+			ConnectionPort.Dir.IN,
 			_obstacles_except(obstacles, [wire.from_uid, wire.to_uid]),
+		)
+		# Обрезаем концы по краям модулей — линия «выходит» из края (перекрестие).
+		seg["path"] = WireRouteUtils.trim_path_to_rects(
+			path, _rect_for(obstacles, wire.from_uid), _rect_for(obstacles, wire.to_uid)
 		)
 	_renderer.set_segments(_segments)
 	_token_layer.set_segments(_segments)
 	_update_pending_wire()
+
+
+## Прямоугольник модуля по uid из списка препятствий (или пустой, если не найден).
+func _rect_for(rects: Array[Dictionary], uid: String) -> Rect2:
+	for entry: Dictionary in rects:
+		if str(entry["uid"]) == uid:
+			return entry["rect"]
+	return Rect2()
 
 
 func set_visible_rect(rect: Rect2) -> void:
@@ -95,28 +107,28 @@ func set_cursor_screen(pos: Vector2) -> void:
 
 
 func _on_port_pressed(port: ConnectionPort) -> void:
-	if port.direction == ConnectionPort.Dir.OUT:
-		if GameState.wiring.port_has_output_link(port.instance_uid, port.port_id):
-			if _pending_out == port:
-				GameState.wiring.disconnect_output_port(port.instance_uid, port.port_id)
-				clear_pending()
-				return
+	# Первый клик — выбираем модуль-источник.
+	if _pending_out == null:
 		_pending_out = port
 		_update_pending_wire()
 		PortUtils.refresh_highlights(_ports, _pending_out)
 		return
-	if _pending_out == null:
-		GameState.log_message.emit("Сначала выход.")
+	# Повторный клик по тому же модулю — отмена выбора.
+	if _pending_out.instance_uid == port.instance_uid:
+		clear_pending()
 		return
+	# Второй модуль — соединяем/снимаем. Тип данных и направление подбираются сами.
 	GameState.report_operation(
-		GameState.wiring.try_connect_ports(
-			_pending_out.instance_uid,
-			_pending_out.port_id,
-			port.instance_uid,
-			port.port_id,
-		)
+		GameState.wiring.try_connect_modules(_pending_out.instance_uid, port.instance_uid)
 	)
 	clear_pending()
+
+
+## Тип данных провода (money/file) по логическому порту-источнику в линке.
+func _link_kind(link: WireLink) -> String:
+	var from_type: String = GameState.field.get_instance_type(link.from_uid)
+	var def: Dictionary = BlockDefs.PORT_DEFS.get(from_type, {}).get(link.from_port, {})
+	return "money" if str(def.get("kind", "")) == "money" else "file"
 
 
 func _update_pending_wire() -> void:
@@ -128,14 +140,19 @@ func _update_pending_wire() -> void:
 	var to_pos := _wires_root.get_global_transform().affine_inverse() * global_pos
 	_pending_segment["from"] = from_pos
 	_pending_segment["to"] = to_pos
-	_pending_segment["path"] = WireRouteUtils.build_path(
+	var obstacles := _gather_obstacle_rects()
+	var path := WireRouteUtils.build_path(
 		from_pos,
 		to_pos,
-		_pending_out.direction,
+		ConnectionPort.Dir.OUT,
 		ConnectionPort.Dir.IN,
-		_obstacles_except(_gather_obstacle_rects(), [_pending_out.instance_uid]),
+		_obstacles_except(obstacles, [_pending_out.instance_uid]),
 	)
-	_pending_segment["color"] = PortUtils.wire_color_for_port(_pending_out)
+	# Старт обрезаем по краю модуля-источника; конец (курсор) оставляем как есть.
+	_pending_segment["path"] = WireRouteUtils.trim_path_to_rects(
+		path, _rect_for(obstacles, _pending_out.instance_uid), Rect2()
+	)
+	_pending_segment["color"] = MinimalUI.NEON_CYAN
 	_renderer.set_pending(_pending_segment)
 
 

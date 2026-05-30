@@ -29,6 +29,14 @@ static func find_port(ports: Array[ConnectionPort], uid: String, port_id: String
 	return null
 
 
+## Центральный (модульный) порт ищется только по uid модуля — port_id у него пустой.
+static func find_module_port(ports: Array[ConnectionPort], uid: String) -> ConnectionPort:
+	for port: ConnectionPort in ports:
+		if port.instance_uid == uid and port.is_module_level:
+			return port
+	return null
+
+
 static func port_center_in_local(port: ConnectionPort, space: Control) -> Vector2:
 	return space.get_global_transform().affine_inverse() * port.get_global_rect().get_center()
 
@@ -43,20 +51,19 @@ static func wire_color_for_kind(kind: String) -> Color:
 	return MinimalUI.WIRE_MONEY if kind == "money" else MinimalUI.WIRE_FILE
 
 
+## Подсветка центральных портов: выбранный источник и все модули, к которым его
+## можно подключить (направление и тип подбираются автоматически).
 static func refresh_highlights(
 	ports: Array[ConnectionPort],
-	pending_out: ConnectionPort,
+	pending_source: ConnectionPort,
 ) -> void:
 	for port: ConnectionPort in ports:
 		var can_connect := false
-		if pending_out != null and port.direction == ConnectionPort.Dir.IN:
-			can_connect = GameState.wiring.can_connect_ports(
-				pending_out.instance_uid,
-				pending_out.port_id,
-				port.instance_uid,
-				port.port_id,
+		if pending_source != null and port.instance_uid != pending_source.instance_uid:
+			can_connect = GameState.wiring.can_connect_modules(
+				pending_source.instance_uid, port.instance_uid
 			)
-		port.set_highlight(port == pending_out, can_connect)
+		port.set_highlight(port == pending_source, can_connect)
 
 
 static func wire_flow_speed(link: WireLink) -> float:

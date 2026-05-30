@@ -2,8 +2,6 @@ extends RefCounted
 class_name WireRouteUtils
 ## Ортогональная трассировка проводов (горизонталь / вертикаль, изгибы 90°).
 
-const STUB_CELLS := 0.5
-const PORT_ZONE_MARGIN := 48.0  # Портов имеют зону нажатия 48x48 — смещаемся на их полуширину
 const SAME_ROW_EPS := 4.0
 
 # A* по решётке полуклетки (CELL_SIZE / 2): порты модулей всегда попадают на её узлы.
@@ -14,46 +12,35 @@ const _MAX_GRID_CELLS := 4000
 const _MAX_EXPANSIONS := 6000
 
 
-## Трассировка провода. Если переданы `obstacles` (прямоугольники модулей в той же
-## системе координат, без модулей-концов), путь огибает их по решётке; иначе —
-## простой ортогональный маршрут (L/Z), как раньше.
+## Трассировка провода между центрами модулей (перекрестие). У модуля один порт
+## в центре, поэтому путь идёт строго центр→центр ортогонально (L/Z); части линии
+## внутри модулей-концов скрыты панелями (рисуем провода под блоками).
+## Если переданы `obstacles` (прямоугольники прочих модулей, без концов), путь
+## огибает их по решётке полуклетки.
+## `from_port_dir`/`to_port_dir` оставлены для совместимости вызовов и не влияют на
+## маршрут: направление выхода определяется взаимным положением центров.
 static func build_path(
 	from: Vector2,
 	to: Vector2,
-	from_port_dir: ConnectionPort.Dir,
-	to_port_dir: ConnectionPort.Dir,
+	_from_port_dir: ConnectionPort.Dir = ConnectionPort.Dir.OUT,
+	_to_port_dir: ConnectionPort.Dir = ConnectionPort.Dir.IN,
 	obstacles: Array[Rect2] = [],
 ) -> PackedVector2Array:
-	var stub := float(GridDefs.CELL_SIZE) * STUB_CELLS
-	# Провода выходят из центра модуля как перекрестие,
-	# не из портов. Портов используются только для подключения сигналов.
-	var exit := _exit_from_port(from, from_port_dir, stub)
-	var enter := _approach_to_port(to, to_port_dir, stub)
-	var simple := _simple_path(from, exit, enter, to)
+	var simple := _simple_path(from, from, to, to)
 
-	# Если нет препятствий, используем простой путь
-	if obstacles.is_empty():
+	# Без препятствий или если прямой маршрут их не задевает — используем его.
+	if obstacles.is_empty() or not _path_hits_obstacles(simple, obstacles):
 		return simple
 
-	# Если простой путь НЕ пересекает препятствия, используем его
-	if not _path_hits_obstacles(simple, obstacles):
+	# Прямой маршрут задевает чужие модули — огибаем по решётке.
+	var routed := _route_around(from, to, obstacles)
+	if routed.size() < 2:
 		return simple
-
-	# Простой путь пересекает препятствия - пытаемся обойти
-	var routed := _route_around(exit, enter, obstacles)
-	if routed.size() >= 2:
-		# Реальные точки выхода/входа стыкуем явно: их Y может не лежать на узле решётки,
-		# тогда exit→routed[0] и routed[-1]→enter дают короткую вертикальную доводку (X совпадает).
-		var full := PackedVector2Array([from, exit])
-		for p: Vector2 in routed:
-			full.append(p)
-		full.append(enter)
-		full.append(to)
-		return _dedupe(_simplify_collinear(full))
-
-	# Если обход не сработал, но простой путь пересекает модули, всё равно его не используем
-	# Вместо этого, пытаемся создать альтернативный маршрут, избегая центра модулей
-	return simple
+	var full := PackedVector2Array([from])
+	for p: Vector2 in routed:
+		full.append(p)
+	full.append(to)
+	return _dedupe(_simplify_collinear(full))
 
 
 static func _simple_path(
@@ -66,6 +53,52 @@ static func _simple_path(
 	raw.append(enter)
 	raw.append(to)
 	return _dedupe(raw)
+
+
+## Обрезает концы ортогонального пути по прямоугольникам модулей-концов, чтобы
+## видимая линия начиналась/заканчивалась на КРАЮ модуля (эффект «перекрестия»),
+## а не в центре. Пустой Rect2 (size 0) — конец не обрезается (например, курсор).
+static func trim_path_to_rects(
+	path: PackedVector2Array, from_rect: Rect2, to_rect: Rect2
+) -> PackedVector2Array:
+	var out := path
+	if from_rect.size.x > 0.0 and from_rect.size.y > 0.0:
+		out = _trim_start(out, from_rect)
+	if to_rect.size.x > 0.0 and to_rect.size.y > 0.0:
+		out.reverse()
+		out = _trim_start(out, to_rect)
+		out.reverse()
+	return out
+
+
+## Отбрасывает участок пути внутри `rect` от начала и ставит точку на границе.
+static func _trim_start(path: PackedVector2Array, rect: Rect2) -> PackedVector2Array:
+	if path.size() < 2:
+		return path
+	var i := 0
+	while i < path.size() - 1 and rect.has_point(path[i + 1]):
+		i += 1
+	if i >= path.size() - 1:
+		return path  # весь путь внутри модуля — оставляем как есть
+	var out := PackedVector2Array()
+	if rect.has_point(path[i]):
+		out.append(_boundary_point(path[i], path[i + 1], rect))
+	else:
+		out.append(path[i])
+	for j in range(i + 1, path.size()):
+		out.append(path[j])
+	return out
+
+
+## Точка пересечения ортогонального отрезка (inside→outside) с границей rect.
+static func _boundary_point(inside: Vector2, outside: Vector2, rect: Rect2) -> Vector2:
+	if is_zero_approx(inside.y - outside.y):
+		# Горизонтальный сегмент — пересекаем вертикальную грань.
+		var bx := rect.position.x if outside.x < inside.x else rect.position.x + rect.size.x
+		return Vector2(bx, inside.y)
+	# Вертикальный сегмент — пересекаем горизонтальную грань.
+	var by := rect.position.y if outside.y < inside.y else rect.position.y + rect.size.y
+	return Vector2(inside.x, by)
 
 
 static func sample_path(points: PackedVector2Array, t: float) -> Vector2:
@@ -108,18 +141,6 @@ static func is_axis_aligned(points: PackedVector2Array) -> bool:
 		if not is_zero_approx(a.x - b.x) and not is_zero_approx(a.y - b.y):
 			return false
 	return true
-
-
-static func _exit_from_port(center: Vector2, port_dir: ConnectionPort.Dir, stub: float) -> Vector2:
-	if port_dir == ConnectionPort.Dir.OUT:
-		return center + Vector2(stub, 0.0)
-	return center + Vector2(-stub, 0.0)
-
-
-static func _approach_to_port(center: Vector2, port_dir: ConnectionPort.Dir, stub: float) -> Vector2:
-	if port_dir == ConnectionPort.Dir.IN:
-		return center + Vector2(-stub, 0.0)
-	return center + Vector2(stub, 0.0)
 
 
 static func _connect_orthogonal(a: Vector2, b: Vector2) -> Array[Vector2]:

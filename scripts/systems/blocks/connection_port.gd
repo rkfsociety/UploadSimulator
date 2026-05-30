@@ -14,6 +14,8 @@ var _block_type: String = ""
 var _port_id: String = ""
 var _kind: Kind = Kind.FILE
 var _direction: Dir = Dir.OUT
+# Модульный (центральный) порт: один на модуль, тип данных провод определяет сам.
+var _module_level: bool = false
 
 var instance_uid: String:
 	get:
@@ -35,6 +37,10 @@ var direction: Dir:
 	get:
 		return _direction
 
+var is_module_level: bool:
+	get:
+		return _module_level
+
 
 ## Однократная инициализация порта (поля только для чтения снаружи).
 func configure(uid: String, type_id: String, p_id: String, p_kind: Kind, p_dir: Dir) -> void:
@@ -43,7 +49,19 @@ func configure(uid: String, type_id: String, p_id: String, p_kind: Kind, p_dir: 
 	_port_id = p_id
 	_kind = p_kind
 	_direction = p_dir
+	_module_level = false
 	tooltip_text = _tooltip_text()
+	queue_redraw()
+
+
+## Инициализация единственного (центрального) порта модуля. Тип данных и
+## направление выбирает сервис проводов по паре типов модулей при соединении.
+func configure_module(uid: String, type_id: String) -> void:
+	_instance_uid = uid
+	_block_type = type_id
+	_port_id = ""
+	_module_level = true
+	tooltip_text = "%s · разъём" % _block_type
 	queue_redraw()
 
 
@@ -67,8 +85,22 @@ func _draw() -> void:
 	var vis := Vector2(vis_sz, vis_sz)
 	var offset := (size - vis) * 0.5
 	draw_set_transform(offset, 0.0, Vector2.ONE)
-	draw_port_visual(self, vis, _kind, _direction)
+	if _module_level:
+		draw_module_visual(self, vis)
+	else:
+		draw_port_visual(self, vis, _kind, _direction)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+## Нейтральный центральный разъём модуля: кольцо-хаб без привязки к типу данных.
+static func draw_module_visual(canvas: CanvasItem, canvas_size: Vector2) -> void:
+	var center := canvas_size * 0.5
+	var r := 9.0
+	var accent := MinimalUI.NEON_CYAN
+	canvas.draw_circle(center, r + 2.0, Color(accent.r, accent.g, accent.b, 0.16))
+	canvas.draw_circle(center, r, Color(0.04, 0.07, 0.10, 0.95))
+	canvas.draw_arc(center, r, 0, TAU, 48, accent, 2.0)
+	canvas.draw_circle(center, 3.0, accent)
 
 
 static func draw_port_visual(canvas: CanvasItem, canvas_size: Vector2, p_kind: Kind, p_direction: Dir) -> void:
