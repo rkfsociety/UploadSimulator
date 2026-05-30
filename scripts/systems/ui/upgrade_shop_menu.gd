@@ -61,7 +61,7 @@ func _build_ui() -> void:
 	vbox.add_child(header)
 
 	_title = Label.new()
-	_title.text = "Магазин среды"
+	_title.text = "Улучшения"
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_title.add_theme_color_override("font_color", MinimalUI.NEON_MAGENTA)
 	_title.add_theme_font_size_override("font_size", 18)
