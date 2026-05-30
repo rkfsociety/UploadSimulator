@@ -2,7 +2,7 @@ extends RefCounted
 class_name WireRouteUtils
 ## Ортогональная трассировка проводов (горизонталь / вертикаль, изгибы 90°).
 
-const STUB_CELLS := 0.5
+const STUB_CELLS := 1.0
 const SAME_ROW_EPS := 4.0
 
 # A* по решётке полуклетки (CELL_SIZE / 2): порты модулей всегда попадают на её узлы.
@@ -97,15 +97,21 @@ static func is_axis_aligned(points: PackedVector2Array) -> bool:
 
 
 static func _exit_from_port(center: Vector2, port_dir: ConnectionPort.Dir, stub: float) -> Vector2:
+	# Провод выходит из модуля в направлении, противоположном входу портва.
+	# OUT порты справа → выходим вправо; IN порты слева → выходим влево.
+	# Но в реальности, провод ВСЕГДА выходит из OUT портва (справа).
 	if port_dir == ConnectionPort.Dir.OUT:
-		return center + Vector2(stub, 0.0)
-	return center + Vector2(-stub, 0.0)
+		return center + Vector2(stub, 0.0)  # OUT на справа, выходим вправо
+	return center + Vector2(-stub, 0.0)  # IN на слева, выходим влево (но это не используется)
 
 
 static func _approach_to_port(center: Vector2, port_dir: ConnectionPort.Dir, stub: float) -> Vector2:
+	# Провод входит в модуль со стороны, где находится целевой порт.
+	# IN порты слева → подходим слева; OUT порты справа → подходим справа.
+	# Но в реальности, провод ВСЕГДА входит в IN порт (слева).
 	if port_dir == ConnectionPort.Dir.IN:
-		return center + Vector2(-stub, 0.0)
-	return center + Vector2(stub, 0.0)
+		return center + Vector2(-stub, 0.0)  # IN на слева, подходим слева
+	return center + Vector2(stub, 0.0)  # OUT на справа, подходим справа (но это не используется)
 
 
 static func _connect_orthogonal(a: Vector2, b: Vector2) -> Array[Vector2]:
