@@ -5,8 +5,8 @@ class_name GameConstants
 # Preload убирает циклическую зависимость class_name при _static_init
 const _BalanceConfig := preload("res://scripts/core/game/game_balance_config.gd")
 
-const PIPELINE_LABEL := "Загрузчик → Хранилище → Аплоудер"
-const MONEY_PIPELINE_LABEL := "Аплоудер → Коллектор"
+const PIPELINE_LABEL := "Сеть ↔ Хранилище"
+const MONEY_PIPELINE_LABEL := "Сеть → Коллектор"
 const WIRING_HINT := "Круг = файлы | Квадрат/ромб = деньги"
 
 const CONFIG_RESOURCE := "res://resources/game_balance.tres"
@@ -28,7 +28,7 @@ static var DEFAULT_STORED_FILE_BYTES: float
 static var MAX_QUEUE_JOBS: int
 static var MIN_COLLECT_BALANCE: float
 static var MIN_JOB_DURATION_SEC: float
-static var QUALITY_PER_DOWNLOADER_LEVEL: float
+static var QUALITY_PER_NETWORK_LEVEL: float
 static var UPLOAD_SETTLE_PAUSE_SEC: float
 static var REVENUE_PER_BYTE: float
 static var DEFAULT_UPGRADE_BASE: float
@@ -75,7 +75,7 @@ static func _apply_config(cfg: Resource) -> void:
 	MAX_QUEUE_JOBS = cfg.max_queue_jobs
 	MIN_COLLECT_BALANCE = cfg.min_collect_balance
 	MIN_JOB_DURATION_SEC = cfg.min_job_duration_sec
-	QUALITY_PER_DOWNLOADER_LEVEL = cfg.quality_per_downloader_level
+	QUALITY_PER_NETWORK_LEVEL = cfg.quality_per_network_level
 	UPLOAD_SETTLE_PAUSE_SEC = cfg.upload_settle_pause_sec
 	REVENUE_PER_BYTE = cfg.revenue_per_byte()
 	DEFAULT_UPGRADE_BASE = cfg.default_upgrade_base

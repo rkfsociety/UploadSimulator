@@ -48,9 +48,9 @@ func _test_state_setters(errors: Array[String]) -> void:
 	data.add_money(-500.0)
 	if data.get_money() != start_money:
 		errors.append("add_money: отрицательное начисление игнорируется")
-	data.set_uploader_balance(-20.0)
-	if data.get_uploader_balance() != 0.0:
-		errors.append("set_uploader_balance: отрицательное → 0")
+	data.set_network_balance(-20.0)
+	if data.get_network_balance() != 0.0:
+		errors.append("set_network_balance: отрицательное → 0")
 	if data.try_spend_money(-5.0):
 		errors.append("try_spend_money: отрицательная сумма отклоняется")
 	var wallet := PremiumWallet.new(GameConstants.START_DIAMONDS)

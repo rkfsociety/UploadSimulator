@@ -78,8 +78,8 @@ func _build_stats_text() -> String:
 	var lines: PackedStringArray = PackedStringArray([
 		"[DEBUG] F3 — скрыть",
 		"FPS: %.0f" % fps,
-		"Касса: $%.0f | Аплоудер: $%.2f"
-		% [GameState.access.get_money(), GameState.access.get_uploader_balance()],
+		"Касса: $%.0f | Сеть: $%.2f"
+		% [GameState.access.get_money(), GameState.access.get_network_balance()],
 		"Фаза: %s | %s" % [phase, GameState.pipeline.get_phase_label()],
 		"Очереди ↓%d ↑%d | Модули: %d | Провода: %d"
 		% [

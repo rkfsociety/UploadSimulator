@@ -16,7 +16,7 @@ func run() -> Array[String]:
 			shop_types.append(k)
 	if shop_types.size() != BlockDefs.starter_kit_types().size():
 		errors.append("в магазине $ только открытые типы")
-	data.unlock_module_type("downloader")
-	if not data.is_module_type_unlocked("downloader"):
+	data.unlock_module_type("network")
+	if not data.is_module_type_unlocked("network"):
 		errors.append("unlock_module_type должен отмечать тип")
 	return errors

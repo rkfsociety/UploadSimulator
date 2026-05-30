@@ -110,18 +110,18 @@ func can_collect_money() -> bool:
 	return check_collect_money().is_ok()
 
 
-## Проверка загрузчика: uid должен быть file_chain.downloader; иначе PIPELINE_WRONG_MODULE.
+## Проверка сети: uid должен быть file_chain.network; иначе PIPELINE_WRONG_MODULE.
 func check_download_at(uid: String) -> GameOperationResult:
 	var chain := _wiring.get_file_chain()
-	if chain.get("downloader", "") != uid:
+	if chain.get("network", "") != uid:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_WRONG_MODULE)
 	return check_enqueue_download()
 
 
-## Проверка аплоудера: uid — file_chain.uploader.
+## Проверка сети для выгрузки: uid — file_chain.network.
 func check_upload_at(uid: String) -> GameOperationResult:
 	var chain := _wiring.get_file_chain()
-	if chain.get("uploader", "") != uid:
+	if chain.get("network", "") != uid:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_WRONG_MODULE)
 	return check_enqueue_upload()
 
@@ -160,35 +160,35 @@ func check_enqueue_upload() -> GameOperationResult:
 	return GameOperationResult.ok()
 
 
-## Сбор: IDLE, money_chain, сейф аплоудера ≥ MIN_COLLECT_BALANCE.
+## Сбор: IDLE, money_chain, сейф сети ≥ MIN_COLLECT_BALANCE.
 func check_collect_money() -> GameOperationResult:
 	if _data.get_phase() != GameStateData.Phase.IDLE:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_PHASE_BUSY)
 	if _wiring.get_money_chain().is_empty():
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_MONEY_CHAIN)
-	if _data.get_uploader_balance() < GameConstants.MIN_COLLECT_BALANCE:
+	if _data.get_network_balance() < GameConstants.MIN_COLLECT_BALANCE:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_SAFE_EMPTY)
 	return GameOperationResult.ok()
 
 
-## Переводит весь сейф аплоудера в общую кассу (нужен провод money_out → money_in).
+## Переводит весь сейф сети в общую кассу (нужен провод money_out → money_in).
 func collect_money(collector_uid: String) -> GameOperationResult:
 	var check := check_collect_at(collector_uid)
 	if not check.is_ok():
 		return check
 	var chain := _wiring.get_money_chain()
-	var uploader_uid: String = str(chain.get("from_uid", ""))
-	var safe: float = _data.get_uploader_balance()
+	var network_uid: String = str(chain.get("from_uid", ""))
+	var safe: float = _data.get_network_balance()
 	var inst := _field.get_instance(collector_uid)
 	var bonus: float = GameBonus.effect_at_level("collector", inst.level)
 	var payout: float = safe * (1.0 + bonus)
-	_data.set_uploader_balance(0.0)
+	_data.set_network_balance(0.0)
 	_data.add_money(payout)
-	var uploader_name: String = BlockDefs.TYPES.get(_field.get_instance_type(uploader_uid), {}).get(
-		"name", "Аплоудер"
+	var network_name: String = BlockDefs.TYPES.get(_field.get_instance_type(network_uid), {}).get(
+		"name", "Сеть"
 	)
 	_host.log_message.emit(
-		"Коллектор: $%.0f из %s → касса (баланс $%.0f)" % [payout, uploader_name, _data.get_money()]
+		"Коллектор: $%.0f из %s → касса (баланс $%.0f)" % [payout, network_name, _data.get_money()]
 	)
 	_notify_field_and_stats()
 	return GameOperationResult.ok()
@@ -196,9 +196,9 @@ func collect_money(collector_uid: String) -> GameOperationResult:
 
 func run_block_action(uid: String) -> GameOperationResult:
 	match _field.get_instance_type(uid):
-		"downloader":
-			return enqueue_download()
-		"uploader":
+		"network":
+			if check_enqueue_download().is_ok():
+				return enqueue_download()
 			return enqueue_upload()
 		"collector":
 			return collect_money(uid)
@@ -210,13 +210,13 @@ func enqueue_download() -> GameOperationResult:
 	if not check.is_ok():
 		return check
 	var chain := _wiring.get_file_chain()
-	var dl_uid: String = chain.get("downloader", "")
+	var net_uid: String = chain.get("network", "")
 	var file_type_id := FileDefs.pick_random_download_type(_rng)
 	if not FileDefs.is_downloadable_type(file_type_id):
 		return GameOperationResult.fail(GameOperationResult.Code.FILE_TYPE_UNSUPPORTED)
-	var dl_level := _field.get_instance_level(dl_uid)
-	var quality := 1.0 + float(dl_level) * GameConstants.QUALITY_PER_DOWNLOADER_LEVEL
-	var speed_bps := download_speed_for(dl_uid)
+	var net_level := _field.get_instance_level(net_uid)
+	var quality := 1.0 + float(net_level) * GameConstants.QUALITY_PER_NETWORK_LEVEL
+	var speed_bps := download_speed_for(net_uid)
 	# Случайный размер влияет на длительность и доход; на вместимость диска (в штуках) — нет
 	var total_bytes := FileDefs.random_download_size_bytes(file_type_id, speed_bps, _rng)
 	var job := FileTransferJob.new()
@@ -239,12 +239,12 @@ func enqueue_upload() -> GameOperationResult:
 	if not check.is_ok():
 		return check
 	var chain := _wiring.get_file_chain()
-	var up_uid: String = chain.get("uploader", "")
+	var net_uid: String = chain.get("network", "")
 	var entry: StoredFileEntry = _data.get_stored_files().pop_front()  # с диска — старейший файл
 	var job := FileTransferJob.new()
 	job.quality = entry.quality
 	job.size_bytes = GameValueBounds.size_bytes(entry.size_bytes)
-	var up_speed := upload_speed_for(up_uid)
+	var up_speed := upload_speed_for(net_uid)
 	job.duration = GameValueBounds.job_duration_from_bytes(job.size_bytes, up_speed)
 	job.progress = 0.0
 	job.file_type_id = entry.file_type_id
@@ -321,10 +321,10 @@ func apply_publish(job: FileTransferJob) -> void:
 	var revenue := GameValueBounds.money(
 		job.size_bytes * GameConstants.REVENUE_PER_BYTE * job.quality
 	)
-	_data.set_uploader_balance(_data.get_uploader_balance() + revenue)
+	_data.set_network_balance(_data.get_network_balance() + revenue)
 	_data.set_phase(GameStateData.Phase.SETTLING)
 	_host.log_message.emit(
-		"Выгружен %s: +$%.1f в аплоудер, +◆%d"
+		"Выгружен %s: +$%.1f в сейф сети, +◆%d"
 		% [FileDefs.get_type_label(job.file_type_id), revenue, diamonds_granted]
 	)
 

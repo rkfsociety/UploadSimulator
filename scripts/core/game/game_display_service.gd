@@ -34,17 +34,12 @@ func get_block_metric(uid: String) -> String:
 		return ""
 	var lvl: int = maxi(1, inst.level)
 	match inst.type_id:
-		"downloader":
-			return (
-				"Скорость: %s"
-				% ByteFormat.format_speed_bps(_pipeline.download_speed_for(uid))
-			)
+		"network":
+			var dl := ByteFormat.format_speed_bps(_pipeline.download_speed_for(uid))
+			var ul := ByteFormat.format_speed_bps(_pipeline.upload_speed_for(uid))
+			return "↓ %s  ↑ %s" % [dl, ul]
 		"storage":
 			return "Вместимость: %d файл." % int(_storage.storage_capacity_for(uid))
-		"uploader":
-			return (
-				"Скорость: %s" % ByteFormat.format_speed_bps(_pipeline.upload_speed_for(uid))
-			)
 		"collector":
 			return (
 				"Бонус к сбору: +%.0f%%"
@@ -54,22 +49,19 @@ func get_block_metric(uid: String) -> String:
 
 
 ## Uid модулей, у которых меняется прогресс/статус во время активных очередей.
-## Скачивание и выгрузка идут одновременно — обновляем оба конца сразу.
+## Скачивание и выгрузка идут одновременно — обновляем сеть и хранилище.
 func get_progress_block_uids() -> Array[String]:
 	var out: Array[String] = []
 	var chain_file := _wiring.get_file_chain()
-	if not _data.get_download_queue().is_empty():
-		var dl_uid: String = str(chain_file.get("downloader", ""))
-		if dl_uid != "":
-			out.append(dl_uid)
+	var net_uid: String = str(chain_file.get("network", ""))
+	if not _data.get_download_queue().is_empty() and net_uid != "":
+		out.append(net_uid)
 		for inst: BlockInstance in _data.get_placed_blocks():
 			if inst.type_id == "storage":
 				out.append(inst.uid)
 	if not _data.get_upload_queue().is_empty():
-		var up_uid: String = str(chain_file.get("uploader", ""))
-		if up_uid != "":
-			out.append(up_uid)
-		# Хранилище отдаёт файл — обновляем и его статус
+		if net_uid != "" and net_uid not in out:
+			out.append(net_uid)
 		for inst: BlockInstance in _data.get_placed_blocks():
 			if inst.type_id == "storage" and inst.uid not in out:
 				out.append(inst.uid)
@@ -90,43 +82,73 @@ func get_block_display(uid: String) -> Dictionary:
 	var chain_file := _wiring.get_file_chain()
 	var chain_money := _wiring.get_money_chain()
 	match inst.type_id:
-		"downloader":
-			_fill_downloader_display(empty, uid, chain_file)
+		"network":
+			_fill_network_display(empty, uid, chain_file)
 		"storage":
 			_fill_storage_display(empty)
-		"uploader":
-			_fill_uploader_display(empty, uid, chain_file)
 		"collector":
 			_fill_collector_display(empty, uid, chain_money)
 	return empty
 
 
-## UI загрузчика: скачивает автоматически, ручной кнопки нет — только статус и прогресс.
-func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
+## UI сети: скачивает и выгружает автоматически — только статус и прогресс.
+func _fill_network_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
 	target["action_visible"] = false
 	target["action_enabled"] = false
-	var queue := _data.get_download_queue()
-	if not queue.is_empty() and chain_file.get("downloader", "") == uid:
-		var job: FileTransferJob = queue[0]
+	var dl_queue := _data.get_download_queue()
+	var up_queue := _data.get_upload_queue()
+	var in_chain: bool = chain_file.get("network", "") == uid
+	if not dl_queue.is_empty() and in_chain:
+		var job: FileTransferJob = dl_queue[0]
 		target["status"] = (
 			"Качает: %s · %d%%"
 			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0)]
 		)
 		target["progress"] = job.progress
-	elif _pipeline.can_download_at(uid):
+		return
+	if not up_queue.is_empty() and in_chain:
+		var job: FileTransferJob = up_queue[0]
+		target["status"] = (
+			"Грузит: %s · %d%%"
+			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0)]
+		)
+		target["progress"] = job.progress
+		return
+	if _pipeline.can_download_at(uid) and _pipeline.can_upload_at(uid):
+		target["status"] = "Скачивает и выгружает автоматически"
+		return
+	if _pipeline.can_download_at(uid):
 		target["status"] = "Качает автоматически из интернета"
+		return
+	if _pipeline.can_upload_at(uid):
+		target["status"] = "Выгружает автоматически в сеть"
+		return
+	if chain_file.is_empty():
+		target["status"] = GameOperationResult.fail(
+			GameOperationResult.Code.PIPELINE_NO_CHAIN
+		).get_message()
+		return
+	if not _data.get_stored_files().is_empty():
+		var next: StoredFileEntry = _data.get_stored_files()[0]
+		target["status"] = "На диске: %s" % FileDefs.get_type_label(next.file_type_id)
+		return
+	var safe := _data.get_network_balance()
+	if safe >= GameConstants.MIN_COLLECT_BALANCE and not _wiring.get_money_chain().is_empty():
+		target["status"] = "В сейфе $%.0f → коллектор" % safe
 	else:
-		target["status"] = _downloader_idle_hint(chain_file)
+		target["status"] = _network_idle_hint(chain_file)
 
 
-## Подсказка, почему can_download_at ложен (порядок проверок для текста статуса).
-func _downloader_idle_hint(chain_file: Dictionary) -> String:
+func _network_idle_hint(chain_file: Dictionary) -> String:
 	if chain_file.is_empty():
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_CHAIN).get_message()
 	var check := _pipeline.check_enqueue_download()
 	if not check.is_ok():
 		return check.get_message()
-	return "Скачивание недоступно"
+	check = _pipeline.check_enqueue_upload()
+	if not check.is_ok():
+		return check.get_message()
+	return "Сеть свободна"
 
 
 func _fill_storage_display(target: Dictionary) -> void:
@@ -142,38 +164,6 @@ func _fill_storage_display(target: Dictionary) -> void:
 		target["progress"] = job.progress
 
 
-## UI аплоудера: выгружает автоматически, ручной кнопки нет — только статус и прогресс.
-func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
-	target["action_visible"] = false
-	target["action_enabled"] = false
-	var queue := _data.get_upload_queue()
-	if not queue.is_empty() and chain_file.get("uploader", "") == uid:
-		var job: FileTransferJob = queue[0]
-		target["status"] = (
-			"Грузит: %s · %d%%"
-			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0)]
-		)
-		target["progress"] = job.progress
-		return
-	if _pipeline.can_upload_at(uid):
-		target["status"] = "Выгружает автоматически в сеть"
-		return
-	if chain_file.is_empty():
-		target["status"] = GameOperationResult.fail(
-			GameOperationResult.Code.PIPELINE_NO_CHAIN
-		).get_message()
-		return
-	if not _data.get_stored_files().is_empty():
-		var next: StoredFileEntry = _data.get_stored_files()[0]
-		target["status"] = "На диске: %s" % FileDefs.get_type_label(next.file_type_id)
-		return
-	var safe := _data.get_uploader_balance()
-	if safe >= GameConstants.MIN_COLLECT_BALANCE and not _wiring.get_money_chain().is_empty():
-		target["status"] = "В сейфе $%.0f → коллектор" % safe
-	else:
-		target["status"] = "Сейф пуст"
-
-
 ## UI коллектора: собирает доход автоматически, ручной кнопки нет — только статус.
 func _fill_collector_display(target: Dictionary, uid: String, chain_money: Dictionary) -> void:
 	target["action_visible"] = false
@@ -183,7 +173,7 @@ func _fill_collector_display(target: Dictionary, uid: String, chain_money: Dicti
 			GameOperationResult.Code.PIPELINE_NO_MONEY_CHAIN
 		).get_message()
 		return
-	var safe := _data.get_uploader_balance()
+	var safe := _data.get_network_balance()
 	if safe < GameConstants.MIN_COLLECT_BALANCE:
 		target["status"] = "Собирает доход в кассу автоматически"
 		return

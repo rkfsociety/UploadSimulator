@@ -23,10 +23,10 @@ func run() -> Array[String]:
 			errors.append("координаты после relocate")
 	else:
 		errors.append("relocate_block")
-	data.add_block_stock("downloader", 1)
-	var place_dl := field.place_block("downloader", 24, 0)
-	if not place_dl.is_ok():
-		errors.append("place_block downloader")
+	data.add_block_stock("network", 1)
+	var place_net := field.place_block("network", 24, 0)
+	if not place_net.is_ok():
+		errors.append("place_block network")
 		return errors
 	if field.can_relocate_block(uid, 24, 0):
 		errors.append("relocate в занятую клетку должен быть запрещён")

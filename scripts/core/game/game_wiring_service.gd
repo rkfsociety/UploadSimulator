@@ -116,24 +116,25 @@ func _notify_topology_changed() -> void:
 		_pipeline.cancel_file_transfer_queues()
 
 
-## Цепочка файлов: downloader→storage→uploader; storage в обоих звеньях — один uid.
+## Цепочка файлов: network↔storage (скачивание и выгрузка); storage — один uid в обоих звеньях.
 func get_file_chain() -> Dictionary:
-	var a := _find_wired_pair("downloader", "file_out", "storage", "file_in")
-	if a.is_empty():
+	var dl := _find_wired_pair("network", "file_out", "storage", "file_in")
+	if dl.is_empty():
 		return {}
-	var b := _find_wired_pair("storage", "file_out", "uploader", "file_in")
-	if b.is_empty() or b.get("from_uid", "") != a.get("to_uid", ""):
+	var ul := _find_wired_pair("storage", "file_out", "network", "file_in")
+	if ul.is_empty() or ul.get("from_uid", "") != dl.get("to_uid", ""):
+		return {}
+	if ul.get("to_uid", "") != dl.get("from_uid", ""):
 		return {}
 	return {
-		"downloader": a.get("from_uid", ""),
-		"storage": a.get("to_uid", ""),
-		"uploader": b.get("to_uid", ""),
+		"network": dl.get("from_uid", ""),
+		"storage": dl.get("to_uid", ""),
 	}
 
 
-## Цепочка денег: uploader→collector (money_out→money_in), одна пара на поле.
+## Цепочка денег: network→collector (money_out→money_in), одна пара на поле.
 func get_money_chain() -> Dictionary:
-	return _find_wired_pair("uploader", "money_out", "collector", "money_in")
+	return _find_wired_pair("network", "money_out", "collector", "money_in")
 
 
 func _port_types(
@@ -162,12 +163,10 @@ func _find_wired_pair(
 
 
 func _connection_error(from_type: String, to_type: String) -> String:
-	if from_type == "downloader" and to_type == "uploader":
-		return "Нельзя напрямую: загрузчик → аплоудер. Нужно хранилище."
-	if from_type == "downloader" and to_type == "collector":
-		return "Нельзя: загрузчик → коллектор."
 	if from_type == "storage" and to_type == "collector":
 		return "Нельзя: хранилище → коллектор."
+	if from_type == "network" and to_type == "network":
+		return "Нельзя соединять два модуля «Сеть»."
 	return "Соединение недоступно."
 
 

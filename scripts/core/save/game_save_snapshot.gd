@@ -24,7 +24,7 @@ func is_valid() -> bool:
 	if _payload.is_empty():
 		return false
 	var version: int = int(_payload.get("format_version", 0))
-	return version == SaveConstants.FORMAT_VERSION
+	return version >= 1 and version <= SaveConstants.FORMAT_VERSION
 
 
 func to_payload() -> Dictionary:

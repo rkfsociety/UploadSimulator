@@ -111,9 +111,9 @@ func _test_disconnect_cancels_active_transfer(errors: Array[String]) -> void:
 	job.progress = 0.4
 	job.apply_bounds()
 	data.get_download_queue().append(job)
-	wiring.disconnect_output_port(uids.downloader, "file_out")
+	wiring.disconnect_output_port(uids.network, "file_out")
 	if not data.get_download_queue().is_empty():
-		errors.append("после отключения загрузчика очередь скачивания должна быть пуста")
+		errors.append("после отключения сети очередь скачивания должна быть пуста")
 	if not data.get_upload_queue().is_empty():
 		errors.append("после отключения очередь выгрузки должна быть пуста")
 	if data.get_phase() != GameStateData.Phase.IDLE:
@@ -189,17 +189,15 @@ func _wire_file_chain(stack: Dictionary) -> Dictionary:
 	var field: GameFieldService = stack.field
 	var wiring: GameWiringService = stack.wiring
 	var data: GameStateData = stack.data
-	data.add_block_stock("downloader", 1)
+	data.add_block_stock("network", 1)
 	data.add_block_stock("storage", 1)
-	data.add_block_stock("uploader", 1)
-	var d := field.place_block("downloader", 0, 0)
+	var n := field.place_block("network", 0, 0)
 	var s := field.place_block("storage", 12, 0)
-	var u := field.place_block("uploader", 24, 0)
-	if not d.is_ok() or not s.is_ok() or not u.is_ok():
+	if not n.is_ok() or not s.is_ok():
 		return {}
-	wiring.try_connect_ports(d.get_uid(), "file_out", s.get_uid(), "file_in")
-	wiring.try_connect_ports(s.get_uid(), "file_out", u.get_uid(), "file_in")
-	return {"downloader": d.get_uid(), "storage": s.get_uid(), "uploader": u.get_uid()}
+	wiring.try_connect_ports(n.get_uid(), "file_out", s.get_uid(), "file_in")
+	wiring.try_connect_ports(s.get_uid(), "file_out", n.get_uid(), "file_in")
+	return {"network": n.get_uid(), "storage": s.get_uid()}
 
 
 class _PipelineTestHost:
