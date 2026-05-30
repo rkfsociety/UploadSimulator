@@ -43,6 +43,26 @@ func has_block_on_field(type_id: String) -> bool:
 	return false
 
 
+func owned_singleton_count(type_id: String) -> int:
+	var count := _data.get_block_stock(type_id)
+	if has_block_on_field(type_id):
+		count += 1
+	return count
+
+
+func check_singleton_limit(type_id: String) -> GameOperationResult:
+	if not BlockDefs.is_singleton_type(type_id):
+		return GameOperationResult.ok()
+	if owned_singleton_count(type_id) <= 0:
+		return GameOperationResult.ok()
+	var block_name: String = BlockDefs.TYPES.get(type_id, {}).get("name", type_id)
+	return GameOperationResult.fail(
+		GameOperationResult.Code.FIELD_SINGLETON_LIMIT,
+		"«%s» может быть только один — снимите с поля или поставьте со склада."
+		% block_name,
+	)
+
+
 func get_block_stock(type_id: String) -> int:
 	return _data.get_block_stock(type_id)
 
@@ -54,6 +74,9 @@ func can_buy_block(type_id: String) -> bool:
 func check_buy_block(type_id: String) -> GameOperationResult:
 	if not BlockDefs.TYPES.has(type_id):
 		return GameOperationResult.fail(GameOperationResult.Code.FIELD_INVALID_MODULE)
+	var singleton := check_singleton_limit(type_id)
+	if not singleton.is_ok():
+		return singleton
 	if not _data.is_module_type_unlocked(type_id):
 		return GameOperationResult.fail(GameOperationResult.Code.FIELD_MODULE_LOCKED)
 	if _data.get_money() < float(BlockDefs.TYPES[type_id]["shop_cost"]):
@@ -81,6 +104,8 @@ func can_place_block(type_id: String, gx: int, gy: int) -> bool:
 func check_place_block(type_id: String, gx: int, gy: int) -> GameOperationResult:
 	if not BlockDefs.TYPES.has(type_id):
 		return GameOperationResult.fail(GameOperationResult.Code.FIELD_INVALID_MODULE)
+	if BlockDefs.is_singleton_type(type_id) and has_block_on_field(type_id):
+		return check_singleton_limit(type_id)
 	if not _data.is_module_type_unlocked(type_id):
 		return GameOperationResult.fail(GameOperationResult.Code.FIELD_MODULE_LOCKED)
 	if _data.get_block_stock(type_id) <= 0:

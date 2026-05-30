@@ -99,6 +99,10 @@ static func is_upgradeable(type_id: String) -> bool:
 	return bool(TYPES.get(type_id, {}).get("upgradable", true))
 
 
+static func is_singleton_type(type_id: String) -> bool:
+	return bool(TYPES.get(type_id, {}).get("singleton_on_field", false))
+
+
 static func max_stored_files(type_id: String) -> int:
 	return int(TYPES.get(type_id, {}).get("max_stored_files", 0))
 

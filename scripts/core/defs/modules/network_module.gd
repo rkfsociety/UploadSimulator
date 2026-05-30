@@ -15,6 +15,7 @@ static func build() -> Dictionary:
 		"unlocked_at_start": true,
 		"diamond_unlock_cost": 0,
 		"shop_cost": 55,
+		"singleton_on_field": true,
 		"upgrade_base": 32,
 		"upgrade_mult": 1.44,
 		"effect_per_level": 0.12,

@@ -24,6 +24,7 @@ enum Code {
 	FIELD_OUT_OF_BOUNDS,
 	FIELD_CELL_OCCUPIED,
 	FIELD_INVALID_INSTANCE,
+	FIELD_SINGLETON_LIMIT,
 	# Провода
 	WIRING_INVALID_MODULE,
 	WIRING_TYPE_NOT_ALLOWED,
@@ -108,6 +109,8 @@ static func message_for(err_code: Code) -> String:
 			return "Клетка занята."
 		Code.FIELD_INVALID_INSTANCE:
 			return "Модуль не найден на поле."
+		Code.FIELD_SINGLETON_LIMIT:
+			return "Этот модуль может быть только один."
 		Code.WIRING_INVALID_MODULE:
 			return "Неверный порт или модуль."
 		Code.WIRING_TYPE_NOT_ALLOWED:
