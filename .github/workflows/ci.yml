@@ -163,3 +163,17 @@ jobs:
           name: UploadSimulator-apk
           path: build/UploadSimulator.apk
           if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-apk-${{ github.run_number }}
+          name: Android APK Build #${{ github.run_number }}
+          body: |
+            Автоматическая сборка APK для Android
+            - Commit: ${{ github.sha }}
+            - Branch: ${{ github.ref_name }}
+          files: build/UploadSimulator.apk
+          draft: false
+          prerelease: true
