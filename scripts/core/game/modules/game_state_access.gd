@@ -21,8 +21,8 @@ func is_module_type_unlocked(type_id: String) -> bool:
 	return _data.is_module_type_unlocked(type_id)
 
 
-func get_network_balance() -> float:
-	return _data.get_network_balance()
+func get_uploader_balance() -> float:
+	return _data.get_uploader_balance()
 
 
 func get_placed_blocks() -> Array[BlockInstance]:

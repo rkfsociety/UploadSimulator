@@ -21,7 +21,7 @@ func _test_snapshot_roundtrip(errors: Array[String]) -> void:
 	premium.grant(2, PremiumCurrencyService.Source.ADMIN)
 	data.unlock_module_type("cache")
 	data.set_block_stock("storage", 1)
-	var inst := BlockInstance.create("network", 1, 2, "blk_test", 2)
+	var inst := BlockInstance.create("downloader", 1, 2, "blk_test", 2)
 	data.get_placed_blocks().append(inst)
 	var payload := GameSaveSnapshot.capture(data, premium).to_payload()
 	var restored := GameStateData.new()
@@ -100,7 +100,7 @@ func _test_reset_progress(errors: Array[String]) -> void:
 	var starter := float(BlockDefs.starter_kit_cost())
 	data.add_money(500.0)
 	premium.grant(7, PremiumCurrencyService.Source.ADMIN)
-	data.get_placed_blocks().append(BlockInstance.create("network", 0, 0, "blk_x", 3))
+	data.get_placed_blocks().append(BlockInstance.create("downloader", 0, 0, "blk_x", 3))
 	svc.save("reset_slot")
 	if not svc.reset_progress("reset_slot"):
 		errors.append("reset_progress: возврат true")

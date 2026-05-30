@@ -25,7 +25,7 @@ func _test_buy_no_money(
 ) -> void:
 	# Свежая GameStateData стартует с кассой = стоимость набора ($315) — обнуляем для теста
 	data.set_money(0.0)
-	var check := field.check_buy_block("network")
+	var check := field.check_buy_block("downloader")
 	if check.is_ok():
 		errors.append("покупка без денег должна падать")
 	elif check.code != GameOperationResult.Code.FIELD_INSUFFICIENT_MONEY:
@@ -40,14 +40,20 @@ func _test_download_queue_full(
 	pipeline: GamePipelineService,
 ) -> void:
 	data.add_block_stock("network", 1)
+	data.add_block_stock("downloader", 1)
 	data.add_block_stock("storage", 1)
+	data.add_block_stock("uploader", 1)
 	var n := field.place_block("network", 0, 0)
-	var s := field.place_block("storage", 12, 0)
-	if not n.is_ok() or not s.is_ok():
+	var d := field.place_block("downloader", 8, 0)
+	var s := field.place_block("storage", 20, 0)
+	var u := field.place_block("uploader", 32, 0)
+	if not n.is_ok() or not d.is_ok() or not s.is_ok() or not u.is_ok():
 		errors.append("размещение модулей для очереди")
 		return
-	wiring.try_connect_ports(n.get_uid(), "file_out", s.get_uid(), "file_in")
-	wiring.try_connect_ports(s.get_uid(), "file_out", n.get_uid(), "file_in")
+	wiring.try_connect_ports(n.get_uid(), "net_out", d.get_uid(), "net_in")
+	wiring.try_connect_ports(d.get_uid(), "file_out", s.get_uid(), "file_in")
+	wiring.try_connect_ports(s.get_uid(), "file_out", u.get_uid(), "file_in")
+	wiring.try_connect_ports(u.get_uid(), "net_out", n.get_uid(), "net_in")
 	for _i in GameConstants.MAX_QUEUE_JOBS:
 		var job := FileTransferJob.new()
 		job.size_bytes = 100.0

@@ -7,7 +7,7 @@ const _SaveConstants := preload("res://scripts/core/save/save_constants.gd")
 enum Phase { IDLE, SETTLING }
 
 var _money: float = 0.0
-var _network_balance: float = 0.0
+var _uploader_balance: float = 0.0
 var _env_upgrade_levels: Dictionary = {}
 # Типы модулей, открытые в магазине ◆ (потом покупка за $ в магазине модулей)
 var _unlocked_module_types: Dictionary = {}
@@ -33,7 +33,7 @@ func _init() -> void:
 ## открыты только стартовые типы, поле/очереди/счётчики пусты.
 func reset_to_initial() -> void:
 	_money = float(BlockDefs.starter_kit_cost())
-	_network_balance = 0.0
+	_uploader_balance = 0.0
 	_env_upgrade_levels.clear()
 	_unlocked_module_types.clear()
 	for type_id in BlockDefs.starter_kit_types():
@@ -99,12 +99,12 @@ func get_env_multiplier(effect_key: String) -> float:
 	return mult
 
 
-func get_network_balance() -> float:
-	return _network_balance
+func get_uploader_balance() -> float:
+	return _uploader_balance
 
 
-func set_network_balance(value: float) -> void:
-	_network_balance = GameValueBounds.money(value)
+func set_uploader_balance(value: float) -> void:
+	_uploader_balance = GameValueBounds.money(value)
 
 
 func get_block_stock(type_id: String) -> int:
@@ -191,7 +191,7 @@ func export_save_dict() -> Dictionary:
 	return {
 		"format_version": _SaveConstants.FORMAT_VERSION,
 		"money": _money,
-		"network_balance": _network_balance,
+		"uploader_balance": _uploader_balance,
 		"env_upgrade_levels": _env_upgrade_levels.duplicate(),
 		"unlocked_module_types": unlocked,
 		"block_stock": _block_stock.duplicate(),
@@ -209,8 +209,13 @@ func export_save_dict() -> Dictionary:
 func import_save_dict(payload: Dictionary) -> void:
 	var migrated := _migrate_save_payload(payload)
 	set_money(float(migrated.get("money", _money)))
-	set_network_balance(
-		float(migrated.get("network_balance", migrated.get("uploader_balance", _network_balance)))
+	set_uploader_balance(
+		float(
+			migrated.get(
+				"uploader_balance",
+				migrated.get("network_balance", _uploader_balance),
+			)
+		)
 	)
 	_env_upgrade_levels = {}
 	var env_raw: Variant = migrated.get("env_upgrade_levels", {})
@@ -253,14 +258,18 @@ func import_save_dict(payload: Dictionary) -> void:
 			_upload_queue.append(FileTransferJob.from_dict(item as Dictionary))
 
 
-## Миграция сохранений v1 (downloader/uploader) → v2 (network).
+## Миграция сохранений: v1→v2 (объединённая сеть), v2→v3 (сеть + загрузчик + аплоудер).
 static func _migrate_save_payload(payload: Dictionary) -> Dictionary:
 	var version: int = int(payload.get("format_version", 0))
 	if version >= SaveConstants.FORMAT_VERSION:
 		return payload
 	var out: Dictionary = payload.duplicate(true)
-	if version >= 1:
+	if version < 2:
 		_migrate_v1_modules_to_network(out)
+		version = 2
+	if version < 3:
+		_migrate_v2_unified_network_to_split(out)
+		version = 3
 	out["format_version"] = SaveConstants.FORMAT_VERSION
 	return out
 
@@ -359,3 +368,75 @@ static func _migrate_v1_modules_to_network(payload: Dictionary) -> void:
 			link["to_uid"] = uploader_to_network[to_uid]
 		migrated_wires.append(link)
 	payload["wire_connections"] = migrated_wires
+
+
+static func _migrate_v2_unified_network_to_split(payload: Dictionary) -> void:
+	if payload.has("network_balance") and not payload.has("uploader_balance"):
+		payload["uploader_balance"] = payload["network_balance"]
+	payload.erase("network_balance")
+
+	var stock: Dictionary = {}
+	var stock_raw: Variant = payload.get("block_stock", {})
+	if stock_raw is Dictionary:
+		stock = (stock_raw as Dictionary).duplicate()
+
+	var placed_raw: Array = []
+	var placed_src: Variant = payload.get("placed_blocks", [])
+	if placed_src is Array:
+		placed_raw = placed_src as Array
+
+	var converted_uids: Dictionary = {}
+	var converted_count := 0
+	var migrated_placed: Array = []
+	for item: Variant in placed_raw:
+		if not item is Dictionary:
+			continue
+		var block: Dictionary = (item as Dictionary).duplicate(true)
+		var type_id := str(block.get("type_id", block.get("type", "")))
+		if type_id == "network":
+			block["type_id"] = "downloader"
+			if block.has("type"):
+				block["type"] = "downloader"
+			converted_uids[str(block.get("uid", ""))] = true
+			converted_count += 1
+			migrated_placed.append(block)
+		else:
+			migrated_placed.append(block)
+	payload["placed_blocks"] = migrated_placed
+
+	if converted_count > 0:
+		stock["network"] = int(stock.get("network", 0)) + converted_count
+		stock["uploader"] = int(stock.get("uploader", 0)) + converted_count
+	payload["block_stock"] = stock
+
+	var unlocked: Array = []
+	var unlocked_raw: Variant = payload.get("unlocked_module_types", [])
+	if unlocked_raw is Array:
+		for type_id: Variant in unlocked_raw:
+			unlocked.append(str(type_id))
+	for extra in ["downloader", "uploader", "network"]:
+		if extra not in unlocked:
+			unlocked.append(extra)
+	payload["unlocked_module_types"] = unlocked
+
+	var wires_raw: Array = []
+	var wires_src: Variant = payload.get("wire_connections", [])
+	if wires_src is Array:
+		wires_raw = wires_src as Array
+	var kept_wires: Array = []
+	for item: Variant in wires_raw:
+		if not item is Dictionary:
+			continue
+		var link: Dictionary = item as Dictionary
+		var from_uid := str(link.get("from_uid", ""))
+		var to_uid := str(link.get("to_uid", ""))
+		var from_port := str(link.get("from_port", ""))
+		var to_port := str(link.get("to_port", ""))
+		if converted_uids.has(from_uid) and from_port == "money_out":
+			continue
+		if converted_uids.has(to_uid) and to_port == "file_in":
+			continue
+		if converted_uids.has(from_uid) and from_port == "file_in":
+			continue
+		kept_wires.append(link)
+	payload["wire_connections"] = kept_wires

@@ -33,7 +33,7 @@ func can_connect_ports(
 
 ## Проверка нового провода out→in.
 ## Один провод на порт: WIRING_OUTPUT_BUSY / WIRING_INPUT_BUSY — линейный пайплайн без разветвлений.
-## Типы только из ALLOWED_WIRES; направление out→in и одинаковый kind (file/money).
+## Типы только из ALLOWED_WIRES; направление out→in и одинаковый kind (file/money/net).
 func check_connect_ports(
 	from_uid: String, from_port: String, to_uid: String, to_port: String
 ) -> GameOperationResult:
@@ -111,30 +111,38 @@ func disconnect_ports(from_uid: String, from_port: String, to_uid: String, to_po
 
 
 func _notify_topology_changed() -> void:
-	# Нет полной цепочки файлов — останавливаем передачу
 	if _pipeline != null and get_file_chain().is_empty():
 		_pipeline.cancel_file_transfer_queues()
 
 
-## Цепочка файлов: network↔storage (скачивание и выгрузка); storage — один uid в обоих звеньях.
+## Полная цепочка: сеть→загрузчик→хранилище→аплоудер→сеть (один uid сети и хранилища).
 func get_file_chain() -> Dictionary:
-	var dl := _find_wired_pair("network", "file_out", "storage", "file_in")
-	if dl.is_empty():
+	var files_a := _find_wired_pair("downloader", "file_out", "storage", "file_in")
+	if files_a.is_empty():
 		return {}
-	var ul := _find_wired_pair("storage", "file_out", "network", "file_in")
-	if ul.is_empty() or ul.get("from_uid", "") != dl.get("to_uid", ""):
+	var files_b := _find_wired_pair("storage", "file_out", "uploader", "file_in")
+	if files_b.is_empty() or files_b.get("from_uid", "") != files_a.get("to_uid", ""):
 		return {}
-	if ul.get("to_uid", "") != dl.get("from_uid", ""):
+	var net_dl := _find_wired_pair("network", "net_out", "downloader", "net_in")
+	if net_dl.is_empty():
+		return {}
+	var net_ul := _find_wired_pair("uploader", "net_out", "network", "net_in")
+	if net_ul.is_empty():
+		return {}
+	var net_uid := str(net_dl.get("from_uid", ""))
+	if str(net_ul.get("to_uid", "")) != net_uid:
 		return {}
 	return {
-		"network": dl.get("from_uid", ""),
-		"storage": dl.get("to_uid", ""),
+		"network": net_uid,
+		"downloader": files_a.get("from_uid", ""),
+		"storage": files_a.get("to_uid", ""),
+		"uploader": files_b.get("to_uid", ""),
 	}
 
 
-## Цепочка денег: network→collector (money_out→money_in), одна пара на поле.
+## Цепочка денег: uploader→collector (money_out→money_in).
 func get_money_chain() -> Dictionary:
-	return _find_wired_pair("network", "money_out", "collector", "money_in")
+	return _find_wired_pair("uploader", "money_out", "collector", "money_in")
 
 
 func _port_types(
@@ -163,6 +171,12 @@ func _find_wired_pair(
 
 
 func _connection_error(from_type: String, to_type: String) -> String:
+	if from_type == "downloader" and to_type == "uploader":
+		return "Нельзя напрямую: загрузчик → аплоудер. Нужно хранилище."
+	if from_type == "downloader" and to_type == "collector":
+		return "Нельзя: загрузчик → коллектор."
+	if from_type == "network" and to_type == "collector":
+		return "Нельзя: сеть → коллектор. Деньги идут через аплоудер."
 	if from_type == "storage" and to_type == "collector":
 		return "Нельзя: хранилище → коллектор."
 	if from_type == "network" and to_type == "network":

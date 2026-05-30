@@ -34,12 +34,12 @@ class_name GameBalanceConfig
 @export_group("Экономика")
 @export var start_diamonds: int = 5
 @export var diamonds_per_upload: int = 1
-## Минимальный баланс в сейфе сети для сбора в кассу.
+## Минимальный баланс в сейфе аплоудера для сбора в кассу.
 @export var min_collect_balance: float = 0.01
 ## Числитель дохода за байт до деления на BYTE_SIZE_SCALE (как в старом балансе 0.04/scale).
 @export var revenue_legacy_numerator: float = 0.04
-## Бонус качества файла за уровень модуля «Сеть».
-@export var quality_per_network_level: float = 0.08
+## Бонус качества скачанного файла за уровень загрузчика.
+@export var quality_per_downloader_level: float = 0.08
 ## Цена улучшения модуля по умолчанию, если в BlockDefs нет своих полей.
 @export var default_upgrade_base: float = 30.0
 @export var default_upgrade_mult: float = 1.4

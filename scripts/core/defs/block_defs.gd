@@ -8,20 +8,39 @@ const TYPES := {
 		"name": "Сеть",
 		"icon": "🌐",
 		"color": Color(0.12, 0.94, 0.78, 1.0),
-		"desc": "Скачивает и выгружает файлы через интернет",
+		"desc": "Канал в интернет; скорость скачивания и выгрузки растёт с уровнем",
+		"cells_w": 4,
+		"cells_h": 3,
+		"unlocked_at_start": true,
+		"diamond_unlock_cost": 0,
+		"shop_cost": 55,
+		"upgrade_base": 32,
+		"upgrade_mult": 1.44,
+		"effect_per_level": 0.12,
+		"ports":
+		{
+			"net_out": {"kind": "net", "dir": "out"},
+			"net_in": {"kind": "net", "dir": "in"},
+		},
+	},
+	"downloader":
+	{
+		"name": "Загрузчик",
+		"icon": "⬇",
+		"color": Color(0.0, 0.88, 1.0, 1.0),
+		"desc": "Скачивает файлы из сети и передаёт на диск",
 		"cells_w": 5,
 		"cells_h": 3,
 		"unlocked_at_start": true,
 		"diamond_unlock_cost": 0,
-		"shop_cost": 160,
-		"upgrade_base": 36,
-		"upgrade_mult": 1.46,
-		"effect_per_level": 0.11,
+		"shop_cost": 75,
+		"upgrade_base": 35,
+		"upgrade_mult": 1.45,
+		"effect_per_level": 0.1,
 		"ports":
 		{
+			"net_in": {"kind": "net", "dir": "in"},
 			"file_out": {"kind": "file", "dir": "out"},
-			"file_in": {"kind": "file", "dir": "in"},
-			"money_out": {"kind": "money", "dir": "out"},
 		},
 	},
 	"storage":
@@ -46,12 +65,33 @@ const TYPES := {
 			"file_out": {"kind": "file", "dir": "out"},
 		},
 	},
+	"uploader":
+	{
+		"name": "Аплоудер",
+		"icon": "⬆",
+		"color": Color(0.25, 1.0, 0.55, 1.0),
+		"desc": "Отправляет файлы в сеть через канал; копит доход",
+		"cells_w": 5,
+		"cells_h": 3,
+		"unlocked_at_start": true,
+		"diamond_unlock_cost": 0,
+		"shop_cost": 85,
+		"upgrade_base": 38,
+		"upgrade_mult": 1.48,
+		"effect_per_level": 0.05,
+		"ports":
+		{
+			"file_in": {"kind": "file", "dir": "in"},
+			"net_out": {"kind": "net", "dir": "out"},
+			"money_out": {"kind": "money", "dir": "out"},
+		},
+	},
 	"collector":
 	{
 		"name": "Коллектор",
 		"icon": "💰",
 		"color": Color(1.0, 0.78, 0.15, 1.0),
-		"desc": "Забирает деньги из сейфа сети в общую кассу",
+		"desc": "Забирает деньги из сейфа аплоудера в общую кассу",
 		"cells_w": 4,
 		"cells_h": 3,
 		"unlocked_at_start": true,
@@ -64,12 +104,13 @@ const TYPES := {
 	},
 }
 
-# Разрешённые пары типов (только эти три; обход хранилища невозможен на уровне типов).
-# У каждого типа в TYPES ровно один out нужного kind — иначе resolve_wire_ports вернёт {}.
+# Разрешённые пары типов; обход хранилища невозможен на уровне типов.
 const ALLOWED_WIRES: Array[Array] = [
-	["network", "storage"],
-	["storage", "network"],
-	["network", "collector"],
+	["network", "downloader"],
+	["downloader", "storage"],
+	["storage", "uploader"],
+	["uploader", "network"],
+	["uploader", "collector"],
 ]
 
 const _REQUIRED_TYPE_KEYS: Array[String] = [
@@ -84,7 +125,7 @@ const _REQUIRED_TYPE_KEYS: Array[String] = [
 	"upgrade_mult",
 	"ports",
 ]
-const _VALID_PORT_KINDS: Array[String] = ["file", "money"]
+const _VALID_PORT_KINDS: Array[String] = ["file", "money", "net"]
 const _VALID_PORT_DIRS: Array[String] = ["in", "out"]
 
 # Размер следа модуля по умолчанию (клетки), если тип не задал свой
@@ -128,7 +169,7 @@ static func cells_size(type_id: String) -> Vector2i:
 
 
 static func starter_kit_types() -> Array[String]:
-	return ["network", "storage", "collector"]
+	return ["network", "downloader", "storage", "uploader", "collector"]
 
 
 static func starter_kit_cost() -> int:
@@ -275,7 +316,7 @@ static func _validate_wire_pair(pair: Array) -> void:
 		push_error(
 			(
 				"BlockDefs: нет совместимых портов для соединения «%s» → «%s» "
-				+ "(нужен ровно один out и один in с одинаковым kind)."
+				+ "(нужен out и in с одинаковым kind)."
 			)
 			% [from_type, to_type]
 		)

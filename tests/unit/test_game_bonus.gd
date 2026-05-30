@@ -12,12 +12,12 @@ func run() -> Array[String]:
 		GameConstants.BASE_DOWNLOAD_SPEED_BPS,
 		"скорость ур.1 = база",
 	)
-	# network effect_per_level = 0.11 → ур.2 = база +11% (уровень 1 = база)
+	# network effect_per_level = 0.12 → ур.2 = база +12%
 	_assert_close(
 		errors,
 		GameBonus.speed_scaled(GameConstants.BASE_DOWNLOAD_SPEED_BPS, "network", 2),
-		GameConstants.BASE_DOWNLOAD_SPEED_BPS * 1.11,
-		"скорость ур.2 network +11%",
+		GameConstants.BASE_DOWNLOAD_SPEED_BPS * 1.12,
+		"скорость ур.2 network +12%",
 	)
 	var cap_l1 := GameBonus.storage_capacity_files(1)
 	var cap_l2 := GameBonus.storage_capacity_files(2)
