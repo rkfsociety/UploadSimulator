@@ -16,6 +16,7 @@ var _camera: FieldMapCamera
 var _blocks: FieldMapBlocks
 var _placement: FieldMapPlacement
 var _wiring: FieldMapWiring
+var _diamonds: FieldMapDiamonds
 var _map_input: FieldMapInput
 var _block_drag: RefCounted
 
@@ -37,11 +38,18 @@ func _ready() -> void:
 	_blocks = FieldMapBlocks.new(blocks_root)
 	_placement = FieldMapPlacement.new(map_content, _camera)
 	_wiring = FieldMapWiring.new(self, wires_root, _blocks)
+	var diamonds_root := Control.new()
+	diamonds_root.name = "DiamondsRoot"
+	diamonds_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	diamonds_root.z_index = FieldMapConstants.DIAMONDS_Z_INDEX
+	map_content.add_child(diamonds_root)
+	_diamonds = FieldMapDiamonds.new(diamonds_root, _camera)
 	_block_drag = _BlockDragClass.new(map_content, _camera, _blocks, _placement)
-	_map_input = FieldMapInput.new(self, _camera, _placement, _wiring, _block_drag)
+	_map_input = FieldMapInput.new(self, _camera, _placement, _wiring, _block_drag, _diamonds)
 	_map_input.placement_finished.connect(_on_placement_finished)
 
 	GameState.field_changed.connect(_on_field_changed)
+	GameState.diamond_pickups_changed.connect(_on_diamond_pickups_changed)
 	GameState.wiring_changed.connect(_on_wiring_changed)
 	GameState.queue_changed.connect(_on_blocks_refresh)
 	GameState.blocks_progress_changed.connect(_on_blocks_progress)
@@ -72,6 +80,7 @@ func _process(_delta: float) -> void:
 	var vis := _camera.visible_world_rect()
 	_blocks.update_visibility(vis)
 	_wiring.set_visible_rect(vis)
+	_diamonds.update_visibility(vis)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -107,6 +116,7 @@ func place_at_view_center(type_id: String) -> bool:
 
 func _sync_field_visual() -> void:
 	_blocks.sync_from_state()
+	_diamonds.sync_from_state()
 	_block_drag.sync_selection_visual()
 	_wiring.collect_ports()
 	_wiring.update_positions()
@@ -139,6 +149,7 @@ func _on_field_changed() -> void:
 	# сравнивать позиции после неё бесполезно (они уже совпадут с целевыми).
 	var prev_layout := _capture_block_layout()
 	_blocks.sync_from_state()
+	_diamonds.sync_from_state()
 	# Порты и провода — только при изменении набора/раскладки блоков.
 	# rebuild_wires (а не update_positions): после загрузки сейва сегментов ещё нет,
 	# их надо собрать заново из восстановленных соединений GameState.
@@ -148,6 +159,10 @@ func _on_field_changed() -> void:
 		# Свежезаспавненные блоки раскладывают порты не сразу — уточняем концы проводов кадром позже
 		_refresh_wire_positions_deferred()
 	_block_drag.sync_selection_visual()
+
+
+func _on_diamond_pickups_changed() -> void:
+	_diamonds.sync_from_state()
 
 
 ## Пересчёт координат проводов после того, как контейнеры портов разложились (следующий кадр).

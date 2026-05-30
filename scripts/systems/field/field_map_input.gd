@@ -11,6 +11,7 @@ var _camera: FieldMapCamera
 var _placement: FieldMapPlacement
 var _wiring: FieldMapWiring
 var _block_drag: RefCounted
+var _diamonds: FieldMapDiamonds
 
 var _drag_pan: bool = false
 var _drag_start := Vector2.ZERO
@@ -32,12 +33,14 @@ func _init(
 	placement: FieldMapPlacement,
 	wiring: FieldMapWiring,
 	block_drag: RefCounted,
+	diamonds: FieldMapDiamonds,
 ) -> void:
 	_host = host
 	_camera = camera
 	_placement = placement
 	_wiring = wiring
 	_block_drag = block_drag
+	_diamonds = diamonds
 
 
 func handle_gui_input(event: InputEvent) -> void:
@@ -127,6 +130,8 @@ func _end_pointer(local_pos: Vector2) -> void:
 			var next_type: String = _placement.try_place_at_screen(local_pos)
 			_placement.set_selected_type(next_type)
 			placement_finished.emit(next_type)
+		elif _diamonds.try_collect_at_screen(local_pos):
+			pass
 		else:
 			_block_drag.handle_tap(local_pos)
 	_pointer_down = false

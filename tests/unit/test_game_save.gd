@@ -16,16 +16,17 @@ func run() -> Array[String]:
 func _test_snapshot_roundtrip(errors: Array[String]) -> void:
 	var host := _SaveTestHost.new()
 	var data := GameStateData.new()
-	var premium := PremiumCurrencyService.new(host, GameConstants.START_DIAMONDS)
+	var premium := PremiumCurrencyService.new(host, data, GameConstants.START_DIAMONDS)
 	data.add_money(50.0)
 	premium.grant(2, PremiumCurrencyService.Source.ADMIN)
 	data.unlock_module_type("cache")
 	data.set_block_stock("text_downloader", 1)
+	data.add_diamond_pickup(Vector2(64.0, -32.0), 2)
 	var inst := BlockInstance.create("text_downloader", 1, 2, "blk_test", 2)
 	data.get_placed_blocks().append(inst)
 	var payload := GameSaveSnapshot.capture(data, premium).to_payload()
 	var restored := GameStateData.new()
-	var restored_premium := PremiumCurrencyService.new(host, 0)
+	var restored_premium := PremiumCurrencyService.new(host, restored, 0)
 	if not GameSaveSnapshot.from_payload(payload).apply_to(restored, restored_premium):
 		errors.append("GameSaveSnapshot.apply_to")
 		host.free()
@@ -41,12 +42,16 @@ func _test_snapshot_roundtrip(errors: Array[String]) -> void:
 		errors.append("snapshot: placed_blocks size")
 	elif restored.get_placed_blocks()[0].uid != "blk_test":
 		errors.append("snapshot: placed block uid")
+	if restored.get_diamond_pickup_count() != 1:
+		errors.append("snapshot: diamond_pickups")
+	elif restored.get_diamond_pickups()[0].amount != 2:
+		errors.append("snapshot: diamond pickup amount")
 
 
 func _test_memory_backend(errors: Array[String]) -> void:
 	var host := _SaveTestHost.new()
 	var data := GameStateData.new()
-	var premium := PremiumCurrencyService.new(host)
+	var premium := PremiumCurrencyService.new(host, data)
 	var backend := MemorySaveBackend.new()
 	var svc := GameSaveService.new(data, premium, host, backend)
 	data.add_money(10.0)
@@ -55,7 +60,7 @@ func _test_memory_backend(errors: Array[String]) -> void:
 	if not backend.has_save("test_slot"):
 		errors.append("MemorySaveBackend.has_save")
 	var fresh := GameStateData.new()
-	var fresh_premium := PremiumCurrencyService.new(host, 0)
+	var fresh_premium := PremiumCurrencyService.new(host, fresh, 0)
 	var load_svc := GameSaveService.new(fresh, fresh_premium, host, backend)
 	if not load_svc.load("test_slot"):
 		errors.append("GameSaveService.load memory")
@@ -67,7 +72,7 @@ func _test_memory_backend(errors: Array[String]) -> void:
 func _test_file_backend(errors: Array[String]) -> void:
 	var host := _SaveTestHost.new()
 	var data := GameStateData.new()
-	var premium := PremiumCurrencyService.new(host)
+	var premium := PremiumCurrencyService.new(host, data)
 	var backend := FileSaveBackend.new()
 	var svc := GameSaveService.new(data, premium, host, backend)
 	var slot := "test_file_slot"
@@ -78,7 +83,7 @@ func _test_file_backend(errors: Array[String]) -> void:
 	if not backend.has_save(slot):
 		errors.append("FileSaveBackend: has_save после save")
 	var fresh := GameStateData.new()
-	var fresh_premium := PremiumCurrencyService.new(host, 0)
+	var fresh_premium := PremiumCurrencyService.new(host, fresh, 0)
 	var load_svc := GameSaveService.new(fresh, fresh_premium, host, backend)
 	if not load_svc.load(slot):
 		errors.append("FileSaveBackend: load")
@@ -94,7 +99,7 @@ func _test_file_backend(errors: Array[String]) -> void:
 func _test_reset_progress(errors: Array[String]) -> void:
 	var host := _SaveTestHost.new()
 	var data := GameStateData.new()
-	var premium := PremiumCurrencyService.new(host)
+	var premium := PremiumCurrencyService.new(host, data)
 	var backend := MemorySaveBackend.new()
 	var svc := GameSaveService.new(data, premium, host, backend)
 	var starter := float(BlockDefs.starter_kit_cost())

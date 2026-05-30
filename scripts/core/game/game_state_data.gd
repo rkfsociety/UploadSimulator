@@ -22,6 +22,7 @@ var _download_queue: Array[FileTransferJob] = []
 var _module_files: Dictionary = {}
 var _upload_queue: Array[FileTransferJob] = []
 var _wire_transfers: Array[WireFileTransfer] = []
+var _diamond_pickups: Dictionary = {}
 
 var _uid_counter: int = 0
 
@@ -48,6 +49,7 @@ func reset_to_initial() -> void:
 	_module_files.clear()
 	_upload_queue.clear()
 	_wire_transfers.clear()
+	_diamond_pickups.clear()
 	_uid_counter = 0
 
 
@@ -207,6 +209,52 @@ func next_uid() -> String:
 	return "blk_%d" % _uid_counter
 
 
+func add_diamond_pickup(world_pos: Vector2, amount: int) -> String:
+	var delta := GameValueBounds.diamond_delta(amount)
+	if delta <= 0:
+		return ""
+	var pickup := DiamondPickup.new()
+	_uid_counter += 1
+	pickup.uid = "gem_%d" % _uid_counter
+	pickup.world_pos = world_pos
+	pickup.amount = delta
+	_diamond_pickups[pickup.uid] = pickup
+	return pickup.uid
+
+
+func take_diamond_pickup(uid: String) -> int:
+	if not _diamond_pickups.has(uid):
+		return 0
+	var pickup: DiamondPickup = _diamond_pickups[uid]
+	var amount := pickup.amount
+	_diamond_pickups.erase(uid)
+	return amount
+
+
+func find_diamond_pickup_at(world_pos: Vector2, radius: float) -> String:
+	var best_uid := ""
+	var limit_sq := radius * radius
+	var best_dist_sq := limit_sq + 1.0
+	for uid: Variant in _diamond_pickups.keys():
+		var pickup: DiamondPickup = _diamond_pickups[uid]
+		var dist_sq := world_pos.distance_squared_to(pickup.world_pos)
+		if dist_sq <= limit_sq and dist_sq < best_dist_sq:
+			best_dist_sq = dist_sq
+			best_uid = str(uid)
+	return best_uid
+
+
+func get_diamond_pickups() -> Array[DiamondPickup]:
+	var out: Array[DiamondPickup] = []
+	for uid: Variant in _diamond_pickups.keys():
+		out.append(_diamond_pickups[uid])
+	return out
+
+
+func get_diamond_pickup_count() -> int:
+	return _diamond_pickups.size()
+
+
 func get_uid_counter() -> int:
 	return _uid_counter
 
@@ -235,6 +283,9 @@ func export_save_dict() -> Dictionary:
 	var transfers: Array = []
 	for transfer: WireFileTransfer in _wire_transfers:
 		transfers.append(transfer.to_dict())
+	var gems: Array = []
+	for uid: Variant in _diamond_pickups.keys():
+		gems.append((_diamond_pickups[uid] as DiamondPickup).to_dict())
 	return {
 		"format_version": _SaveConstants.FORMAT_VERSION,
 		"money": _money,
@@ -251,6 +302,7 @@ func export_save_dict() -> Dictionary:
 		"module_files": _export_module_files(),
 		"upload_queue": uploads,
 		"wire_transfers": transfers,
+		"diamond_pickups": gems,
 	}
 
 
@@ -323,6 +375,12 @@ func import_save_dict(payload: Dictionary) -> void:
 	for item: Variant in migrated.get("wire_transfers", []):
 		if item is Dictionary:
 			_wire_transfers.append(WireFileTransfer.from_dict(item as Dictionary))
+	_diamond_pickups.clear()
+	for item: Variant in migrated.get("diamond_pickups", []):
+		if item is Dictionary:
+			var pickup := DiamondPickup.from_dict(item as Dictionary)
+			if pickup.uid != "":
+				_diamond_pickups[pickup.uid] = pickup
 
 
 ## Миграция сохранений: v1→v2 (объединённая сеть), v2→v3 (сеть + загрузчик + аплоудер).

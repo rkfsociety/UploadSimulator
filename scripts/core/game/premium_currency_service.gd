@@ -9,11 +9,13 @@ enum Source {
 }
 
 var _wallet: PremiumWallet
+var _data: GameStateData
 var _host: Node
 
 
-func _init(host: Node, start_balance: int = GameConstants.START_DIAMONDS) -> void:
+func _init(host: Node, data: GameStateData, start_balance: int = GameConstants.START_DIAMONDS) -> void:
 	_host = host
+	_data = data
 	_wallet = PremiumWallet.new(start_balance)
 
 
@@ -45,9 +47,31 @@ func grant(amount: int, _source: Source = Source.ADMIN) -> int:
 	return amount
 
 
-## Награда за успешную выгрузку (см. GameConstants.DIAMONDS_PER_UPLOAD).
-func grant_upload_reward() -> int:
-	return grant(GameConstants.DIAMONDS_PER_UPLOAD, Source.UPLOAD)
+## Кристал ◆ на карте после выгрузки (баланс не меняется до сбора).
+func spawn_upload_pickup(world_pos: Vector2) -> int:
+	var amount := GameConstants.DIAMONDS_PER_UPLOAD
+	if amount <= 0:
+		return 0
+	if _data.add_diamond_pickup(world_pos, amount) == "":
+		return 0
+	if _host.has_signal("diamond_pickups_changed"):
+		_host.diamond_pickups_changed.emit()
+	return amount
+
+
+## Сбор кристалла по координатам карты; возвращает начисленное количество ◆.
+func try_collect_pickup_at(world_pos: Vector2, radius: float) -> int:
+	var uid := _data.find_diamond_pickup_at(world_pos, radius)
+	if uid == "":
+		return 0
+	var amount := _data.take_diamond_pickup(uid)
+	if amount <= 0:
+		return 0
+	grant(amount, Source.UPLOAD)
+	if _host.has_signal("diamond_pickups_changed"):
+		_host.diamond_pickups_changed.emit()
+	_host.log_message.emit("Собрано ◆%d" % amount)
+	return amount
 
 
 func export_save_dict() -> Dictionary:

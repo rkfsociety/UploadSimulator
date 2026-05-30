@@ -11,7 +11,7 @@ func run() -> Array[String]:
 	var field := GameFieldService.new(data, host)
 	var wiring := GameWiringService.new(data, host, field)
 	var storage := GameStorageService.new(data, field)
-	var premium := PremiumCurrencyService.new(host)
+	var premium := PremiumCurrencyService.new(host, data)
 	var pipeline := GamePipelineService.new(data, host, field, wiring, storage, premium)
 	_test_buy_no_money(errors, field, data)
 	_test_download_queue_full(errors, data, field, wiring, pipeline)

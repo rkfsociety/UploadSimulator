@@ -165,7 +165,7 @@ func _test_disconnect_cancels_active_transfer(errors: Array[String]) -> void:
 func _test_save_load_restores_queues(errors: Array[String]) -> void:
 	var host := _PipelineTestHost.new()
 	var data := GameStateData.new()
-	var premium := PremiumCurrencyService.new(host)
+	var premium := PremiumCurrencyService.new(host, data)
 	var backend := MemorySaveBackend.new()
 	var save_svc := GameSaveService.new(data, premium, host, backend)
 	var dl_job := FileTransferJob.new()
@@ -188,7 +188,7 @@ func _test_save_load_restores_queues(errors: Array[String]) -> void:
 		host.free()
 		return
 	var loaded_data := GameStateData.new()
-	var loaded_premium := PremiumCurrencyService.new(host, 0)
+	var loaded_premium := PremiumCurrencyService.new(host, loaded_data, 0)
 	var load_svc := GameSaveService.new(loaded_data, loaded_premium, host, backend)
 	if not load_svc.load("critical"):
 		errors.append("load critical slot")
@@ -211,7 +211,7 @@ func _make_stack() -> Dictionary:
 	var field := GameFieldService.new(data, host)
 	var wiring := GameWiringService.new(data, host, field)
 	var storage := GameStorageService.new(data, field)
-	var premium := PremiumCurrencyService.new(host)
+	var premium := PremiumCurrencyService.new(host, data)
 	var pipeline := GamePipelineService.new(data, host, field, wiring, storage, premium)
 	wiring.bind_pipeline(pipeline)
 	return {

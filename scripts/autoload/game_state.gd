@@ -16,6 +16,7 @@ signal operation_failed(code: int, message: String)
 signal wiring_changed
 signal field_changed
 signal wire_transfers_changed
+signal diamond_pickups_changed
 signal placement_requested(type_id: String)
 signal block_purchased(type_id: String)
 
@@ -46,7 +47,7 @@ var _autosave_accum: float = 0.0
 
 func _ready() -> void:
 	_data = GameStateData.new()
-	_premium_svc = PremiumCurrencyService.new(self)
+	_premium_svc = PremiumCurrencyService.new(self, _data)
 	_field_svc = GameFieldService.new(_data, self)
 	_wiring_svc = GameWiringService.new(_data, self, _field_svc)
 	_storage_svc = GameStorageService.new(_data, _field_svc)

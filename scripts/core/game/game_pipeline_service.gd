@@ -346,16 +346,22 @@ func _tick_upload_queue(delta: float) -> void:
 
 func apply_publish(job: FileTransferJob) -> void:
 	_data.add_uploaded_files(1)
-	var diamonds_granted := _premium.grant_upload_reward()
+	var diamonds_spawned := _spawn_diamond_pickup_for_upload()
 	var revenue := GameValueBounds.money(
 		job.size_bytes * GameConstants.REVENUE_PER_BYTE * job.quality
 	)
 	_data.set_uploader_balance(_data.get_uploader_balance() + revenue)
 	_data.set_phase(GameStateData.Phase.SETTLING)
-	_host.log_message.emit(
-		"Выгружен %s: +$%.1f в загрузчик, +◆%d"
-		% [FileDefs.get_type_label(job.file_type_id), revenue, diamonds_granted]
-	)
+	if diamonds_spawned > 0:
+		_host.log_message.emit(
+			"Выгружен %s: +$%.1f в загрузчик, ◆%d на карте (нажмите, чтобы собрать)"
+			% [FileDefs.get_type_label(job.file_type_id), revenue, diamonds_spawned]
+		)
+	else:
+		_host.log_message.emit(
+			"Выгружен %s: +$%.1f в загрузчик"
+			% [FileDefs.get_type_label(job.file_type_id), revenue]
+		)
 
 
 func finish_publish_pause() -> void:
@@ -527,6 +533,22 @@ func _speed_for_network_uid(network_uid: String, is_download: bool) -> float:
 		* _data.get_env_multiplier(effect_key)
 	)
 	return GameValueBounds.speed_bps(speed)
+
+
+func _spawn_diamond_pickup_for_upload() -> int:
+	var chain := _wiring.get_file_chain()
+	var up_uid: String = str(chain.get("uploader", ""))
+	if up_uid != "":
+		var inst := _field.get_instance(up_uid)
+		if inst.is_valid():
+			var origin := GridDefs.cell_to_pixel(inst.gx, inst.gy)
+			var sz := GridDefs.block_pixel_size(inst.type_id)
+			var center := origin + sz * 0.5
+			var rng := RandomNumberGenerator.new()
+			rng.randomize()
+			var offset := Vector2(rng.randf_range(-28.0, 28.0), rng.randf_range(-52.0, -8.0))
+			return _premium.spawn_upload_pickup(center + offset)
+	return _premium.spawn_upload_pickup(GridDefs.world_center_pixel())
 
 
 func _notify_field_and_stats() -> void:

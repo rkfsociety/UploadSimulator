@@ -45,5 +45,9 @@ func get_wire_transfers() -> Array[WireFileTransfer]:
 	return _data.get_wire_transfers()
 
 
+func get_diamond_pickups() -> Array[DiamondPickup]:
+	return _data.get_diamond_pickups()
+
+
 func get_phase() -> GameStateData.Phase:
 	return _data.get_phase()

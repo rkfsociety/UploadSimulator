@@ -2,13 +2,14 @@ extends RefCounted
 ## Unit-тесты изолированной премиум-валюты (◆).
 
 
-var case_count := 4
+var case_count := 5
 
 
 func run() -> Array[String]:
 	var errors: Array[String] = []
 	var host := _TestHost.new()
-	var premium := PremiumCurrencyService.new(host, GameConstants.START_DIAMONDS)
+	var data := GameStateData.new()
+	var premium := PremiumCurrencyService.new(host, data, GameConstants.START_DIAMONDS)
 
 	if premium.get_balance() != GameConstants.START_DIAMONDS:
 		errors.append(
@@ -16,16 +17,26 @@ func run() -> Array[String]:
 			% [GameConstants.START_DIAMONDS, premium.get_balance()]
 		)
 
-	var granted := premium.grant_upload_reward()
-	if granted != GameConstants.DIAMONDS_PER_UPLOAD:
-		errors.append("grant_upload_reward должен вернуть %d" % GameConstants.DIAMONDS_PER_UPLOAD)
-	var expected_after_grant := GameConstants.START_DIAMONDS + GameConstants.DIAMONDS_PER_UPLOAD
-	if premium.get_balance() != expected_after_grant:
-		errors.append("после награды за выгрузку баланс ◆ должен быть %d" % expected_after_grant)
+	var spawned := premium.spawn_upload_pickup(Vector2(100.0, 50.0))
+	if spawned != GameConstants.DIAMONDS_PER_UPLOAD:
+		errors.append("spawn_upload_pickup должен вернуть %d" % GameConstants.DIAMONDS_PER_UPLOAD)
+	if premium.get_balance() != GameConstants.START_DIAMONDS:
+		errors.append("spawn не должен сразу начислять ◆ на баланс")
+	if data.get_diamond_pickup_count() != 1:
+		errors.append("на карте должен быть 1 кристалл")
+
+	var collected := premium.try_collect_pickup_at(Vector2(100.0, 50.0), 32.0)
+	if collected != GameConstants.DIAMONDS_PER_UPLOAD:
+		errors.append("collect должен вернуть %d" % GameConstants.DIAMONDS_PER_UPLOAD)
+	var expected_after_collect := GameConstants.START_DIAMONDS + GameConstants.DIAMONDS_PER_UPLOAD
+	if premium.get_balance() != expected_after_collect:
+		errors.append("после сбора баланс ◆ должен быть %d" % expected_after_collect)
+	if data.get_diamond_pickup_count() != 0:
+		errors.append("после сбора кристаллов на карте быть не должно")
 
 	if not premium.try_spend(1):
 		errors.append("try_spend(1) должен пройти при достаточном балансе")
-	if premium.get_balance() != expected_after_grant - 1:
+	if premium.get_balance() != expected_after_collect - 1:
 		errors.append("баланс ◆ после списания 1")
 
 	if premium.try_spend(999_999):
@@ -45,3 +56,5 @@ class _TestHost:
 	extends Node
 
 	signal stats_changed
+	signal diamond_pickups_changed
+	signal log_message(text: String)

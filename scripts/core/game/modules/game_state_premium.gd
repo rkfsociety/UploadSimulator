@@ -16,3 +16,7 @@ func get_balance() -> int:
 
 func can_afford(cost: int) -> bool:
 	return _svc.can_afford(cost)
+
+
+func try_collect_at_world(world_pos: Vector2, radius: float = FieldMapConstants.DIAMOND_PICKUP_HIT_RADIUS) -> int:
+	return _svc.try_collect_pickup_at(world_pos, radius)
