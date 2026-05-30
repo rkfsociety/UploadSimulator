@@ -140,7 +140,7 @@ func _append_module_unlock_section() -> void:
 
 
 func _append_env_upgrade_section() -> void:
-	_list.add_child(_make_section_title("Улучшения среды"))
+	_list.add_child(_make_section_title("Улучшения"))
 	for upgrade_id in EnvironmentUpgradeDefs.get_upgrade_ids():
 		_list.add_child(_make_env_upgrade_row(upgrade_id))
 

@@ -270,7 +270,7 @@ grow_horizontal = 2
 grow_vertical = 2
 focus_mode = 0
 flat = true
-tooltip_text = "Улучшения среды (алмазы)"
+tooltip_text = "Улучшения (алмазы)"
 mouse_default_cursor_shape = 2
 
 [node name="ModalLayer" type="CanvasLayer" parent="."]

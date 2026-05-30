@@ -43,7 +43,7 @@ func _apply_cyber_theme() -> void:
 	shop_icon_btn.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	shop_icon_btn.tooltip_text = "Магазин модулей ($)"
 	MinimalUI.apply_upgrade_shop_hud_button(upgrade_shop_btn, upgrade_shop_tex)
-	upgrade_shop_btn.tooltip_text = "Улучшения среды (◆)"
+	upgrade_shop_btn.tooltip_text = "Улучшения (◆)"
 	MinimalUI.apply_map_center_hud_button(map_center_btn, map_center_tex)
 	map_center_btn.tooltip_text = "В центр карты"
 
