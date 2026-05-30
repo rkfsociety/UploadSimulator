@@ -6,6 +6,7 @@ var _host: Control
 var _wires_root: Control
 var _blocks: FieldMapBlocks
 var _renderer: WireBatchRenderer
+var _token_layer: WireFileTokenLayer
 
 var _ports: Array[ConnectionPort] = []
 var _segments: Array[Dictionary] = []
@@ -21,6 +22,10 @@ func _init(host: Control, wires_root: Control, blocks: FieldMapBlocks) -> void:
 	_renderer = WireBatchRenderer.new()
 	_renderer.name = "WireBatchRenderer"
 	_wires_root.add_child(_renderer)
+	_token_layer = WireFileTokenLayer.new()
+	_token_layer.name = "WireFileTokenLayer"
+	_token_layer.z_index = FieldMapConstants.WIRES_Z_INDEX + 1
+	_wires_root.add_child(_token_layer)
 
 
 func collect_ports() -> void:
@@ -47,10 +52,12 @@ func rebuild_wires() -> void:
 		var seg := WirePool.acquire_segment()
 		seg["link"] = pooled
 		seg["color"] = PortUtils.wire_color_for_kind(kind)
-		seg["animate"] = true
-		seg["speed"] = PortUtils.wire_flow_speed(pooled)
 		_segments.append(seg)
 	update_positions()
+
+
+func refresh_tokens() -> void:
+	_token_layer.refresh()
 
 
 func update_positions() -> void:
@@ -66,6 +73,7 @@ func update_positions() -> void:
 		seg["from"] = PortUtils.port_center_in_local(from_p, _wires_root)
 		seg["to"] = PortUtils.port_center_in_local(to_p, _wires_root)
 	_renderer.set_segments(_segments)
+	_token_layer.set_segments(_segments)
 	_update_pending_wire()
 
 

@@ -24,7 +24,7 @@ func get_module_used_files(uid: String, chain: Dictionary) -> int:
 	if chain.get("uploader", "") == uid:
 		if not _data.get_download_queue().is_empty():
 			used += 1
-		used += _data.get_upload_queue().size()
+		used += _data.count_incoming_wire_transfers(uid)
 	return used
 
 
@@ -36,7 +36,7 @@ func has_module_space(uid: String, count: int = 1, include_active_download: bool
 	if include_active_download:
 		if not _data.get_download_queue().is_empty():
 			used += 1
-		used += _data.get_upload_queue().size()
+		used += _data.count_incoming_wire_transfers(uid)
 	return float(used + count) <= float(cap)
 
 

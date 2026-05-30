@@ -47,11 +47,19 @@ func _test_full_download_queue_drains(errors: Array[String]) -> void:
 		job.apply_bounds()
 		data.get_download_queue().append(job)
 	var steps := 0
-	while not data.get_download_queue().is_empty() and steps < 500:
-		pipeline._tick_download_queue(0.02)
+	while steps < 500:
+		var had_work := false
+		if not data.get_download_queue().is_empty():
+			pipeline._tick_download_queue(0.02)
+			had_work = true
+		if not data.get_wire_transfers().is_empty():
+			pipeline._tick_wire_transfers(0.02)
+			had_work = true
+		if not had_work:
+			break
 		steps += 1
-	if not data.get_download_queue().is_empty():
-		errors.append("полная очередь: после тика очередь должна опустеть")
+	if not data.get_download_queue().is_empty() or not data.get_wire_transfers().is_empty():
+		errors.append("полная очередь: после тика очередь и провода должны опустеть")
 	var stored := data.get_module_files(uids.uploader).size()
 	if stored != GameConstants.MAX_QUEUE_JOBS:
 		errors.append(
@@ -88,6 +96,7 @@ func _test_downloader_overflow_clears_pending_downloads(errors: Array[String]) -
 	waiting.apply_bounds()
 	data.get_download_queue().append(waiting)
 	pipeline._tick_download_queue(0.05)
+	pipeline._tick_wire_transfers(0.05)
 	if not data.get_download_queue().is_empty():
 		errors.append("переполнение загрузчика: очередь скачивания должна очиститься")
 	if data.get_module_files(uids.uploader).size() != cap:
@@ -116,6 +125,8 @@ func _test_disconnect_cancels_active_transfer(errors: Array[String]) -> void:
 		errors.append("после отключения загрузчика очередь скачивания должна быть пуста")
 	if not data.get_upload_queue().is_empty():
 		errors.append("после отключения очередь выгрузки должна быть пуста")
+	if not data.get_wire_transfers().is_empty():
+		errors.append("после отключения передачи по проводам должны быть пусты")
 	if data.get_phase() != GameStateData.Phase.IDLE:
 		errors.append("после отключения фаза должна быть IDLE")
 	stack.host.free()
@@ -217,4 +228,5 @@ class _PipelineTestHost:
 	signal placement_requested(type_id: String)
 	signal queue_changed
 	signal blocks_progress_changed
+	signal wire_transfers_changed
 	signal operation_failed(code: int, message: String)

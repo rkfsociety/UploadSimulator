@@ -45,6 +45,7 @@ func _ready() -> void:
 	GameState.wiring_changed.connect(_on_wiring_changed)
 	GameState.queue_changed.connect(_on_blocks_refresh)
 	GameState.blocks_progress_changed.connect(_on_blocks_progress)
+	GameState.wire_transfers_changed.connect(_on_wire_transfers_changed)
 
 	var tree := get_tree()
 	if tree == null:
@@ -165,6 +166,12 @@ func _on_blocks_refresh() -> void:
 
 func _on_blocks_progress() -> void:
 	_blocks.refresh_uids(GameState.display.get_progress_block_uids())
+	_wiring.refresh_tokens()
+
+
+func _on_wire_transfers_changed() -> void:
+	_blocks.refresh_uids(GameState.display.get_progress_block_uids())
+	_wiring.refresh_tokens()
 
 
 func _on_wiring_changed() -> void:

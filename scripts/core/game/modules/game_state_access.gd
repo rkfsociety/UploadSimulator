@@ -41,5 +41,9 @@ func get_upload_queue() -> Array[FileTransferJob]:
 	return _data.get_upload_queue()
 
 
+func get_wire_transfers() -> Array[WireFileTransfer]:
+	return _data.get_wire_transfers()
+
+
 func get_phase() -> GameStateData.Phase:
 	return _data.get_phase()

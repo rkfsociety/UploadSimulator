@@ -56,6 +56,19 @@ static func _bytes_max_for_type(type_id: String, def: Dictionary) -> float:
 	return float(def.get("bytes_max", GameConstants.TEXT_FILE_BYTES_MAX))
 
 
+# Символ типа файла на маркере провода
+static func get_type_icon_char(type_id: String) -> String:
+	match type_id:
+		"text":
+			return "T"
+		"image":
+			return "I"
+		"archive":
+			return "A"
+		_:
+			return "F"
+
+
 # Человекочитаемое название типа для UI модуля
 static func get_type_label(type_id: String) -> String:
 	return str(TYPES.get(type_id, TYPES[DEFAULT_TYPE]).get("name", "Файл"))

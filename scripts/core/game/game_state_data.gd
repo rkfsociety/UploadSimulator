@@ -21,6 +21,7 @@ var _uploaded_files: int = 0
 var _download_queue: Array[FileTransferJob] = []
 var _module_files: Dictionary = {}
 var _upload_queue: Array[FileTransferJob] = []
+var _wire_transfers: Array[WireFileTransfer] = []
 
 var _uid_counter: int = 0
 
@@ -46,6 +47,7 @@ func reset_to_initial() -> void:
 	_download_queue.clear()
 	_module_files.clear()
 	_upload_queue.clear()
+	_wire_transfers.clear()
 	_uid_counter = 0
 
 
@@ -171,6 +173,35 @@ func get_upload_queue() -> Array[FileTransferJob]:
 	return _upload_queue
 
 
+func get_wire_transfers() -> Array[WireFileTransfer]:
+	return _wire_transfers
+
+
+func count_incoming_wire_transfers(to_uid: String) -> int:
+	var count := 0
+	for transfer: WireFileTransfer in _wire_transfers:
+		if transfer.to_uid == to_uid:
+			count += 1
+	return count
+
+
+func has_outgoing_wire_transfer(from_uid: String) -> bool:
+	for transfer: WireFileTransfer in _wire_transfers:
+		if transfer.from_uid == from_uid:
+			return true
+	return false
+
+
+func find_upload_wire_transfer(uploader_uid: String) -> WireFileTransfer:
+	for transfer: WireFileTransfer in _wire_transfers:
+		if (
+			transfer.purpose == WireFileTransfer.Purpose.TO_NETWORK
+			and transfer.from_uid == uploader_uid
+		):
+			return transfer
+	return null
+
+
 func next_uid() -> String:
 	_uid_counter += 1
 	return "blk_%d" % _uid_counter
@@ -201,6 +232,9 @@ func export_save_dict() -> Dictionary:
 	var uploads: Array = []
 	for job: FileTransferJob in _upload_queue:
 		uploads.append(job.to_dict())
+	var transfers: Array = []
+	for transfer: WireFileTransfer in _wire_transfers:
+		transfers.append(transfer.to_dict())
 	return {
 		"format_version": _SaveConstants.FORMAT_VERSION,
 		"money": _money,
@@ -216,6 +250,7 @@ func export_save_dict() -> Dictionary:
 		"download_queue": downloads,
 		"module_files": _export_module_files(),
 		"upload_queue": uploads,
+		"wire_transfers": transfers,
 	}
 
 
@@ -284,6 +319,10 @@ func import_save_dict(payload: Dictionary) -> void:
 	for item: Variant in migrated.get("upload_queue", []):
 		if item is Dictionary:
 			_upload_queue.append(FileTransferJob.from_dict(item as Dictionary))
+	_wire_transfers.clear()
+	for item: Variant in migrated.get("wire_transfers", []):
+		if item is Dictionary:
+			_wire_transfers.append(WireFileTransfer.from_dict(item as Dictionary))
 
 
 ## Миграция сохранений: v1→v2 (объединённая сеть), v2→v3 (сеть + загрузчик + аплоудер).

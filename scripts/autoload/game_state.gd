@@ -15,6 +15,7 @@ signal log_message(text: String)
 signal operation_failed(code: int, message: String)
 signal wiring_changed
 signal field_changed
+signal wire_transfers_changed
 signal placement_requested(type_id: String)
 signal block_purchased(type_id: String)
 

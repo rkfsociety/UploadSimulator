@@ -65,11 +65,24 @@ func get_progress_block_uids() -> Array[String]:
 			var uid: String = str(chain_file.get(key, ""))
 			if uid != "" and uid not in out:
 				out.append(uid)
-	if not _data.get_upload_queue().is_empty():
+	var up_uid: String = str(chain_file.get("uploader", ""))
+	var upload_transfer := _data.find_upload_wire_transfer(up_uid)
+	if upload_transfer != null:
 		for key in ["network", "uploader"]:
 			var uid: String = str(chain_file.get(key, ""))
 			if uid != "" and uid not in out:
 				out.append(uid)
+	elif not _data.get_upload_queue().is_empty():
+		for key in ["network", "uploader"]:
+			var uid: String = str(chain_file.get(key, ""))
+			if uid != "" and uid not in out:
+				out.append(uid)
+	for transfer: WireFileTransfer in _data.get_wire_transfers():
+		if transfer.purpose == WireFileTransfer.Purpose.TO_UPLOADER:
+			for key in ["downloader", "uploader"]:
+				var uid: String = str(chain_file.get(key, ""))
+				if uid != "" and uid not in out:
+					out.append(uid)
 	return out
 
 
@@ -109,6 +122,10 @@ func _fill_network_display(target: Dictionary, uid: String, chain_file: Dictiona
 	if not _data.get_upload_queue().is_empty() and in_chain:
 		target["status"] = "Канал: выгрузка"
 		return
+	var up_uid: String = str(chain_file.get("uploader", ""))
+	if _data.find_upload_wire_transfer(up_uid) != null and in_chain:
+		target["status"] = "Канал: выгрузка"
+		return
 	if in_chain:
 		target["status"] = "Канал готов"
 		return
@@ -126,7 +143,19 @@ func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dicti
 			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0)]
 		)
 		target["progress"] = job.progress
-	elif _pipeline.can_download_at(uid):
+		return
+	for transfer: WireFileTransfer in _data.get_wire_transfers():
+		if (
+			transfer.purpose == WireFileTransfer.Purpose.TO_UPLOADER
+			and transfer.from_uid == uid
+		):
+			target["status"] = (
+				"Передаёт %s · %d%% → Загрузчик"
+				% [FileDefs.get_type_label(transfer.file_type_id), int(transfer.progress * 100.0)]
+			)
+			target["progress"] = transfer.progress
+			return
+	if _pipeline.can_download_at(uid):
 		var ft := FileDefs.get_type_label(BlockDefs.get_downloader_file_type(_field.get_instance_type(uid)))
 		target["status"] = "Качает %s → Загрузчик" % ft
 	else:
@@ -147,6 +176,19 @@ func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Diction
 	target["action_enabled"] = false
 	var cap := _storage.max_files_for(uid)
 	var used := _storage.get_module_used_files(uid, chain_file)
+	var upload_transfer := _data.find_upload_wire_transfer(uid)
+	if upload_transfer != null and chain_file.get("uploader", "") == uid:
+		target["status"] = (
+			"Грузит в сеть: %s · %d%% · %d/%d"
+			% [
+				FileDefs.get_type_label(upload_transfer.file_type_id),
+				int(upload_transfer.progress * 100.0),
+				used,
+				cap,
+			]
+		)
+		target["progress"] = upload_transfer.progress
+		return
 	var queue := _data.get_upload_queue()
 	if not queue.is_empty() and chain_file.get("uploader", "") == uid:
 		var job: FileTransferJob = queue[0]
