@@ -1,5 +1,5 @@
 extends RefCounted
-## Критические сценарии пайплайна: переполнение очереди/диска, разрыв цепочки, загрузка сейва.
+## Критические сценарии пайплайна: переполнение очереди/загрузчика, разрыв цепочки, загрузка сейва.
 
 var case_count := 5
 
@@ -7,14 +7,13 @@ var case_count := 5
 func run() -> Array[String]:
 	var errors: Array[String] = []
 	_test_full_download_queue_drains(errors)
-	_test_storage_overflow_clears_pending_downloads(errors)
+	_test_downloader_overflow_clears_pending_downloads(errors)
 	_test_disconnect_cancels_active_transfer(errors)
 	_test_save_load_restores_queues(errors)
 	_test_tick_auto_enqueues_download(errors)
 	return errors
 
 
-## Автоскачивание: при собранной цепочке tick сам ставит задачу в очередь без кнопки.
 func _test_tick_auto_enqueues_download(errors: Array[String]) -> void:
 	var stack := _make_stack()
 	var data: GameStateData = stack.data
@@ -31,16 +30,13 @@ func _test_tick_auto_enqueues_download(errors: Array[String]) -> void:
 	stack.host.free()
 
 
-## Полная очередь скачивания: активные задачи доигрываются до конца (FIFO).
 func _test_full_download_queue_drains(errors: Array[String]) -> void:
 	var stack := _make_stack()
 	var data: GameStateData = stack.data
-	var field: GameFieldService = stack.field
 	var pipeline: GamePipelineService = stack.pipeline
-	# Без хранилища на поле ёмкость диска = 0 — файлы не сохранятся
-	data.add_block_stock("storage", 1)
-	if not field.place_block("storage", 0, 0).is_ok():
-		errors.append("place_block storage для drain-теста")
+	var uids := _wire_file_chain(stack)
+	if uids.is_empty():
+		errors.append("drain-тест: цепочка")
 		stack.host.free()
 		return
 	for _i in GameConstants.MAX_QUEUE_JOBS:
@@ -52,28 +48,33 @@ func _test_full_download_queue_drains(errors: Array[String]) -> void:
 		data.get_download_queue().append(job)
 	var steps := 0
 	while not data.get_download_queue().is_empty() and steps < 500:
-		pipeline.tick(0.02)
+		pipeline._tick_download_queue(0.02)
 		steps += 1
 	if not data.get_download_queue().is_empty():
 		errors.append("полная очередь: после тика очередь должна опустеть")
-	if data.get_stored_files().size() != GameConstants.MAX_QUEUE_JOBS:
+	var stored := data.get_downloader_files(uids.downloader).size()
+	if stored != GameConstants.MAX_QUEUE_JOBS:
 		errors.append(
-			"полная очередь: на диске %d файлов, ожидалось %d"
-			% [data.get_stored_files().size(), GameConstants.MAX_QUEUE_JOBS]
+			"полная очередь: в загрузчике %d файлов, ожидалось %d" % [stored, GameConstants.MAX_QUEUE_JOBS]
 		)
 	stack.host.free()
 
 
-## Нет хранилища: завершённый файл некуда класть — ожидающие задачи сбрасываются.
-func _test_storage_overflow_clears_pending_downloads(errors: Array[String]) -> void:
+func _test_downloader_overflow_clears_pending_downloads(errors: Array[String]) -> void:
 	var stack := _make_stack()
 	var data: GameStateData = stack.data
 	var pipeline: GamePipelineService = stack.pipeline
-	# Хранилище на поле не размещено → вместимость 0 файлов
-	var filler := StoredFileEntry.new()
-	filler.size_bytes = 1000.0
-	filler.apply_bounds()
-	data.get_stored_files().append(filler)
+	var uids := _wire_file_chain(stack)
+	if uids.is_empty():
+		errors.append("переполнение: цепочка")
+		stack.host.free()
+		return
+	var cap := BlockDefs.max_stored_files("text_downloader")
+	for _i in cap:
+		var filler := StoredFileEntry.new()
+		filler.size_bytes = 1000.0
+		filler.apply_bounds()
+		data.get_downloader_files(uids.downloader).append(filler)
 	var finishing := FileTransferJob.new()
 	finishing.size_bytes = 200.0
 	finishing.duration = 0.01
@@ -86,15 +87,14 @@ func _test_storage_overflow_clears_pending_downloads(errors: Array[String]) -> v
 	waiting.progress = 0.0
 	waiting.apply_bounds()
 	data.get_download_queue().append(waiting)
-	pipeline.tick(0.05)
+	pipeline._tick_download_queue(0.05)
 	if not data.get_download_queue().is_empty():
-		errors.append("переполнение диска: очередь скачивания должна очиститься")
-	if data.get_stored_files().size() != 1:
-		errors.append("переполнение диска: лишний файл не должен попасть на диск")
+		errors.append("переполнение загрузчика: очередь скачивания должна очиститься")
+	if data.get_downloader_files(uids.downloader).size() != cap:
+		errors.append("переполнение загрузчика: лишний файл не должен попасть внутрь")
 	stack.host.free()
 
 
-## Отключение провода во время передачи сбрасывает очереди файлов.
 func _test_disconnect_cancels_active_transfer(errors: Array[String]) -> void:
 	var stack := _make_stack()
 	var data: GameStateData = stack.data
@@ -121,7 +121,6 @@ func _test_disconnect_cancels_active_transfer(errors: Array[String]) -> void:
 	stack.host.free()
 
 
-## Сохранение и загрузка восстанавливают очереди и прогресс задач.
 func _test_save_load_restores_queues(errors: Array[String]) -> void:
 	var host := _PipelineTestHost.new()
 	var data := GameStateData.new()
@@ -191,22 +190,18 @@ func _wire_file_chain(stack: Dictionary) -> Dictionary:
 	var data: GameStateData = stack.data
 	data.add_block_stock("network", 1)
 	data.add_block_stock("text_downloader", 1)
-	data.add_block_stock("storage", 1)
 	data.add_block_stock("uploader", 1)
 	var n := field.place_block("network", 0, 0)
 	var d := field.place_block("text_downloader", 8, 0)
-	var s := field.place_block("storage", 20, 0)
 	var u := field.place_block("uploader", 32, 0)
-	if not n.is_ok() or not d.is_ok() or not s.is_ok() or not u.is_ok():
+	if not n.is_ok() or not d.is_ok() or not u.is_ok():
 		return {}
 	wiring.try_connect_ports(n.get_uid(), "net_out", d.get_uid(), "net_in")
-	wiring.try_connect_ports(d.get_uid(), "file_out", s.get_uid(), "file_in")
-	wiring.try_connect_ports(s.get_uid(), "file_out", u.get_uid(), "file_in")
+	wiring.try_connect_ports(d.get_uid(), "file_out", u.get_uid(), "file_in")
 	wiring.try_connect_ports(u.get_uid(), "net_out", n.get_uid(), "net_in")
 	return {
 		"network": n.get_uid(),
 		"downloader": d.get_uid(),
-		"storage": s.get_uid(),
 		"uploader": u.get_uid(),
 	}
 

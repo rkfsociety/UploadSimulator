@@ -59,7 +59,7 @@ Autoload `DebugOverlay` показывает FPS, кассу, фазы, очер
 | `field` | `game_state_field.gd` | поле: склад, покупка, установка, улучшения |
 | `display` | `game_state_display.gd` | метрики и кнопки на модуле |
 | `wiring` | `game_state_wiring.gd` | соединения портов |
-| `storage` | `game_state_storage.gd` | диск |
+| `storage` | `game_state_storage.gd` | ёмкость файлов в загрузчиках |
 | `pipeline` | `game_state_pipeline.gd` | скачивание, выгрузка, сбор денег |
 | `environment` | `game_state_environment.gd` | открытие типов модулей и улучшения среды за алмазы |
 | `premium` | `game_state_premium.gd` | кошелёк алмазов ◆ |

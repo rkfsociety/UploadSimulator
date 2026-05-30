@@ -41,18 +41,15 @@ func _test_download_queue_full(
 ) -> void:
 	data.add_block_stock("network", 1)
 	data.add_block_stock("text_downloader", 1)
-	data.add_block_stock("storage", 1)
 	data.add_block_stock("uploader", 1)
 	var n := field.place_block("network", 0, 0)
 	var d := field.place_block("text_downloader", 8, 0)
-	var s := field.place_block("storage", 20, 0)
 	var u := field.place_block("uploader", 32, 0)
-	if not n.is_ok() or not d.is_ok() or not s.is_ok() or not u.is_ok():
+	if not n.is_ok() or not d.is_ok() or not u.is_ok():
 		errors.append("размещение модулей для очереди")
 		return
 	wiring.try_connect_ports(n.get_uid(), "net_out", d.get_uid(), "net_in")
-	wiring.try_connect_ports(d.get_uid(), "file_out", s.get_uid(), "file_in")
-	wiring.try_connect_ports(s.get_uid(), "file_out", u.get_uid(), "file_in")
+	wiring.try_connect_ports(d.get_uid(), "file_out", u.get_uid(), "file_in")
 	wiring.try_connect_ports(u.get_uid(), "net_out", n.get_uid(), "net_in")
 	for _i in GameConstants.MAX_QUEUE_JOBS:
 		var job := FileTransferJob.new()
@@ -82,12 +79,12 @@ func _test_place_occupied(errors: Array[String], host: Node) -> void:
 	# Изоляция: своё поле, чтобы клетки не были заняты из предыдущих подтестов
 	var data := GameStateData.new()
 	var field := GameFieldService.new(data, host)
-	data.add_block_stock("storage", 2)
-	var first := field.place_block("storage", 0, 0)
+	data.add_block_stock("uploader", 2)
+	var first := field.place_block("uploader", 0, 0)
 	if not first.is_ok():
-		errors.append("первый storage")
+		errors.append("первый uploader")
 		return
-	var second := field.check_place_block("storage", 0, 0)
+	var second := field.check_place_block("uploader", 0, 0)
 	if second.is_ok():
 		errors.append("вторая установка в занятую клетку")
 	elif second.code != GameOperationResult.Code.FIELD_CELL_OCCUPIED:

@@ -1,6 +1,6 @@
 extends RefCounted
 class_name GameStorageService
-## Вместимость и занятость диска (в штуках файлов).
+## Вместимость и занятость файлов в загрузчиках (в штуках).
 
 var _data: GameStateData
 var _field: GameFieldService
@@ -11,35 +11,66 @@ func _init(data: GameStateData, field: GameFieldService) -> void:
 	_field = field
 
 
-## Суммарная вместимость всех хранилищ на поле (штук файлов).
+func max_files_for(uid: String) -> int:
+	var type_id := _field.get_instance_type(uid)
+	if not BlockDefs.is_downloader_type(type_id):
+		return 0
+	return BlockDefs.max_stored_files(type_id)
+
+
+func files_stored_in(uid: String) -> int:
+	return _data.get_downloader_files(uid).size()
+
+
+func get_downloader_used_files(uid: String, chain: Dictionary) -> int:
+	var used := files_stored_in(uid)
+	if chain.get("downloader", "") == uid and not _data.get_download_queue().is_empty():
+		used += 1
+	if chain.get("downloader", "") == uid:
+		used += _data.get_upload_queue().size()
+	return used
+
+
+func has_downloader_space(uid: String, count: int = 1, include_active_download: bool = true) -> bool:
+	var cap := max_files_for(uid)
+	if cap <= 0:
+		return false
+	var chain: Dictionary = {"downloader": uid} if _field.get_instance(uid).is_valid() else {}
+	var used := files_stored_in(uid)
+	if include_active_download and chain.get("downloader", "") == uid:
+		if not _data.get_download_queue().is_empty():
+			used += 1
+		used += _data.get_upload_queue().size()
+	return float(used + count) <= float(cap)
+
+
+func can_store_in_downloader(uid: String, count: int = 1) -> bool:
+	return float(files_stored_in(uid) + count) <= float(max_files_for(uid))
+
+
+## Устаревшие методы (отображение в debug/UI).
 func get_storage_capacity_files() -> float:
 	var total := 0.0
 	for inst: BlockInstance in _data.get_placed_blocks():
-		if inst.type_id == "storage":
-			total += storage_capacity_for(inst.uid)
+		if BlockDefs.is_downloader_type(inst.type_id):
+			total += float(max_files_for(inst.uid))
 	return total
 
 
-## Вместимость конкретного хранилища (уровень × множитель среды), штук файлов.
-func storage_capacity_for(uid: String) -> float:
-	return (
-		GameBonus.storage_capacity_files(_field.get_instance_level(uid))
-		* _data.get_env_multiplier("storage_capacity")
-	)
-
-
-## Занято файлов: в очереди скачивания, на диске и в очереди выгрузки.
 func get_storage_used_files() -> int:
-	return (
-		_data.get_download_queue().size()
-		+ _data.get_stored_files().size()
-		+ _data.get_upload_queue().size()
-	)
+	var total := 0
+	for inst: BlockInstance in _data.get_placed_blocks():
+		if BlockDefs.is_downloader_type(inst.type_id):
+			total += get_downloader_used_files(inst.uid, {"downloader": inst.uid})
+	return total
 
 
-## Хватает ли места ещё на count файлов (нужно хотя бы одно хранилище на поле).
 func has_storage_space(count: int = 1) -> bool:
-	return get_storage_capacity_files() > 0.0 and get_storage_free_files() >= float(count)
+	for inst: BlockInstance in _data.get_placed_blocks():
+		if BlockDefs.is_downloader_type(inst.type_id):
+			if has_downloader_space(inst.uid, count):
+				return true
+	return false
 
 
 func get_storage_free_files() -> float:

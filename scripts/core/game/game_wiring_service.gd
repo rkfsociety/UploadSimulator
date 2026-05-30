@@ -115,13 +115,10 @@ func _notify_topology_changed() -> void:
 		_pipeline.cancel_file_transfer_queues()
 
 
-## Полная цепочка: сеть→загрузчик→хранилище→аплоудер→сеть (один uid сети и хранилища).
+## Полная цепочка: сеть→загрузчик→аплоудер→сеть.
 func get_file_chain() -> Dictionary:
-	var files_a := _find_downloader_to_storage()
+	var files_a := _find_downloader_to_uploader()
 	if files_a.is_empty():
-		return {}
-	var files_b := _find_wired_pair("storage", "file_out", "uploader", "file_in")
-	if files_b.is_empty() or files_b.get("from_uid", "") != files_a.get("to_uid", ""):
 		return {}
 	var net_dl := _find_network_to_downloader()
 	if net_dl.is_empty() or net_dl.get("to_uid", "") != files_a.get("from_uid", ""):
@@ -135,8 +132,7 @@ func get_file_chain() -> Dictionary:
 	return {
 		"network": net_uid,
 		"downloader": files_a.get("from_uid", ""),
-		"storage": files_a.get("to_uid", ""),
-		"uploader": files_b.get("to_uid", ""),
+		"uploader": files_a.get("to_uid", ""),
 	}
 
 
@@ -170,13 +166,13 @@ func _find_wired_pair(
 	return {}
 
 
-func _find_downloader_to_storage() -> Dictionary:
+func _find_downloader_to_uploader() -> Dictionary:
 	for link: WireLink in _data.get_wire_connections():
 		if link.from_port != "file_out" or link.to_port != "file_in":
 			continue
 		if not BlockDefs.is_downloader_type(_field.get_instance_type(link.from_uid)):
 			continue
-		if _field.get_instance_type(link.to_uid) != "storage":
+		if _field.get_instance_type(link.to_uid) != "uploader":
 			continue
 		return {"from_uid": link.from_uid, "to_uid": link.to_uid}
 	return {}
@@ -196,13 +192,11 @@ func _find_network_to_downloader() -> Dictionary:
 
 func _connection_error(from_type: String, to_type: String) -> String:
 	if BlockDefs.is_downloader_type(from_type) and to_type == "uploader":
-		return "Нельзя напрямую: загрузчик → аплоудер. Нужно хранилище."
+		return "Нельзя напрямую: нужен провод file_out → file_in."
 	if BlockDefs.is_downloader_type(from_type) and to_type == "collector":
 		return "Нельзя: загрузчик → коллектор."
 	if from_type == "network" and to_type == "collector":
 		return "Нельзя: сеть → коллектор. Деньги идут через аплоудер."
-	if from_type == "storage" and to_type == "collector":
-		return "Нельзя: хранилище → коллектор."
 	if from_type == "network" and to_type == "network":
 		return "Нельзя соединять два модуля «Сеть»."
 	return "Соединение недоступно."

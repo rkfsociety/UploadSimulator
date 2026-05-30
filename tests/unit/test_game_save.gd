@@ -20,7 +20,7 @@ func _test_snapshot_roundtrip(errors: Array[String]) -> void:
 	data.add_money(50.0)
 	premium.grant(2, PremiumCurrencyService.Source.ADMIN)
 	data.unlock_module_type("cache")
-	data.set_block_stock("storage", 1)
+	data.set_block_stock("text_downloader", 1)
 	var inst := BlockInstance.create("text_downloader", 1, 2, "blk_test", 2)
 	data.get_placed_blocks().append(inst)
 	var payload := GameSaveSnapshot.capture(data, premium).to_payload()

@@ -9,12 +9,12 @@ func run() -> Array[String]:
 	var host := _TestHost.new()
 	var data := GameStateData.new()
 	var field := GameFieldService.new(data, host)
-	data.add_block_stock("storage", 1)
-	var place_storage := field.place_block("storage", 0, 0)
-	if not place_storage.is_ok():
-		errors.append("place_block storage")
+	data.add_block_stock("uploader", 1)
+	var place := field.place_block("uploader", 0, 0)
+	if not place.is_ok():
+		errors.append("place_block uploader")
 		return errors
-	var uid := place_storage.get_uid()
+	var uid := place.get_uid()
 	if not field.can_relocate_block(uid, 12, 0):
 		errors.append("can_relocate на свободную клетку")
 	if field.relocate_block(uid, 12, 0):

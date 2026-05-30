@@ -75,6 +75,8 @@ func apply(data: PlacedBlockViewData) -> void:
 		_progress_bar.visible = false
 	_upgrade_btn.text = data.upgrade_text
 	_upgrade_btn.disabled = not data.upgrade_enabled
+	if _upgrade_panel != null:
+		_upgrade_panel.visible = data.upgrade_visible
 	_apply_upgrade_colors(upgrade_accent, data.use_network_panel)
 
 

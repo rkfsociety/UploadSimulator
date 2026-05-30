@@ -4,14 +4,12 @@ class_name BlockDefs
 
 const _NetworkModule := preload("res://scripts/core/defs/modules/network_module.gd")
 const _TextDownloaderModule := preload("res://scripts/core/defs/modules/text_downloader_module.gd")
-const _StorageModule := preload("res://scripts/core/defs/modules/storage_module.gd")
 const _UploaderModule := preload("res://scripts/core/defs/modules/uploader_module.gd")
 const _CollectorModule := preload("res://scripts/core/defs/modules/collector_module.gd")
 
 const _MODULE_SCRIPTS: Array = [
 	_NetworkModule,
 	_TextDownloaderModule,
-	_StorageModule,
 	_UploaderModule,
 	_CollectorModule,
 ]
@@ -95,6 +93,14 @@ static func is_downloader_type(type_id: String) -> bool:
 
 static func get_downloader_file_type(type_id: String) -> String:
 	return str(TYPES.get(type_id, {}).get("file_type_id", ""))
+
+
+static func is_upgradeable(type_id: String) -> bool:
+	return bool(TYPES.get(type_id, {}).get("upgradable", true))
+
+
+static func max_stored_files(type_id: String) -> int:
+	return int(TYPES.get(type_id, {}).get("max_stored_files", 0))
 
 
 static func downloader_type_ids() -> Array[String]:
@@ -203,16 +209,19 @@ static func _validate_type(type_id: String, type_def: Dictionary) -> void:
 	for key in _REQUIRED_TYPE_KEYS:
 		if not type_def.has(key):
 			push_error("BlockDefs: тип «%s» не содержит обязательное поле «%s»." % [type_id, key])
-	if not type_def.has("effect_per_level") and not type_def.has("capacity_files_per_level"):
-		push_error(
-			"BlockDefs: тип «%s» должен иметь effect_per_level или capacity_files_per_level." % type_id
-		)
+	if is_upgradeable(type_id):
+		if not type_def.has("effect_per_level") and not type_def.has("capacity_files_per_level"):
+			push_error(
+				"BlockDefs: тип «%s» должен иметь effect_per_level или capacity_files_per_level." % type_id
+			)
 	if is_downloader_type(type_id):
 		var ft := get_downloader_file_type(type_id)
 		if ft == "" or not FileDefs.TYPES.has(ft):
 			push_error(
 				"BlockDefs: загрузчик «%s» ссылается на неизвестный file_type_id «%s»." % [type_id, ft]
 			)
+		if max_stored_files(type_id) <= 0:
+			push_error("BlockDefs: загрузчик «%s» должен иметь max_stored_files > 0." % type_id)
 	if cells_w(type_id) < MIN_CELLS_W or cells_h(type_id) < MIN_CELLS_H:
 		push_error(
 			"BlockDefs: тип «%s» — размер %dx%d меньше минимума %dx%d клеток."

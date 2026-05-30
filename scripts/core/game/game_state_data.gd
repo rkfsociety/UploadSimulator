@@ -19,7 +19,7 @@ var _wire_connections: Array[WireLink] = []
 var _phase: Phase = Phase.IDLE
 var _uploaded_files: int = 0
 var _download_queue: Array[FileTransferJob] = []
-var _stored_files: Array[StoredFileEntry] = []
+var _downloader_files: Dictionary = {}
 var _upload_queue: Array[FileTransferJob] = []
 
 var _uid_counter: int = 0
@@ -44,7 +44,7 @@ func reset_to_initial() -> void:
 	_phase = Phase.IDLE
 	_uploaded_files = 0
 	_download_queue.clear()
-	_stored_files.clear()
+	_downloader_files.clear()
 	_upload_queue.clear()
 	_uid_counter = 0
 
@@ -147,8 +147,21 @@ func get_download_queue() -> Array[FileTransferJob]:
 	return _download_queue
 
 
+func get_downloader_files(uid: String) -> Array[StoredFileEntry]:
+	if not _downloader_files.has(uid):
+		var bucket: Array[StoredFileEntry] = []
+		_downloader_files[uid] = bucket
+	var files: Array = _downloader_files[uid]
+	return files as Array[StoredFileEntry]
+
+
 func get_stored_files() -> Array[StoredFileEntry]:
-	return _stored_files
+	## Устаревший доступ: файлы первого загрузчика на поле (для совместимости тестов).
+	for inst: BlockInstance in _placed_blocks:
+		if BlockDefs.is_downloader_type(inst.type_id):
+			return get_downloader_files(inst.uid)
+	var empty: Array[StoredFileEntry] = []
+	return empty
 
 
 func get_upload_queue() -> Array[FileTransferJob]:
@@ -182,9 +195,6 @@ func export_save_dict() -> Dictionary:
 	var downloads: Array = []
 	for job: FileTransferJob in _download_queue:
 		downloads.append(job.to_dict())
-	var stored: Array = []
-	for entry: StoredFileEntry in _stored_files:
-		stored.append(entry.to_dict())
 	var uploads: Array = []
 	for job: FileTransferJob in _upload_queue:
 		uploads.append(job.to_dict())
@@ -201,9 +211,19 @@ func export_save_dict() -> Dictionary:
 		"uploaded_files": _uploaded_files,
 		"uid_counter": _uid_counter,
 		"download_queue": downloads,
-		"stored_files": stored,
+		"downloader_files": _export_downloader_files(),
 		"upload_queue": uploads,
 	}
+
+
+func _export_downloader_files() -> Dictionary:
+	var out: Dictionary = {}
+	for uid: Variant in _downloader_files.keys():
+		var files: Array = []
+		for entry: StoredFileEntry in _downloader_files[uid]:
+			files.append(entry.to_dict())
+		out[str(uid)] = files
+	return out
 
 
 func import_save_dict(payload: Dictionary) -> void:
@@ -248,10 +268,15 @@ func import_save_dict(payload: Dictionary) -> void:
 	for item: Variant in migrated.get("download_queue", []):
 		if item is Dictionary:
 			_download_queue.append(FileTransferJob.from_dict(item as Dictionary))
-	_stored_files.clear()
-	for item: Variant in migrated.get("stored_files", []):
-		if item is Dictionary:
-			_stored_files.append(StoredFileEntry.from_dict(item as Dictionary))
+	_downloader_files.clear()
+	var files_raw: Variant = migrated.get("downloader_files", {})
+	if files_raw is Dictionary:
+		for uid: Variant in (files_raw as Dictionary).keys():
+			var bucket: Array[StoredFileEntry] = []
+			for item: Variant in (files_raw as Dictionary)[uid]:
+				if item is Dictionary:
+					bucket.append(StoredFileEntry.from_dict(item as Dictionary))
+			_downloader_files[str(uid)] = bucket
 	_upload_queue.clear()
 	for item: Variant in migrated.get("upload_queue", []):
 		if item is Dictionary:
@@ -273,6 +298,9 @@ static func _migrate_save_payload(payload: Dictionary) -> Dictionary:
 	if version < 4:
 		_migrate_v3_downloader_to_typed(out)
 		version = 4
+	if version < 5:
+		_migrate_v4_storage_into_downloader(out)
+		version = 5
 	out["format_version"] = SaveConstants.FORMAT_VERSION
 	return out
 
@@ -486,3 +514,101 @@ static func _migrate_v3_downloader_to_typed(payload: Dictionary) -> void:
 				block["type"] = "text_downloader"
 		migrated_placed.append(block)
 	payload["placed_blocks"] = migrated_placed
+
+
+static func _migrate_v4_storage_into_downloader(payload: Dictionary) -> void:
+	var stock: Dictionary = {}
+	var stock_raw: Variant = payload.get("block_stock", {})
+	if stock_raw is Dictionary:
+		stock = (stock_raw as Dictionary).duplicate()
+	stock.erase("storage")
+	payload["block_stock"] = stock
+
+	var unlocked: Array = []
+	var unlocked_raw: Variant = payload.get("unlocked_module_types", [])
+	if unlocked_raw is Array:
+		for type_id: Variant in unlocked_raw:
+			var tid := str(type_id)
+			if tid != "storage":
+				unlocked.append(tid)
+	payload["unlocked_module_types"] = unlocked
+
+	var placed_raw: Array = []
+	var placed_src: Variant = payload.get("placed_blocks", [])
+	if placed_src is Array:
+		placed_raw = placed_src as Array
+
+	var storage_uids: Dictionary = {}
+	var downloader_uids: Array[String] = []
+	var migrated_placed: Array = []
+	for item: Variant in placed_raw:
+		if not item is Dictionary:
+			continue
+		var block: Dictionary = item as Dictionary
+		var type_id := str(block.get("type_id", block.get("type", "")))
+		var uid := str(block.get("uid", ""))
+		if type_id == "storage":
+			storage_uids[uid] = true
+			continue
+		if BlockDefs.is_downloader_type(type_id):
+			downloader_uids.append(uid)
+		migrated_placed.append(block)
+	payload["placed_blocks"] = migrated_placed
+
+	var target_dl := downloader_uids[0] if not downloader_uids.is_empty() else ""
+	var downloader_files: Dictionary = {}
+	var files_raw: Variant = payload.get("downloader_files", {})
+	if files_raw is Dictionary and not (files_raw as Dictionary).is_empty():
+		downloader_files = (files_raw as Dictionary).duplicate(true)
+
+	if target_dl != "":
+		if not downloader_files.has(target_dl):
+			downloader_files[target_dl] = []
+		var bucket: Array = downloader_files[target_dl]
+		for item: Variant in payload.get("stored_files", []):
+			if item is Dictionary:
+				bucket.append((item as Dictionary).duplicate(true))
+		downloader_files[target_dl] = bucket
+
+	var wires_raw: Array = []
+	var wires_src: Variant = payload.get("wire_connections", [])
+	if wires_src is Array:
+		wires_raw = wires_src as Array
+	var dl_to_uploader: Dictionary = {}
+	var migrated_wires: Array = []
+	for item: Variant in wires_raw:
+		if not item is Dictionary:
+			continue
+		var link: Dictionary = (item as Dictionary).duplicate(true)
+		var from_uid := str(link.get("from_uid", ""))
+		var to_uid := str(link.get("to_uid", ""))
+		if storage_uids.has(from_uid) or storage_uids.has(to_uid):
+			if storage_uids.has(from_uid):
+				dl_to_uploader[from_uid] = to_uid
+			continue
+		migrated_wires.append(link)
+
+	for storage_uid: Variant in dl_to_uploader.keys():
+		var up_uid := str(dl_to_uploader[storage_uid])
+		for item: Variant in wires_raw:
+			if not item is Dictionary:
+				continue
+			var link: Dictionary = item as Dictionary
+			if str(link.get("from_uid", "")) != storage_uid:
+				continue
+			var dl_uid := str(link.get("to_uid", ""))
+			if dl_uid == "":
+				continue
+			var new_link := WireLink.create(dl_uid, "file_out", up_uid, "file_in").to_dict()
+			var exists := false
+			for kept: Variant in migrated_wires:
+				if kept is Dictionary and str((kept as Dictionary).get("from_uid", "")) == dl_uid:
+					if str((kept as Dictionary).get("to_uid", "")) == up_uid:
+						exists = true
+						break
+			if not exists:
+				migrated_wires.append(new_link)
+
+	payload["wire_connections"] = migrated_wires
+	payload["downloader_files"] = downloader_files
+	payload.erase("stored_files")

@@ -34,20 +34,24 @@ static func pixel_size(type_id: String = "") -> Vector2:
 	return GridDefs.block_pixel_size(type_id)
 
 
+func _uses_upgrade_strip() -> bool:
+	return BlockDefs.is_upgradeable(block_type)
+
+
 func _main_panel_size() -> Vector2:
 	var c := GridDefs.block_cells(block_type)
+	var upgrade_cells := GridDefs.BLOCK_UPGRADE_CELLS_H if _uses_upgrade_strip() else 0
 	return Vector2(
 		float(c.x * GridDefs.CELL_SIZE),
-		float((c.y - GridDefs.BLOCK_UPGRADE_CELLS_H) * GridDefs.CELL_SIZE),
+		float((c.y - upgrade_cells) * GridDefs.CELL_SIZE),
 	)
 
 
 func _upgrade_panel_size() -> Vector2:
+	if not _uses_upgrade_strip():
+		return Vector2.ZERO
 	var c := GridDefs.block_cells(block_type)
 	return Vector2(
-		float(c.x * GridDefs.CELL_SIZE),
-		float(GridDefs.BLOCK_UPGRADE_CELLS_H * GridDefs.CELL_SIZE),
-	)
 
 
 static func get_scene() -> PackedScene:
@@ -104,7 +108,9 @@ func _apply_root_layout() -> void:
 	custom_minimum_size = sz
 	size = sz
 	_main_panel.custom_minimum_size = _main_panel_size()
-	_upgrade_panel.custom_minimum_size = _upgrade_panel_size()
+	var up_sz := _upgrade_panel_size()
+	_upgrade_panel.custom_minimum_size = up_sz
+	_upgrade_panel.visible = _uses_upgrade_strip()
 
 
 func _build_ports() -> void:

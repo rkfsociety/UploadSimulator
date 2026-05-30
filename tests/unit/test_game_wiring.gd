@@ -13,31 +13,30 @@ func run() -> Array[String]:
 	var uids := _place_modules(field, data)
 	var n_uid: String = uids.get("network", "")
 	var d_uid: String = uids.get("text_downloader", "")
-	var s_uid: String = uids.get("storage", "")
 	var u_uid: String = uids.get("uploader", "")
-	if n_uid == "" or d_uid == "" or s_uid == "" or u_uid == "":
+	if n_uid == "" or d_uid == "" or u_uid == "":
 		errors.append("не удалось разместить модули для теста проводов")
 		return errors
 	if not wiring.can_connect_ports(n_uid, "net_out", d_uid, "net_in"):
 		errors.append("can_connect network→downloader")
-	if not wiring.try_connect_ports(d_uid, "file_out", s_uid, "file_in").is_ok():
-		errors.append("try_connect downloader→storage")
+	if not wiring.try_connect_ports(n_uid, "net_out", d_uid, "net_in").is_ok():
+		errors.append("try_connect network→downloader")
+	if not wiring.try_connect_ports(d_uid, "file_out", u_uid, "file_in").is_ok():
+		errors.append("try_connect downloader→uploader")
 	if not wiring.get_file_chain().is_empty():
-		errors.append("file_chain не должна быть полной без storage→uploader и uploader→network")
-	if wiring.can_connect_ports(d_uid, "file_out", u_uid, "file_in"):
-		errors.append("downloader→uploader должно быть запрещено")
-	wiring.try_connect_ports(s_uid, "file_out", u_uid, "file_in")
+		errors.append("file_chain не должна быть полной без uploader→network")
 	wiring.try_connect_ports(u_uid, "net_out", n_uid, "net_in")
-	wiring.try_connect_ports(n_uid, "net_out", d_uid, "net_in")
 	if wiring.get_file_chain().is_empty():
 		errors.append("полная file_chain после всех проводов")
+	if wiring.get_file_chain().has("storage"):
+		errors.append("file_chain не должна содержать storage")
 	return errors
 
 
 func _place_modules(field: GameFieldService, data: GameStateData) -> Dictionary:
 	var uids := {}
 	var gx := 0
-	for type_id in ["network", "text_downloader", "storage", "uploader"]:
+	for type_id in ["network", "text_downloader", "uploader"]:
 		data.add_block_stock(type_id, 1)
 		var place := field.place_block(type_id, gx, 0)
 		uids[type_id] = place.get_uid() if place.is_ok() else ""

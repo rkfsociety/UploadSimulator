@@ -12,10 +12,10 @@ func run() -> Array[String]:
 
 
 func _test_block_instance(errors: Array[String]) -> void:
-	var inst := BlockInstance.create("storage", 2, 3, "blk_1", 2)
+	var inst := BlockInstance.create("text_downloader", 2, 3, "blk_1", 1)
 	if not inst.is_valid():
 		errors.append("BlockInstance.create: is_valid")
-	if inst.type_id != "storage" or inst.gx != 2 or inst.gy != 3 or inst.level != 2:
+	if inst.type_id != "text_downloader" or inst.gx != 2 or inst.gy != 3 or inst.level != 1:
 		errors.append("BlockInstance.create: поля")
 	var d := inst.to_dict()
 	var restored := BlockInstance.from_dict(d)

@@ -131,7 +131,8 @@ func check_enqueue_download() -> GameOperationResult:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_CHAIN)
 	if _data.get_download_queue().size() >= GameConstants.MAX_QUEUE_JOBS:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_DOWNLOAD_QUEUE_FULL)
-	if not _storage.has_storage_space(1):
+	var dl_uid: String = str(chain.get("downloader", ""))
+	if not _storage.has_downloader_space(dl_uid, 1):
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_STORAGE)
 	return GameOperationResult.ok()
 
@@ -139,9 +140,11 @@ func check_enqueue_download() -> GameOperationResult:
 func check_enqueue_upload() -> GameOperationResult:
 	if _data.get_phase() != GameStateData.Phase.IDLE:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_PHASE_BUSY)
-	if _wiring.get_file_chain().is_empty():
+	var chain := _wiring.get_file_chain()
+	if chain.is_empty():
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_CHAIN)
-	if _data.get_stored_files().is_empty():
+	var dl_uid: String = str(chain.get("downloader", ""))
+	if _data.get_downloader_files(dl_uid).is_empty():
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_FILES)
 	if _data.get_upload_queue().size() >= GameConstants.MAX_QUEUE_JOBS:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_UPLOAD_QUEUE_FULL)
@@ -202,14 +205,12 @@ func enqueue_download() -> GameOperationResult:
 	var file_type_id := BlockDefs.get_downloader_file_type(dl_type)
 	if file_type_id == "" or not FileDefs.is_downloadable_type(file_type_id):
 		return GameOperationResult.fail(GameOperationResult.Code.FILE_TYPE_UNSUPPORTED)
-	var dl_level := _field.get_instance_level(dl_uid)
-	var quality := 1.0 + float(dl_level) * GameConstants.QUALITY_PER_DOWNLOADER_LEVEL
 	var speed_bps := download_speed_for(dl_uid)
 	var total_bytes := FileDefs.random_download_size_bytes(file_type_id, speed_bps, _rng)
 	var job := FileTransferJob.new()
 	job.file_type_id = file_type_id
 	job.title = FileDefs.get_type_label(file_type_id)
-	job.quality = quality
+	job.quality = 1.0
 	job.size_bytes = GameValueBounds.size_bytes(total_bytes)
 	job.duration = GameValueBounds.job_duration_from_bytes(job.size_bytes, speed_bps)
 	job.progress = 0.0
@@ -226,8 +227,12 @@ func enqueue_upload() -> GameOperationResult:
 	if not check.is_ok():
 		return check
 	var chain := _wiring.get_file_chain()
-	var up_uid: String = chain.get("uploader", "")
-	var entry: StoredFileEntry = _data.get_stored_files().pop_front()
+	var dl_uid: String = str(chain.get("downloader", ""))
+	var files := _data.get_downloader_files(dl_uid)
+	if files.is_empty():
+		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_FILES)
+	var entry: StoredFileEntry = files.pop_front()
+	var up_uid: String = str(chain.get("uploader", ""))
 	var job := FileTransferJob.new()
 	job.quality = entry.quality
 	job.size_bytes = GameValueBounds.size_bytes(entry.size_bytes)
@@ -271,7 +276,7 @@ func _tick_download_queue(delta: float) -> void:
 	queue.pop_front()
 	if not _try_store_completed_download(job):
 		queue.clear()
-		_host.log_message.emit("Диск переполнен: очередь скачивания очищена.")
+		_host.log_message.emit("Загрузчик переполнен: очередь скачивания очищена.")
 		_host.queue_changed.emit()
 		_host.field_changed.emit()
 		_host.stats_changed.emit()
@@ -324,7 +329,9 @@ func cancel_file_transfer_queues() -> void:
 
 
 func _try_store_completed_download(job: FileTransferJob) -> bool:
-	if not _storage.has_storage_space(1):
+	var chain := _wiring.get_file_chain()
+	var dl_uid: String = str(chain.get("downloader", ""))
+	if not _storage.can_store_in_downloader(dl_uid, 1):
 		return false
 	var stored := StoredFileEntry.new()
 	stored.title = job.title
@@ -332,11 +339,16 @@ func _try_store_completed_download(job: FileTransferJob) -> bool:
 	stored.quality = job.quality
 	stored.size_bytes = job.size_bytes
 	stored.apply_bounds()
-	_data.get_stored_files().append(stored)
+	_data.get_downloader_files(dl_uid).append(stored)
 	return true
 
 
 func _return_upload_queue_to_storage() -> void:
+	var chain := _wiring.get_file_chain()
+	var dl_uid: String = str(chain.get("downloader", ""))
+	if dl_uid == "":
+		_data.get_upload_queue().clear()
+		return
 	for job: FileTransferJob in _data.get_upload_queue():
 		var entry := StoredFileEntry.new()
 		entry.title = job.title
@@ -344,7 +356,7 @@ func _return_upload_queue_to_storage() -> void:
 		entry.quality = job.quality
 		entry.size_bytes = job.size_bytes
 		entry.apply_bounds()
-		_data.get_stored_files().append(entry)
+		_data.get_downloader_files(dl_uid).append(entry)
 	_data.get_upload_queue().clear()
 
 

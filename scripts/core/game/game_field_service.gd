@@ -163,6 +163,8 @@ func check_upgrade_instance(uid: String) -> GameOperationResult:
 	var inst := get_instance(uid)
 	if not inst.is_valid():
 		return GameOperationResult.fail(GameOperationResult.Code.FIELD_INVALID_INSTANCE)
+	if not BlockDefs.is_upgradeable(inst.type_id):
+		return GameOperationResult.fail(GameOperationResult.Code.FIELD_INVALID_MODULE, "Улучшение недоступно.")
 	if _data.get_money() < float(get_instance_upgrade_cost(uid)):
 		return GameOperationResult.fail(GameOperationResult.Code.FIELD_INSUFFICIENT_MONEY)
 	return GameOperationResult.ok()
