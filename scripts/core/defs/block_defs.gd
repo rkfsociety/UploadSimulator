@@ -1,117 +1,19 @@
 extends RefCounted
 class_name BlockDefs
-## Описание типов блоков: покупка в магазине, порты и разрешённые соединения.
+## Реестр типов блоков: сборка из отдельных файлов в `defs/modules/`.
 
-const TYPES := {
-	"network":
-	{
-		"name": "Сеть",
-		"icon": "🌐",
-		"color": Color(0.12, 0.94, 0.78, 1.0),
-		"desc": "Канал в интернет; скорость скачивания и выгрузки растёт с уровнем",
-		"cells_w": 5,
-		"cells_h": 3,
-		"unlocked_at_start": true,
-		"diamond_unlock_cost": 0,
-		"shop_cost": 55,
-		"upgrade_base": 32,
-		"upgrade_mult": 1.44,
-		"effect_per_level": 0.12,
-		"ports":
-		{
-			"net_out": {"kind": "net", "dir": "out"},
-			"net_in": {"kind": "net", "dir": "in"},
-		},
-	},
-	"text_downloader":
-	{
-		"name": "Text Downloader",
-		"icon": "📄",
-		"color": Color(0.0, 0.88, 1.0, 1.0),
-		"desc": "Скачивает текстовые файлы из сети и передаёт на диск",
-		"file_type_id": "text",
-		"cells_w": 5,
-		"cells_h": 3,
-		"unlocked_at_start": true,
-		"diamond_unlock_cost": 0,
-		"shop_cost": 75,
-		"upgrade_base": 35,
-		"upgrade_mult": 1.45,
-		"effect_per_level": 0.1,
-		"ports":
-		{
-			"net_in": {"kind": "net", "dir": "in"},
-			"file_out": {"kind": "file", "dir": "out"},
-		},
-	},
-	"storage":
-	{
-		"name": "Хранилище",
-		"icon": "💾",
-		"color": Color(0.58, 0.35, 1.0, 1.0),
-		"desc": "Диск для скачанных файлов",
-		"cells_w": 5,
-		"cells_h": 3,
-		"unlocked_at_start": true,
-		"diamond_unlock_cost": 0,
-		"shop_cost": 90,
-		"upgrade_base": 40,
-		"upgrade_mult": 1.5,
-		# Маркер модуля-хранилища: вместимость в штуках файлов растёт с уровнем
-		# (база и прирост за уровень — из GameBalanceConfig).
-		"capacity_files_per_level": 1.0,
-		"ports":
-		{
-			"file_in": {"kind": "file", "dir": "in"},
-			"file_out": {"kind": "file", "dir": "out"},
-		},
-	},
-	"uploader":
-	{
-		"name": "Аплоудер",
-		"icon": "⬆",
-		"color": Color(0.25, 1.0, 0.55, 1.0),
-		"desc": "Отправляет файлы в сеть через канал; копит доход",
-		"cells_w": 5,
-		"cells_h": 3,
-		"unlocked_at_start": true,
-		"diamond_unlock_cost": 0,
-		"shop_cost": 85,
-		"upgrade_base": 38,
-		"upgrade_mult": 1.48,
-		"effect_per_level": 0.05,
-		"ports":
-		{
-			"file_in": {"kind": "file", "dir": "in"},
-			"net_out": {"kind": "net", "dir": "out"},
-			"money_out": {"kind": "money", "dir": "out"},
-		},
-	},
-	"collector":
-	{
-		"name": "Коллектор",
-		"icon": "💰",
-		"color": Color(1.0, 0.78, 0.15, 1.0),
-		"desc": "Забирает деньги из сейфа аплоудера в общую кассу",
-		"cells_w": 4,
-		"cells_h": 3,
-		"unlocked_at_start": true,
-		"diamond_unlock_cost": 0,
-		"shop_cost": 65,
-		"upgrade_base": 30,
-		"upgrade_mult": 1.4,
-		"effect_per_level": 0.05,
-		"ports": {"money_in": {"kind": "money", "dir": "in"}},
-	},
-}
+const _NetworkModule := preload("res://scripts/core/defs/modules/network_module.gd")
+const _TextDownloaderModule := preload("res://scripts/core/defs/modules/text_downloader_module.gd")
+const _StorageModule := preload("res://scripts/core/defs/modules/storage_module.gd")
+const _UploaderModule := preload("res://scripts/core/defs/modules/uploader_module.gd")
+const _CollectorModule := preload("res://scripts/core/defs/modules/collector_module.gd")
 
-# Разрешённые пары типов; обход хранилища невозможен на уровне типов.
-const ALLOWED_WIRES: Array[Array] = [
-	["network", "text_downloader"],
-	["text_downloader", "storage"],
-	["storage", "uploader"],
-	["uploader", "network"],
-	["uploader", "collector"],
+const _MODULE_SCRIPTS: Array = [
+	_NetworkModule,
+	_TextDownloaderModule,
+	_StorageModule,
+	_UploaderModule,
+	_CollectorModule,
 ]
 
 const _REQUIRED_TYPE_KEYS: Array[String] = [
@@ -129,23 +31,36 @@ const _REQUIRED_TYPE_KEYS: Array[String] = [
 const _VALID_PORT_KINDS: Array[String] = ["file", "money", "net"]
 const _VALID_PORT_DIRS: Array[String] = ["in", "out"]
 
-# Размер следа модуля по умолчанию (клетки), если тип не задал свой
 const DEFAULT_CELLS_W := 6
 const DEFAULT_CELLS_H := 3
-# Минимум: ширина под текст и порты; высота — хотя бы основная панель + полоса улучшения
 const MIN_CELLS_W := 3
 const MIN_CELLS_H := 2
 
-# Собирается из TYPES["ports"] при загрузке класса
+static var TYPES: Dictionary = {}
+static var ALLOWED_WIRES: Array[Array] = []
 static var PORT_DEFS: Dictionary = {}
 
 
 static func _static_init() -> void:
+	_register_modules()
 	_build_port_defs()
 	_validate_defs()
 
 
-# Вместимость диска за уровень — из GameBalanceConfig (без записи в const TYPES)
+static func _register_modules() -> void:
+	TYPES.clear()
+	ALLOWED_WIRES.clear()
+	for module_script: Variant in _MODULE_SCRIPTS:
+		var type_id: String = str(module_script.TYPE_ID)
+		if TYPES.has(type_id):
+			push_error("BlockDefs: дублирующий TYPE_ID «%s»." % type_id)
+			continue
+		TYPES[type_id] = module_script.build()
+		for pair: Variant in module_script.wire_pairs():
+			if pair is Array and (pair as Array).size() == 2:
+				ALLOWED_WIRES.append([str(pair[0]), str(pair[1])])
+
+
 static func sync_limits_from_balance() -> void:
 	pass
 
@@ -154,26 +69,26 @@ static func get_block_color(type_id: String) -> Color:
 	return TYPES.get(type_id, {}).get("color", Color(0.0, 0.88, 1.0, 1.0))
 
 
-## Ширина следа модуля в клетках (своя у каждого типа; иначе значение по умолчанию).
 static func cells_w(type_id: String) -> int:
 	return int(TYPES.get(type_id, {}).get("cells_w", DEFAULT_CELLS_W))
 
 
-## Высота следа модуля в клетках.
 static func cells_h(type_id: String) -> int:
 	return int(TYPES.get(type_id, {}).get("cells_h", DEFAULT_CELLS_H))
 
 
-## Размер следа модуля в клетках (ширина, высота).
 static func cells_size(type_id: String) -> Vector2i:
 	return Vector2i(cells_w(type_id), cells_h(type_id))
 
 
 static func starter_kit_types() -> Array[String]:
-	return ["network", "text_downloader", "storage", "uploader", "collector"]
+	var ids: Array[String] = []
+	for module_script: Variant in _MODULE_SCRIPTS:
+		if module_script.in_starter_kit():
+			ids.append(str(module_script.TYPE_ID))
+	return ids
 
 
-## Модуль-загрузчик привязан к типу файла (`file_type_id` в TYPES).
 static func is_downloader_type(type_id: String) -> bool:
 	return TYPES.get(type_id, {}).has("file_type_id")
 
@@ -198,22 +113,18 @@ static func starter_kit_cost() -> int:
 	return total
 
 
-# Модуль доступен в магазине $ без открытия в ◆
 static func is_unlocked_at_start(type_id: String) -> bool:
 	return bool(TYPES.get(type_id, {}).get("unlocked_at_start", false))
 
 
-# Цена открытия типа в магазине улучшений (0 — уже открыт или не продаётся в ◆)
 static func diamond_unlock_cost(type_id: String) -> int:
 	return int(TYPES.get(type_id, {}).get("diamond_unlock_cost", 0))
 
 
-# Нужно сначала открыть за алмазы, потом покупать за $
 static func requires_diamond_unlock(type_id: String) -> bool:
 	return not is_unlocked_at_start(type_id) and diamond_unlock_cost(type_id) > 0
 
 
-# Типы для вкладки «Новые модули» в магазине ◆ (ещё не открыты игроком)
 static func get_diamond_lockable_type_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for type_id in TYPES:
@@ -223,7 +134,6 @@ static func get_diamond_lockable_type_ids() -> Array[String]:
 	return ids
 
 
-# Проверяет, разрешено ли соединение указанных портов между типами блоков
 static func is_allowed_wire(
 	from_type: String, from_port: String, to_type: String, to_port: String
 ) -> bool:
@@ -233,7 +143,6 @@ static func is_allowed_wire(
 	return resolved["from_port"] == from_port and resolved["to_port"] == to_port
 
 
-# Пара портов out→in для пары типов; при нескольких out выбирается совпадение kind с входом.
 static func resolve_wire_ports(from_type: String, to_type: String) -> Dictionary:
 	if not _is_allowed_type_pair(from_type, to_type):
 		return {}

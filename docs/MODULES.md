@@ -8,27 +8,14 @@
 
 ## Шаги в коде
 
-1. Добавить тип в `BlockDefs.TYPES`:
-   - `unlocked_at_start: false`
-   - `diamond_unlock_cost: <цена в ◆>`
-   - `shop_cost`, порты, `ALLOWED_WIRES`, баланс как у соседних модулей.
-   - `cells_w` / `cells_h` — размер следа модуля в клетках (необязательно; по умолчанию `BlockDefs.DEFAULT_CELLS_W`×`DEFAULT_CELLS_H`, минимум `MIN_CELLS_W`×`MIN_CELLS_H`).
-2. Стартовый набор (`starter_kit_types`) не трогать — только модули с `unlocked_at_start: true`.
-3. При необходимости — метрики в `GameDisplayService` и автоматическое поведение в `GamePipelineService.tick` (модули работают сами, без кнопок действия; `run_block_action` оставлен для возможных будущих ручных действий).
+1. Создать файл `scripts/core/defs/modules/<type_id>_module.gd` по образцу соседних модулей:
+   - `TYPE_ID`, `build()` — поля модуля (`shop_cost`, порты, `cells_w` / `cells_h`…)
+   - `wire_pairs()` — исходящие соединения `[["from_type", "to_type"], …]`
+   - `in_starter_kit()` — `true`, если тип в базовом наборе
+   - для загрузчиков — `file_type_id` (см. `FileDefs`)
+2. Добавить preload в `_MODULE_SCRIPTS` в `block_defs.gd`.
+3. При необходимости — метрики в `GameDisplayService` и поведение в `GamePipelineService`.
 
-Пример полей:
+Пример нового модуля — `scripts/core/defs/modules/text_downloader_module.gd`.
 
-```gdscript
-"vpn_gateway": {
-    "name": "VPN-шлюз",
-    "icon": "🔒",
-    "unlocked_at_start": false,
-    "diamond_unlock_cost": 12,
-    "shop_cost": 95,
-    "cells_w": 6,
-    "cells_h": 4,
-    # ... ports, upgrade_base, ...
-},
-```
-
-После этого тип появится в разделе **«Новые модули»** магазина ◆ и, после открытия, в магазине модулей за $.
+Для модулей с `unlocked_at_start: false` укажите `diamond_unlock_cost` и `in_starter_kit() -> false`.

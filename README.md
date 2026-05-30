@@ -106,7 +106,8 @@ scripts/autoload/platform_info.gd   # платформа, тач, DPI (autoload)
 scripts/autoload/game_state.gd      # фасад состояния (autoload)
 scripts/core/game/                  # сервисы и модели
 resources/game_balance.tres       # лимиты геймплея (очереди, генерация, экономика)
-scripts/core/defs/block_defs.gd     # типы блоков и порты
+scripts/core/defs/block_defs.gd     # реестр типов блоков
+scripts/core/defs/modules/          # описание каждого модуля (отдельный файл)
 scripts/systems/field/              # карта, камера, установка
 scripts/systems/blocks/             # PlacedBlock, порты
 scripts/systems/ui/                 # HUD и магазин
