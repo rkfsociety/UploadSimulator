@@ -1,6 +1,6 @@
 extends Node2D
 class_name WireBatchRenderer
-## Массовая отрисовка проводов через RenderingServer (статичные линии без импульса).
+## Массовая отрисовка проводов через RenderingServer (ортогональные линии).
 
 const BASE_WIDTH := 2.0
 
@@ -55,33 +55,47 @@ func _draw_batch() -> void:
 
 
 func _draw_segment(seg: Dictionary) -> void:
-	var from: Vector2 = seg.get("from", Vector2.ZERO)
-	var to: Vector2 = seg.get("to", Vector2.ZERO)
-	if not _segment_intersects_view(from, to):
+	var path: PackedVector2Array = _segment_path(seg)
+	if path.size() < 2:
+		return
+	if not _path_intersects_view(path):
 		return
 	var color: Color = seg.get("color", Color.WHITE)
 	var dim := Color(color.r, color.g, color.b, 0.32)
-	RenderingServer.canvas_item_add_line(_canvas_rid, from, to, dim, BASE_WIDTH, true)
+	_draw_polyline(path, dim)
 
 
 func _draw_pending() -> void:
-	var from: Vector2 = _pending.get("from", Vector2.ZERO)
-	var to: Vector2 = _pending.get("to", Vector2.ZERO)
-	if not _segment_intersects_view(from, to):
+	var path: PackedVector2Array = _segment_path(_pending)
+	if path.size() < 2:
+		return
+	if not _path_intersects_view(path):
 		return
 	var color: Color = _pending.get("color", Color.WHITE)
 	var dim := Color(color.r, color.g, color.b, 0.22)
-	RenderingServer.canvas_item_add_line(_canvas_rid, from, to, dim, BASE_WIDTH, true)
+	_draw_polyline(path, dim)
 
 
-func _segment_intersects_view(from: Vector2, to: Vector2) -> bool:
+func _segment_path(seg: Dictionary) -> PackedVector2Array:
+	var path: Variant = seg.get("path", null)
+	if path is PackedVector2Array and (path as PackedVector2Array).size() >= 2:
+		return path as PackedVector2Array
+	var from: Vector2 = seg.get("from", Vector2.ZERO)
+	var to: Vector2 = seg.get("to", Vector2.ZERO)
+	return PackedVector2Array([from, to])
+
+
+func _draw_polyline(points: PackedVector2Array, color: Color) -> void:
+	for i in range(points.size() - 1):
+		RenderingServer.canvas_item_add_line(
+			_canvas_rid, points[i], points[i + 1], color, BASE_WIDTH, true
+		)
+
+
+func _path_intersects_view(path: PackedVector2Array) -> bool:
 	if _visible_rect.size.x <= 0.0 or _visible_rect.size.y <= 0.0:
 		return true
-	var seg_rect := Rect2(from, to - from)
-	if seg_rect.size.x < 0.0:
-		seg_rect.position.x += seg_rect.size.x
-		seg_rect.size.x = -seg_rect.size.x
-	if seg_rect.size.y < 0.0:
-		seg_rect.position.y += seg_rect.size.y
-		seg_rect.size.y = -seg_rect.size.y
-	return _visible_rect.intersects(seg_rect)
+	var bounds := WireRouteUtils.path_bounds(path)
+	var pad := 12.0
+	bounds = bounds.grow(pad)
+	return _visible_rect.intersects(bounds)

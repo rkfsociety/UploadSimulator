@@ -103,15 +103,15 @@ func _redraw_wires() -> void:
 		var to_port := _find_port(link.to_uid, link.to_port)
 		if from_port == null or to_port == null:
 			continue
+		var from_pos := _port_center_local(from_port)
+		var to_pos := _port_center_local(to_port)
+		var path := WireRouteUtils.build_path(
+			from_pos, to_pos, from_port.direction, to_port.direction
+		)
 		var line := Line2D.new()
 		line.width = 3.0
 		line.default_color = _wire_color(link)
-		line.points = PackedVector2Array(
-			[
-				_port_center_local(from_port),
-				_port_center_local(to_port),
-			]
-		)
+		line.points = path
 		line.antialiased = true
 		wires_root.add_child(line)
 		_line_nodes.append(line)

@@ -66,12 +66,10 @@ func _draw_token(
 	progress: float,
 	file_type_id: String,
 ) -> void:
-	var endpoints := _find_endpoints(from_uid, from_port, to_uid, to_port)
+	var endpoints := _find_path(from_uid, from_port, to_uid, to_port)
 	if endpoints.is_empty():
 		return
-	var from: Vector2 = endpoints[0]
-	var to: Vector2 = endpoints[1]
-	var pos := from.lerp(to, clampf(progress, 0.0, 1.0))
+	var pos := WireRouteUtils.sample_path(endpoints, clampf(progress, 0.0, 1.0))
 	var fill := MinimalUI.WIRE_FILE
 	fill.a = 0.95
 	draw_circle(pos, TOKEN_RADIUS, fill)
@@ -91,7 +89,7 @@ func _draw_token(
 	)
 
 
-func _find_endpoints(
+func _find_path(
 	from_uid: String,
 	from_port: String,
 	to_uid: String,
@@ -104,5 +102,8 @@ func _find_endpoints(
 		var wire: WireLink = link
 		if not wire.matches(from_uid, from_port, to_uid, to_port):
 			continue
+		var path: Variant = seg.get("path", null)
+		if path is PackedVector2Array and (path as PackedVector2Array).size() >= 2:
+			return path as PackedVector2Array
 		return PackedVector2Array([seg.get("from", Vector2.ZERO), seg.get("to", Vector2.ZERO)])
 	return PackedVector2Array()

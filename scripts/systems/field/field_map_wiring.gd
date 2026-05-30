@@ -72,6 +72,12 @@ func update_positions() -> void:
 			continue
 		seg["from"] = PortUtils.port_center_in_local(from_p, _wires_root)
 		seg["to"] = PortUtils.port_center_in_local(to_p, _wires_root)
+		seg["path"] = WireRouteUtils.build_path(
+			seg["from"],
+			seg["to"],
+			from_p.direction,
+			to_p.direction,
+		)
 	_renderer.set_segments(_segments)
 	_token_layer.set_segments(_segments)
 	_update_pending_wire()
@@ -120,5 +126,11 @@ func _update_pending_wire() -> void:
 	var to_pos := _wires_root.get_global_transform().affine_inverse() * global_pos
 	_pending_segment["from"] = from_pos
 	_pending_segment["to"] = to_pos
+	_pending_segment["path"] = WireRouteUtils.build_path(
+		from_pos,
+		to_pos,
+		_pending_out.direction,
+		ConnectionPort.Dir.IN,
+	)
 	_pending_segment["color"] = PortUtils.wire_color_for_port(_pending_out)
 	_renderer.set_pending(_pending_segment)
