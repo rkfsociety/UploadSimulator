@@ -98,21 +98,15 @@ static func is_axis_aligned(points: PackedVector2Array) -> bool:
 
 
 static func _exit_from_port(center: Vector2, port_dir: ConnectionPort.Dir, stub: float) -> Vector2:
-	# Провод выходит из модуля перпендикулярно краю модуля, где находится порт.
-	# Используем большое смещение чтобы выйти за пределы зоны портов (48x48).
-	var margin := maxf(stub, PORT_ZONE_MARGIN * 0.5)
 	if port_dir == ConnectionPort.Dir.OUT:
-		return center + Vector2(margin, 0.0)  # OUT на справа, выходим вправо
-	return center + Vector2(-margin, 0.0)  # IN на слева, выходим влево
+		return center + Vector2(stub, 0.0)
+	return center + Vector2(-stub, 0.0)
 
 
 static func _approach_to_port(center: Vector2, port_dir: ConnectionPort.Dir, stub: float) -> Vector2:
-	# Провод входит в модуль со стороны, где находится целевой порт.
-	# Используем большое смещение чтобы подойти от края модуля, а не от центра портаю.
-	var margin := maxf(stub, PORT_ZONE_MARGIN * 0.5)
 	if port_dir == ConnectionPort.Dir.IN:
-		return center + Vector2(-margin, 0.0)  # IN на слева, подходим слева
-	return center + Vector2(margin, 0.0)  # OUT на справа, подходим справа
+		return center + Vector2(-stub, 0.0)
+	return center + Vector2(stub, 0.0)
 
 
 static func _connect_orthogonal(a: Vector2, b: Vector2) -> Array[Vector2]:

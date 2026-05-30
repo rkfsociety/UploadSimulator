@@ -100,6 +100,7 @@ theme_override_constants/separation = 4
 [node name="LeftPorts" type="HBoxContainer" parent="RootVBox/MainPanel/PortsRow"]
 unique_name_in_owner = true
 layout_mode = 2
+offset_left = -24
 theme_override_constants/separation = 2
 
 [node name="PortSpacer" type="Control" parent="RootVBox/MainPanel/PortsRow"]
@@ -110,6 +111,7 @@ mouse_filter = 2
 [node name="RightPorts" type="HBoxContainer" parent="RootVBox/MainPanel/PortsRow"]
 unique_name_in_owner = true
 layout_mode = 2
+offset_right = 24
 theme_override_constants/separation = 2
 
 [node name="UpgradePanel" type="Control" parent="RootVBox"]
