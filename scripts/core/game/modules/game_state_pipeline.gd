@@ -83,3 +83,11 @@ func apply_publish(job: FileTransferJob) -> void:
 
 func finish_publish_pause() -> void:
 	_svc.finish_publish_pause()
+
+
+func network_download_speed(network_uid: String) -> float:
+	return _svc.network_download_speed(network_uid)
+
+
+func network_upload_speed(network_uid: String) -> float:
+	return _svc.network_upload_speed(network_uid)
