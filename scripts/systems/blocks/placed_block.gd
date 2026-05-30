@@ -7,6 +7,7 @@ signal action_requested(block: PlacedBlock)
 
 const SCENE_PATH := "res://scenes/blocks/placed_block.tscn"
 const THEME_PATH := "res://themes/placed_block_theme.tres"
+const NetworkBlockPanelType = preload("res://scripts/systems/blocks/network_block_panel.gd")
 
 static var _scene_cache: PackedScene
 static var _theme_cache: Theme
@@ -18,7 +19,7 @@ var block_type: String = ""
 @onready var _upgrade_panel: NeonFrame = %UpgradePanel
 @onready var _title_label: Label = %TitleLabel
 @onready var _metric_label: Label = %MetricLabel
-@onready var _network_panel: NetworkBlockPanel = %NetworkPanel
+@onready var _network_panel: NetworkBlockPanelType = %NetworkPanel
 @onready var _progress_bar: ProgressBar = %ProgressBar
 @onready var _action_btn: Button = %ActionButton
 @onready var _upgrade_btn: Button = %UpgradeButton

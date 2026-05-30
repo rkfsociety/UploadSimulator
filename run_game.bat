@@ -20,6 +20,18 @@ if not exist "%GODOT_EXE%" (
 echo Project: %PROJECT_DIR%
 echo Godot:   %GODOT_EXE%
 echo.
+
+if not exist "%PROJECT_DIR%\.godot" (
+	echo Первый запуск: импорт проекта...
+	"%GODOT_EXE%" --headless --path "%PROJECT_DIR%" --import
+	if errorlevel 1 (
+		echo ERROR: import failed.
+		pause
+		exit /b 1
+	)
+	echo.
+)
+
 echo Запуск Upload Simulator...
 "%GODOT_EXE%" --path "%PROJECT_DIR%"
 set "EXIT_CODE=%ERRORLEVEL%"

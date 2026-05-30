@@ -2,11 +2,13 @@ extends RefCounted
 class_name PlacedBlockView
 ## Представление: применяет PlacedBlockViewData к узлам сцены.
 
+const NetworkBlockPanelType = preload("res://scripts/systems/blocks/network_block_panel.gd")
+
 var _main_panel: NeonFrame
 var _upgrade_panel: NeonFrame
 var _title_label: Label
 var _metric_label: Label
-var _network_panel: NetworkBlockPanel
+var _network_panel: NetworkBlockPanelType
 var _progress_bar: ProgressBar
 var _action_btn: Button
 var _upgrade_btn: Button
@@ -17,7 +19,7 @@ func _init(
 	upgrade_panel: NeonFrame,
 	title_label: Label,
 	metric_label: Label,
-	network_panel: NetworkBlockPanel,
+	network_panel: NetworkBlockPanelType,
 	progress_bar: ProgressBar,
 	action_btn: Button,
 	upgrade_btn: Button,
