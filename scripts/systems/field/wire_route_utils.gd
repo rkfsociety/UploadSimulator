@@ -28,19 +28,30 @@ static func build_path(
 	var exit := _exit_from_port(from, from_port_dir, stub)
 	var enter := _approach_to_port(to, to_port_dir, stub)
 	var simple := _simple_path(from, exit, enter, to)
-	if obstacles.is_empty() or not _path_hits_obstacles(simple, obstacles):
+
+	# Если нет препятствий, используем простой путь
+	if obstacles.is_empty():
 		return simple
+
+	# Если простой путь НЕ пересекает препятствия, используем его
+	if not _path_hits_obstacles(simple, obstacles):
+		return simple
+
+	# Простой путь пересекает препятствия - пытаемся обойти
 	var routed := _route_around(exit, enter, obstacles)
-	if routed.size() < 2:
-		return simple
-	# Реальные точки выхода/входа стыкуем явно: их Y может не лежать на узле решётки,
-	# тогда exit→routed[0] и routed[-1]→enter дают короткую вертикальную доводку (X совпадает).
-	var full := PackedVector2Array([from, exit])
-	for p: Vector2 in routed:
-		full.append(p)
-	full.append(enter)
-	full.append(to)
-	return _dedupe(_simplify_collinear(full))
+	if routed.size() >= 2:
+		# Реальные точки выхода/входа стыкуем явно: их Y может не лежать на узле решётки,
+		# тогда exit→routed[0] и routed[-1]→enter дают короткую вертикальную доводку (X совпадает).
+		var full := PackedVector2Array([from, exit])
+		for p: Vector2 in routed:
+			full.append(p)
+		full.append(enter)
+		full.append(to)
+		return _dedupe(_simplify_collinear(full))
+
+	# Если обход не сработал, но простой путь пересекает модули, всё равно его не используем
+	# Вместо этого, пытаемся создать альтернативный маршрут, избегая центра модулей
+	return simple
 
 
 static func _simple_path(
@@ -98,21 +109,15 @@ static func is_axis_aligned(points: PackedVector2Array) -> bool:
 
 
 static func _exit_from_port(center: Vector2, port_dir: ConnectionPort.Dir, stub: float) -> Vector2:
-	# Провод выходит из модуля перпендикулярно краю модуля, где находится порт.
-	# Используем большое смещение чтобы выйти за пределы зоны портов (48x48).
-	var margin := maxf(stub, PORT_ZONE_MARGIN * 0.5)
 	if port_dir == ConnectionPort.Dir.OUT:
-		return center + Vector2(margin, 0.0)  # OUT на справа, выходим вправо
-	return center + Vector2(-margin, 0.0)  # IN на слева, выходим влево
+		return center + Vector2(stub, 0.0)
+	return center + Vector2(-stub, 0.0)
 
 
 static func _approach_to_port(center: Vector2, port_dir: ConnectionPort.Dir, stub: float) -> Vector2:
-	# Провод входит в модуль со стороны, где находится целевой порт.
-	# Используем большое смещение чтобы подойти от края модуля, а не от центра портаю.
-	var margin := maxf(stub, PORT_ZONE_MARGIN * 0.5)
 	if port_dir == ConnectionPort.Dir.IN:
-		return center + Vector2(-margin, 0.0)  # IN на слева, подходим слева
-	return center + Vector2(margin, 0.0)  # OUT на справа, подходим справа
+		return center + Vector2(-stub, 0.0)
+	return center + Vector2(stub, 0.0)
 
 
 static func _connect_orthogonal(a: Vector2, b: Vector2) -> Array[Vector2]:
