@@ -1,7 +1,7 @@
 extends RefCounted
 ## Unit-тесты схемы блоков и разрешённых соединений.
 
-var case_count := 8
+var case_count := 9
 
 
 func run() -> Array[String]:
@@ -18,6 +18,8 @@ func run() -> Array[String]:
 		errors.append("uploader не хранит файлы")
 	if BlockDefs.is_upgradeable("text_downloader"):
 		errors.append("text_downloader не должен улучшаться")
+	if BlockDefs.is_upgradeable("collector"):
+		errors.append("collector не должен улучшаться")
 	if not BlockDefs.is_allowed_wire("network", "net_out", "text_downloader", "net_in"):
 		errors.append("network→text_downloader (канал) должно быть разрешено")
 	if not BlockDefs.is_allowed_wire("text_downloader", "file_out", "uploader", "file_in"):

@@ -15,9 +15,9 @@ static func build() -> Dictionary:
 		"unlocked_at_start": true,
 		"diamond_unlock_cost": 0,
 		"shop_cost": 65,
-		"upgrade_base": 30,
-		"upgrade_mult": 1.4,
-		"effect_per_level": 0.05,
+		"upgradable": false,
+		"upgrade_base": 0,
+		"upgrade_mult": 1.0,
 		"ports": {"money_in": {"kind": "money", "dir": "in"}},
 	}
 

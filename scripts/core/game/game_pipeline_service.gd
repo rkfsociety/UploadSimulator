@@ -176,9 +176,7 @@ func collect_money(collector_uid: String) -> GameOperationResult:
 	var chain := _wiring.get_money_chain()
 	var uploader_uid: String = str(chain.get("from_uid", ""))
 	var safe: float = _data.get_uploader_balance()
-	var inst := _field.get_instance(collector_uid)
-	var bonus: float = GameBonus.effect_at_level("collector", inst.level)
-	var payout: float = safe * (1.0 + bonus)
+	var payout: float = safe
 	_data.set_uploader_balance(0.0)
 	_data.add_money(payout)
 	var uploader_name: String = BlockDefs.TYPES.get(_field.get_instance_type(uploader_uid), {}).get(

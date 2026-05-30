@@ -53,10 +53,7 @@ func get_block_metric(uid: String) -> String:
 						ByteFormat.format_speed_bps(_pipeline.upload_speed_for(uid)),
 					]
 				"collector":
-					return (
-						"Бонус к сбору: +%.0f%%"
-						% (GameBonus.effect_at_level("collector", lvl) * 100.0)
-					)
+					return "Переводит сейф загрузчика в кассу"
 	return ""
 
 
@@ -246,10 +243,4 @@ func _fill_collector_display(target: Dictionary, uid: String, chain_money: Dicti
 	if safe < GameConstants.MIN_COLLECT_BALANCE:
 		target["status"] = "Переводит деньги загрузчика в кассу автоматически"
 		return
-	var inst := _field.get_instance(uid)
-	var bonus: float = GameBonus.effect_at_level("collector", inst.level)
-	var payout: float = safe * (1.0 + bonus)
-	if bonus > 0.0:
-		target["status"] = "Забирает $%.0f → касса (+%.0f%%)" % [payout, bonus * 100.0]
-	else:
-		target["status"] = "Забирает $%.0f → касса" % payout
+	target["status"] = "Забирает $%.0f → касса" % safe
