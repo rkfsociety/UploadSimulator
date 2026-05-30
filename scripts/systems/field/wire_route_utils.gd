@@ -25,6 +25,8 @@ static func build_path(
 	obstacles: Array[Rect2] = [],
 ) -> PackedVector2Array:
 	var stub := float(GridDefs.CELL_SIZE) * STUB_CELLS
+	# Провода выходят из центра модуля как перекрестие,
+	# не из портов. Портов используются только для подключения сигналов.
 	var exit := _exit_from_port(from, from_port_dir, stub)
 	var enter := _approach_to_port(to, to_port_dir, stub)
 	var simple := _simple_path(from, exit, enter, to)
