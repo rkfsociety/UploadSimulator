@@ -110,7 +110,7 @@ scripts/core/game/                  # сервисы и модели
 resources/game_balance.tres       # лимиты геймплея (очереди, генерация, экономика)
 scripts/core/defs/block_defs.gd     # реестр типов блоков
 scripts/core/defs/modules/          # описание каждого модуля (отдельный файл)
-scripts/systems/field/              # карта, камера, установка
+scripts/systems/field/              # карта, камера, установка, провода (FieldMapWiring)
 scripts/systems/blocks/             # PlacedBlock, порты
 scripts/systems/ui/                 # HUD и магазин
 scripts/debug/debug_overlay.gd      # отладка (F3)

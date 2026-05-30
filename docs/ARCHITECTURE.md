@@ -13,9 +13,8 @@ scripts/
     game/            # состояние, сервисы, модели (RefCounted)
       modules/       # фасады API для autoload GameState
   systems/
-    field/           # карта, камера, установка, провода на поле
+    field/           # карта, камера, установка, провода на поле (FieldMapWiring)
     blocks/          # PlacedBlock, порты, тема модуля
-    wiring/          # отрисовка проводов (UI)
     ui/              # HUD, магазин, MinimalUI
     visual/          # фон, сетка, неоновые рамки
   debug/             # отладочный оверлей (F3)
