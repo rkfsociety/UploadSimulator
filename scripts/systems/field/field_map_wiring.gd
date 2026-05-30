@@ -61,6 +61,7 @@ func refresh_tokens() -> void:
 
 
 func update_positions() -> void:
+	var obstacles := _gather_obstacle_rects()
 	for seg: Dictionary in _segments:
 		var link: Variant = seg.get("link", null)
 		if link is not WireLink:
@@ -77,6 +78,7 @@ func update_positions() -> void:
 			seg["to"],
 			from_p.direction,
 			to_p.direction,
+			_obstacles_except(obstacles, [wire.from_uid, wire.to_uid]),
 		)
 	_renderer.set_segments(_segments)
 	_token_layer.set_segments(_segments)
@@ -131,6 +133,32 @@ func _update_pending_wire() -> void:
 		to_pos,
 		_pending_out.direction,
 		ConnectionPort.Dir.IN,
+		_obstacles_except(_gather_obstacle_rects(), [_pending_out.instance_uid]),
 	)
 	_pending_segment["color"] = PortUtils.wire_color_for_port(_pending_out)
 	_renderer.set_pending(_pending_segment)
+
+
+## Прямоугольники всех модулей в координатах _wires_root (= мировые пиксели сетки).
+func _gather_obstacle_rects() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for inst: BlockInstance in GameState.access.get_placed_blocks():
+		out.append(
+			{
+				"uid": inst.uid,
+				"rect": Rect2(
+					GridDefs.cell_to_pixel(inst.gx, inst.gy),
+					GridDefs.block_pixel_size(inst.type_id),
+				),
+			}
+		)
+	return out
+
+
+func _obstacles_except(rects: Array[Dictionary], skip_uids: Array) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	for entry: Dictionary in rects:
+		if str(entry["uid"]) in skip_uids:
+			continue
+		out.append(entry["rect"])
+	return out

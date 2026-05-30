@@ -1,6 +1,6 @@
 extends RefCounted
 
-var case_count := 3
+var case_count := 5
 
 
 func run() -> Array[String]:
@@ -8,6 +8,8 @@ func run() -> Array[String]:
 	_test_same_row_is_horizontal(errors)
 	_test_axis_aligned(errors)
 	_test_sample_endpoints(errors)
+	_test_avoids_obstacle(errors)
+	_test_no_obstacles_keeps_simple(errors)
 	return errors
 
 
@@ -38,6 +40,41 @@ func _test_axis_aligned(errors: Array[String]) -> void:
 	)
 	if not WireRouteUtils.is_axis_aligned(path):
 		errors.append("wire route: все сегменты должны быть H/V")
+
+
+func _test_avoids_obstacle(errors: Array[String]) -> void:
+	# Модуль ровно на прямой между портами — путь должен его обогнуть.
+	var obstacle := Rect2(Vector2(220, 32), Vector2(192, 192))
+	var path := WireRouteUtils.build_path(
+		Vector2(160, 128),
+		Vector2(480, 128),
+		ConnectionPort.Dir.OUT,
+		ConnectionPort.Dir.IN,
+		[obstacle] as Array[Rect2],
+	)
+	if not WireRouteUtils.is_axis_aligned(path):
+		errors.append("wire route: обход должен оставаться ортогональным (H/V)")
+	var inner := obstacle.grow(-2.0)
+	for i in range(path.size() - 1):
+		if WireRouteUtils._seg_hits_rect(path[i], path[i + 1], inner):
+			errors.append("wire route: путь не должен проходить сквозь модуль")
+			break
+
+
+func _test_no_obstacles_keeps_simple(errors: Array[String]) -> void:
+	# Без препятствий результат совпадает с простым маршрутом (регрессия).
+	var bare := WireRouteUtils.build_path(
+		Vector2(0, 0), Vector2(256, 128), ConnectionPort.Dir.OUT, ConnectionPort.Dir.IN
+	)
+	var with_empty := WireRouteUtils.build_path(
+		Vector2(0, 0),
+		Vector2(256, 128),
+		ConnectionPort.Dir.OUT,
+		ConnectionPort.Dir.IN,
+		[] as Array[Rect2],
+	)
+	if bare != with_empty:
+		errors.append("wire route: пустой список препятствий не должен менять маршрут")
 
 
 func _test_sample_endpoints(errors: Array[String]) -> void:

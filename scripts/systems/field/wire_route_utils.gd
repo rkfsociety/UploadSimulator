@@ -5,16 +5,46 @@ class_name WireRouteUtils
 const STUB_CELLS := 0.5
 const SAME_ROW_EPS := 4.0
 
+# A* по решётке полуклетки (CELL_SIZE / 2): порты модулей всегда попадают на её узлы.
+const _DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+const _OBSTACLE_INSET := 1.0
+const _SEARCH_MARGIN_CELLS := 8
+const _MAX_GRID_CELLS := 4000
+const _MAX_EXPANSIONS := 6000
 
+
+## Трассировка провода. Если переданы `obstacles` (прямоугольники модулей в той же
+## системе координат, без модулей-концов), путь огибает их по решётке; иначе —
+## простой ортогональный маршрут (L/Z), как раньше.
 static func build_path(
 	from: Vector2,
 	to: Vector2,
 	from_port_dir: ConnectionPort.Dir,
 	to_port_dir: ConnectionPort.Dir,
+	obstacles: Array[Rect2] = [],
 ) -> PackedVector2Array:
 	var stub := float(GridDefs.CELL_SIZE) * STUB_CELLS
 	var exit := _exit_from_port(from, from_port_dir, stub)
 	var enter := _approach_to_port(to, to_port_dir, stub)
+	var simple := _simple_path(from, exit, enter, to)
+	if obstacles.is_empty() or not _path_hits_obstacles(simple, obstacles):
+		return simple
+	var routed := _route_around(exit, enter, obstacles)
+	if routed.size() < 2:
+		return simple
+	# Реальные точки выхода/входа стыкуем явно: их Y может не лежать на узле решётки,
+	# тогда exit→routed[0] и routed[-1]→enter дают короткую вертикальную доводку (X совпадает).
+	var full := PackedVector2Array([from, exit])
+	for p: Vector2 in routed:
+		full.append(p)
+	full.append(enter)
+	full.append(to)
+	return _dedupe(_simplify_collinear(full))
+
+
+static func _simple_path(
+	from: Vector2, exit: Vector2, enter: Vector2, to: Vector2
+) -> PackedVector2Array:
 	var inner := _connect_orthogonal(exit, enter)
 	var raw := PackedVector2Array([from, exit])
 	for p: Vector2 in inner:
@@ -93,6 +123,191 @@ static func _connect_orthogonal(a: Vector2, b: Vector2) -> Array[Vector2]:
 
 static func _snap_grid(v: float) -> float:
 	return roundf(v / float(GridDefs.CELL_SIZE)) * float(GridDefs.CELL_SIZE)
+
+
+## --- Обход препятствий ---
+
+
+static func _path_hits_obstacles(points: PackedVector2Array, obstacles: Array[Rect2]) -> bool:
+	for i in range(points.size() - 1):
+		for ob: Rect2 in obstacles:
+			if _seg_hits_rect(points[i], points[i + 1], ob.grow(-_OBSTACLE_INSET)):
+				return true
+	return false
+
+
+## A* по решётке полуклетки между точками выхода и входа (узлы попадают на сетку).
+static func _route_around(start: Vector2, goal: Vector2, obstacles: Array[Rect2]) -> PackedVector2Array:
+	var step := float(GridDefs.CELL_SIZE) * 0.5
+	var margin := step * float(_SEARCH_MARGIN_CELLS)
+	var region := Rect2(start.min(goal), (goal - start).abs())
+	for ob: Rect2 in obstacles:
+		if region.grow(margin).intersects(ob):
+			region = region.merge(ob)
+	region = region.grow(margin)
+	var origin := Vector2(
+		floorf(region.position.x / step) * step, floorf(region.position.y / step) * step
+	)
+	var nx := int(ceilf(region.size.x / step)) + 2
+	var ny := int(ceilf(region.size.y / step)) + 2
+	if nx <= 0 or ny <= 0 or nx * ny > _MAX_GRID_CELLS:
+		return PackedVector2Array()
+	var s := _to_cell(start, origin, step)
+	var g := _to_cell(goal, origin, step)
+	if _cell_blocked(s, origin, step, obstacles) or _cell_blocked(g, origin, step, obstacles):
+		return PackedVector2Array()
+	return _astar(s, g, origin, step, nx, ny, obstacles)
+
+
+static func _astar(
+	s: Vector2i,
+	g: Vector2i,
+	origin: Vector2,
+	step: float,
+	nx: int,
+	ny: int,
+	obstacles: Array[Rect2],
+) -> PackedVector2Array:
+	var turn_cost := step * 0.5
+	var start_key := _state_key(s, -1, nx)
+	var open: Dictionary = {start_key: true}
+	var g_score: Dictionary = {start_key: 0.0}
+	var f_score: Dictionary = {start_key: float(_manhattan(s, g)) * step}
+	var came: Dictionary = {}
+	var cell_of: Dictionary = {start_key: s}
+	var dir_of: Dictionary = {start_key: -1}
+	var expansions := 0
+	while not open.is_empty() and expansions < _MAX_EXPANSIONS:
+		expansions += 1
+		var cur_key := _pop_lowest(open, f_score)
+		var cur: Vector2i = cell_of[cur_key]
+		if cur == g:
+			return _reconstruct(came, cell_of, cur_key, origin, step)
+		var cur_dir: int = dir_of[cur_key]
+		var cur_g: float = g_score[cur_key]
+		for i in range(_DIRS.size()):
+			var nc: Vector2i = cur + _DIRS[i]
+			if nc.x < 0 or nc.y < 0 or nc.x >= nx or nc.y >= ny:
+				continue
+			if _cell_blocked(nc, origin, step, obstacles):
+				continue
+			if _edge_blocked(cur, nc, origin, step, obstacles):
+				continue
+			var turn := turn_cost if (cur_dir != -1 and cur_dir != i) else 0.0
+			var tentative := cur_g + step + turn
+			var nkey := _state_key(nc, i, nx)
+			if tentative < float(g_score.get(nkey, INF)):
+				came[nkey] = cur_key
+				cell_of[nkey] = nc
+				dir_of[nkey] = i
+				g_score[nkey] = tentative
+				f_score[nkey] = tentative + float(_manhattan(nc, g)) * step
+				open[nkey] = true
+	return PackedVector2Array()
+
+
+static func _reconstruct(
+	came: Dictionary, cell_of: Dictionary, goal_key: int, origin: Vector2, step: float
+) -> PackedVector2Array:
+	var cells: Array[Vector2i] = []
+	var key: int = goal_key
+	while true:
+		cells.append(cell_of[key])
+		if not came.has(key):
+			break
+		key = came[key]
+	cells.reverse()
+	var out := PackedVector2Array()
+	for c: Vector2i in cells:
+		out.append(_cell_pos(c, origin, step))
+	return out
+
+
+static func _pop_lowest(open: Dictionary, f_score: Dictionary) -> int:
+	var best_key: int = -1
+	var best_f := INF
+	for key: int in open:
+		var f: float = f_score.get(key, INF)
+		if f < best_f:
+			best_f = f
+			best_key = key
+	open.erase(best_key)
+	return best_key
+
+
+static func _state_key(cell: Vector2i, dir: int, nx: int) -> int:
+	return ((cell.y * nx) + cell.x) * 5 + (dir + 1)
+
+
+static func _manhattan(a: Vector2i, b: Vector2i) -> int:
+	return absi(a.x - b.x) + absi(a.y - b.y)
+
+
+static func _to_cell(p: Vector2, origin: Vector2, step: float) -> Vector2i:
+	return Vector2i(roundi((p.x - origin.x) / step), roundi((p.y - origin.y) / step))
+
+
+static func _cell_pos(c: Vector2i, origin: Vector2, step: float) -> Vector2:
+	return origin + Vector2(float(c.x) * step, float(c.y) * step)
+
+
+static func _cell_blocked(c: Vector2i, origin: Vector2, step: float, obstacles: Array[Rect2]) -> bool:
+	var p := _cell_pos(c, origin, step)
+	for ob: Rect2 in obstacles:
+		if ob.grow(-_OBSTACLE_INSET).has_point(p):
+			return true
+	return false
+
+
+static func _edge_blocked(
+	a: Vector2i, b: Vector2i, origin: Vector2, step: float, obstacles: Array[Rect2]
+) -> bool:
+	var mid := (_cell_pos(a, origin, step) + _cell_pos(b, origin, step)) * 0.5
+	for ob: Rect2 in obstacles:
+		if ob.grow(-_OBSTACLE_INSET).has_point(mid):
+			return true
+	return false
+
+
+## Пересечение отрезка с прямоугольником (Лианг–Барски): true, если отрезок заходит внутрь.
+static func _seg_hits_rect(a: Vector2, b: Vector2, r: Rect2) -> bool:
+	if r.size.x <= 0.0 or r.size.y <= 0.0:
+		return false
+	var d := b - a
+	var t0 := 0.0
+	var t1 := 1.0
+	var p := [-d.x, d.x, -d.y, d.y]
+	var q := [a.x - r.position.x, r.position.x + r.size.x - a.x, a.y - r.position.y, r.position.y + r.size.y - a.y]
+	for i in range(4):
+		if is_zero_approx(p[i]):
+			if q[i] < 0.0:
+				return false
+			continue
+		var t: float = q[i] / p[i]
+		if p[i] < 0.0:
+			t0 = maxf(t0, t)
+		else:
+			t1 = minf(t1, t)
+		if t0 > t1:
+			return false
+	return true
+
+
+static func _simplify_collinear(points: PackedVector2Array) -> PackedVector2Array:
+	if points.size() < 3:
+		return points
+	var out := PackedVector2Array([points[0]])
+	for i in range(1, points.size() - 1):
+		var prev := out[out.size() - 1]
+		var cur := points[i]
+		var nxt := points[i + 1]
+		var collinear_x := is_zero_approx(prev.x - cur.x) and is_zero_approx(cur.x - nxt.x)
+		var collinear_y := is_zero_approx(prev.y - cur.y) and is_zero_approx(cur.y - nxt.y)
+		if collinear_x or collinear_y:
+			continue
+		out.append(cur)
+	out.append(points[points.size() - 1])
+	return out
 
 
 static func _dedupe(points: PackedVector2Array) -> PackedVector2Array:
