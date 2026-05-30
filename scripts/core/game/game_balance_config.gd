@@ -12,9 +12,9 @@ class_name GameBalanceConfig
 
 @export_group("Скорости передачи")
 ## Базовая скорость скачивания на 1-м уровне модуля «Сеть» (байт/с).
-@export var base_download_speed_bps: float = 100.0
+@export var base_download_speed_bps: float = 8.0
 ## Базовая скорость выгрузки на 1-м уровне модуля «Сеть» (байт/с).
-@export var base_upload_speed_bps: float = 100.0
+@export var base_upload_speed_bps: float = 8.0
 ## Устаревшая «скорость» в условных МБ/с — только для масштаба байт из старых сохранений.
 @export var legacy_speed_mbps: float = 3.5
 
