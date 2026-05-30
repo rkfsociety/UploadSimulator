@@ -117,14 +117,14 @@ func _notify_topology_changed() -> void:
 
 ## Полная цепочка: сеть→загрузчик→хранилище→аплоудер→сеть (один uid сети и хранилища).
 func get_file_chain() -> Dictionary:
-	var files_a := _find_wired_pair("downloader", "file_out", "storage", "file_in")
+	var files_a := _find_downloader_to_storage()
 	if files_a.is_empty():
 		return {}
 	var files_b := _find_wired_pair("storage", "file_out", "uploader", "file_in")
 	if files_b.is_empty() or files_b.get("from_uid", "") != files_a.get("to_uid", ""):
 		return {}
-	var net_dl := _find_wired_pair("network", "net_out", "downloader", "net_in")
-	if net_dl.is_empty():
+	var net_dl := _find_network_to_downloader()
+	if net_dl.is_empty() or net_dl.get("to_uid", "") != files_a.get("from_uid", ""):
 		return {}
 	var net_ul := _find_wired_pair("uploader", "net_out", "network", "net_in")
 	if net_ul.is_empty():
@@ -170,10 +170,34 @@ func _find_wired_pair(
 	return {}
 
 
+func _find_downloader_to_storage() -> Dictionary:
+	for link: WireLink in _data.get_wire_connections():
+		if link.from_port != "file_out" or link.to_port != "file_in":
+			continue
+		if not BlockDefs.is_downloader_type(_field.get_instance_type(link.from_uid)):
+			continue
+		if _field.get_instance_type(link.to_uid) != "storage":
+			continue
+		return {"from_uid": link.from_uid, "to_uid": link.to_uid}
+	return {}
+
+
+func _find_network_to_downloader() -> Dictionary:
+	for link: WireLink in _data.get_wire_connections():
+		if link.from_port != "net_out" or link.to_port != "net_in":
+			continue
+		if _field.get_instance_type(link.from_uid) != "network":
+			continue
+		if not BlockDefs.is_downloader_type(_field.get_instance_type(link.to_uid)):
+			continue
+		return {"from_uid": link.from_uid, "to_uid": link.to_uid}
+	return {}
+
+
 func _connection_error(from_type: String, to_type: String) -> String:
-	if from_type == "downloader" and to_type == "uploader":
+	if BlockDefs.is_downloader_type(from_type) and to_type == "uploader":
 		return "Нельзя напрямую: загрузчик → аплоудер. Нужно хранилище."
-	if from_type == "downloader" and to_type == "collector":
+	if BlockDefs.is_downloader_type(from_type) and to_type == "collector":
 		return "Нельзя: загрузчик → коллектор."
 	if from_type == "network" and to_type == "collector":
 		return "Нельзя: сеть → коллектор. Деньги идут через аплоудер."

@@ -190,11 +190,11 @@ func _wire_file_chain(stack: Dictionary) -> Dictionary:
 	var wiring: GameWiringService = stack.wiring
 	var data: GameStateData = stack.data
 	data.add_block_stock("network", 1)
-	data.add_block_stock("downloader", 1)
+	data.add_block_stock("text_downloader", 1)
 	data.add_block_stock("storage", 1)
 	data.add_block_stock("uploader", 1)
 	var n := field.place_block("network", 0, 0)
-	var d := field.place_block("downloader", 8, 0)
+	var d := field.place_block("text_downloader", 8, 0)
 	var s := field.place_block("storage", 20, 0)
 	var u := field.place_block("uploader", 32, 0)
 	if not n.is_ok() or not d.is_ok() or not s.is_ok() or not u.is_ok():

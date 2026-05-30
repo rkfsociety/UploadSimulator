@@ -23,12 +23,13 @@ const TYPES := {
 			"net_in": {"kind": "net", "dir": "in"},
 		},
 	},
-	"downloader":
+	"text_downloader":
 	{
-		"name": "Загрузчик",
-		"icon": "⬇",
+		"name": "Text Downloader",
+		"icon": "📄",
 		"color": Color(0.0, 0.88, 1.0, 1.0),
-		"desc": "Скачивает файлы из сети и передаёт на диск",
+		"desc": "Скачивает текстовые файлы из сети и передаёт на диск",
+		"file_type_id": "text",
 		"cells_w": 5,
 		"cells_h": 3,
 		"unlocked_at_start": true,
@@ -106,8 +107,8 @@ const TYPES := {
 
 # Разрешённые пары типов; обход хранилища невозможен на уровне типов.
 const ALLOWED_WIRES: Array[Array] = [
-	["network", "downloader"],
-	["downloader", "storage"],
+	["network", "text_downloader"],
+	["text_downloader", "storage"],
 	["storage", "uploader"],
 	["uploader", "network"],
 	["uploader", "collector"],
@@ -169,7 +170,25 @@ static func cells_size(type_id: String) -> Vector2i:
 
 
 static func starter_kit_types() -> Array[String]:
-	return ["network", "downloader", "storage", "uploader", "collector"]
+	return ["network", "text_downloader", "storage", "uploader", "collector"]
+
+
+## Модуль-загрузчик привязан к типу файла (`file_type_id` в TYPES).
+static func is_downloader_type(type_id: String) -> bool:
+	return TYPES.get(type_id, {}).has("file_type_id")
+
+
+static func get_downloader_file_type(type_id: String) -> String:
+	return str(TYPES.get(type_id, {}).get("file_type_id", ""))
+
+
+static func downloader_type_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for type_id in TYPES:
+		if is_downloader_type(type_id):
+			ids.append(type_id)
+	ids.sort()
+	return ids
 
 
 static func starter_kit_cost() -> int:
@@ -279,6 +298,12 @@ static func _validate_type(type_id: String, type_def: Dictionary) -> void:
 		push_error(
 			"BlockDefs: тип «%s» должен иметь effect_per_level или capacity_files_per_level." % type_id
 		)
+	if is_downloader_type(type_id):
+		var ft := get_downloader_file_type(type_id)
+		if ft == "" or not FileDefs.TYPES.has(ft):
+			push_error(
+				"BlockDefs: загрузчик «%s» ссылается на неизвестный file_type_id «%s»." % [type_id, ft]
+			)
 	if cells_w(type_id) < MIN_CELLS_W or cells_h(type_id) < MIN_CELLS_H:
 		push_error(
 			"BlockDefs: тип «%s» — размер %dx%d меньше минимума %dx%d клеток."

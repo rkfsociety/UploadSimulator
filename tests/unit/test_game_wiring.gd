@@ -12,7 +12,7 @@ func run() -> Array[String]:
 	var wiring := GameWiringService.new(data, host, field)
 	var uids := _place_modules(field, data)
 	var n_uid: String = uids.get("network", "")
-	var d_uid: String = uids.get("downloader", "")
+	var d_uid: String = uids.get("text_downloader", "")
 	var s_uid: String = uids.get("storage", "")
 	var u_uid: String = uids.get("uploader", "")
 	if n_uid == "" or d_uid == "" or s_uid == "" or u_uid == "":
@@ -37,7 +37,7 @@ func run() -> Array[String]:
 func _place_modules(field: GameFieldService, data: GameStateData) -> Dictionary:
 	var uids := {}
 	var gx := 0
-	for type_id in ["network", "downloader", "storage", "uploader"]:
+	for type_id in ["network", "text_downloader", "storage", "uploader"]:
 		data.add_block_stock(type_id, 1)
 		var place := field.place_block(type_id, gx, 0)
 		uids[type_id] = place.get_uid() if place.is_ok() else ""

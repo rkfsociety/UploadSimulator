@@ -21,8 +21,8 @@ func _test_block_instance(errors: Array[String]) -> void:
 	var restored := BlockInstance.from_dict(d)
 	if restored.uid != inst.uid or restored.type_id != inst.type_id:
 		errors.append("BlockInstance to_dict/from_dict")
-	var legacy := BlockInstance.from_legacy_dict({"uid": "x", "type": "downloader", "gx": 1, "gy": 0})
-	if legacy.type_id != "downloader":
+	var legacy := BlockInstance.from_legacy_dict({"uid": "x", "type": "text_downloader", "gx": 1, "gy": 0})
+	if legacy.type_id != "text_downloader":
 		errors.append("BlockInstance.from_legacy_dict type")
 
 

@@ -37,23 +37,29 @@ func get_block_metric(uid: String) -> String:
 			var dl := ByteFormat.format_speed_bps(_pipeline.network_download_speed(uid))
 			var ul := ByteFormat.format_speed_bps(_pipeline.network_upload_speed(uid))
 			return "↓ %s  ↑ %s" % [dl, ul]
-		"downloader":
-			return (
-				"Качество: +%.0f%%"
-				% (GameBonus.effect_at_level("downloader", lvl) * 100.0)
-			)
-		"storage":
-			return "Вместимость: %d файл." % int(_storage.storage_capacity_for(uid))
-		"uploader":
-			return (
-				"Скорость ↑: %s"
-				% ByteFormat.format_speed_bps(_pipeline.upload_speed_for(uid))
-			)
-		"collector":
-			return (
-				"Бонус к сбору: +%.0f%%"
-				% (GameBonus.effect_at_level("collector", lvl) * 100.0)
-			)
+		_:
+			if BlockDefs.is_downloader_type(inst.type_id):
+				var ft := FileDefs.get_type_label(BlockDefs.get_downloader_file_type(inst.type_id))
+				return (
+					"%s · качество +%.0f%%"
+					% [
+						ft,
+						GameBonus.effect_at_level(inst.type_id, lvl) * 100.0,
+					]
+				)
+			match inst.type_id:
+				"storage":
+					return "Вместимость: %d файл." % int(_storage.storage_capacity_for(uid))
+				"uploader":
+					return (
+						"Скорость ↑: %s"
+						% ByteFormat.format_speed_bps(_pipeline.upload_speed_for(uid))
+					)
+				"collector":
+					return (
+						"Бонус к сбору: +%.0f%%"
+						% (GameBonus.effect_at_level("collector", lvl) * 100.0)
+					)
 	return ""
 
 
@@ -95,14 +101,15 @@ func get_block_display(uid: String) -> Dictionary:
 	match inst.type_id:
 		"network":
 			_fill_network_display(empty, uid, chain_file)
-		"downloader":
-			_fill_downloader_display(empty, uid, chain_file)
 		"storage":
 			_fill_storage_display(empty)
 		"uploader":
 			_fill_uploader_display(empty, uid, chain_file)
 		"collector":
 			_fill_collector_display(empty, uid, chain_money)
+		_:
+			if BlockDefs.is_downloader_type(inst.type_id):
+				_fill_downloader_display(empty, uid, chain_file)
 	return empty
 
 
@@ -134,7 +141,8 @@ func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dicti
 		)
 		target["progress"] = job.progress
 	elif _pipeline.can_download_at(uid):
-		target["status"] = "Качает автоматически из сети"
+		var ft := FileDefs.get_type_label(BlockDefs.get_downloader_file_type(_field.get_instance_type(uid)))
+		target["status"] = "Качает %s автоматически" % ft
 	else:
 		target["status"] = _downloader_idle_hint(chain_file)
 

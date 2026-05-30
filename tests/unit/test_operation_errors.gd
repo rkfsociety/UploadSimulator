@@ -25,7 +25,7 @@ func _test_buy_no_money(
 ) -> void:
 	# Свежая GameStateData стартует с кассой = стоимость набора ($315) — обнуляем для теста
 	data.set_money(0.0)
-	var check := field.check_buy_block("downloader")
+	var check := field.check_buy_block("text_downloader")
 	if check.is_ok():
 		errors.append("покупка без денег должна падать")
 	elif check.code != GameOperationResult.Code.FIELD_INSUFFICIENT_MONEY:
@@ -40,11 +40,11 @@ func _test_download_queue_full(
 	pipeline: GamePipelineService,
 ) -> void:
 	data.add_block_stock("network", 1)
-	data.add_block_stock("downloader", 1)
+	data.add_block_stock("text_downloader", 1)
 	data.add_block_stock("storage", 1)
 	data.add_block_stock("uploader", 1)
 	var n := field.place_block("network", 0, 0)
-	var d := field.place_block("downloader", 8, 0)
+	var d := field.place_block("text_downloader", 8, 0)
 	var s := field.place_block("storage", 20, 0)
 	var u := field.place_block("uploader", 32, 0)
 	if not n.is_ok() or not d.is_ok() or not s.is_ok() or not u.is_ok():

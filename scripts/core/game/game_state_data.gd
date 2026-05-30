@@ -270,6 +270,9 @@ static func _migrate_save_payload(payload: Dictionary) -> Dictionary:
 	if version < 3:
 		_migrate_v2_unified_network_to_split(out)
 		version = 3
+	if version < 4:
+		_migrate_v3_downloader_to_typed(out)
+		version = 4
 	out["format_version"] = SaveConstants.FORMAT_VERSION
 	return out
 
@@ -394,9 +397,9 @@ static func _migrate_v2_unified_network_to_split(payload: Dictionary) -> void:
 		var block: Dictionary = (item as Dictionary).duplicate(true)
 		var type_id := str(block.get("type_id", block.get("type", "")))
 		if type_id == "network":
-			block["type_id"] = "downloader"
+			block["type_id"] = "text_downloader"
 			if block.has("type"):
-				block["type"] = "downloader"
+				block["type"] = "text_downloader"
 			converted_uids[str(block.get("uid", ""))] = true
 			converted_count += 1
 			migrated_placed.append(block)
@@ -414,7 +417,7 @@ static func _migrate_v2_unified_network_to_split(payload: Dictionary) -> void:
 	if unlocked_raw is Array:
 		for type_id: Variant in unlocked_raw:
 			unlocked.append(str(type_id))
-	for extra in ["downloader", "uploader", "network"]:
+	for extra in ["text_downloader", "uploader", "network"]:
 		if extra not in unlocked:
 			unlocked.append(extra)
 	payload["unlocked_module_types"] = unlocked
@@ -440,3 +443,46 @@ static func _migrate_v2_unified_network_to_split(payload: Dictionary) -> void:
 			continue
 		kept_wires.append(link)
 	payload["wire_connections"] = kept_wires
+
+
+static func _migrate_v3_downloader_to_typed(payload: Dictionary) -> void:
+	var stock: Dictionary = {}
+	var stock_raw: Variant = payload.get("block_stock", {})
+	if stock_raw is Dictionary:
+		stock = (stock_raw as Dictionary).duplicate()
+	if stock.has("downloader"):
+		var count := int(stock["downloader"])
+		stock.erase("downloader")
+		stock["text_downloader"] = int(stock.get("text_downloader", 0)) + count
+		payload["block_stock"] = stock
+
+	var unlocked: Array = []
+	var unlocked_raw: Variant = payload.get("unlocked_module_types", [])
+	if unlocked_raw is Array:
+		for type_id: Variant in unlocked_raw:
+			var tid := str(type_id)
+			if tid == "downloader":
+				if "text_downloader" not in unlocked:
+					unlocked.append("text_downloader")
+			else:
+				unlocked.append(tid)
+	if "text_downloader" not in unlocked:
+		unlocked.append("text_downloader")
+	payload["unlocked_module_types"] = unlocked
+
+	var placed_raw: Array = []
+	var placed_src: Variant = payload.get("placed_blocks", [])
+	if placed_src is Array:
+		placed_raw = placed_src as Array
+	var migrated_placed: Array = []
+	for item: Variant in placed_raw:
+		if not item is Dictionary:
+			continue
+		var block: Dictionary = (item as Dictionary).duplicate(true)
+		var type_id := str(block.get("type_id", block.get("type", "")))
+		if type_id == "downloader":
+			block["type_id"] = "text_downloader"
+			if block.has("type"):
+				block["type"] = "text_downloader"
+		migrated_placed.append(block)
+	payload["placed_blocks"] = migrated_placed

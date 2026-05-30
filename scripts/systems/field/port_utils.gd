@@ -63,7 +63,7 @@ static func wire_flow_speed(link: WireLink) -> float:
 	var from_type: String = GameState.field.get_instance_type(link.from_uid)
 	if from_type == "network" and not GameState.access.get_download_queue().is_empty():
 		return FieldMapConstants.WIRE_FLOW_ACTIVE
-	if from_type == "downloader" and not GameState.access.get_download_queue().is_empty():
+	if BlockDefs.is_downloader_type(from_type) and not GameState.access.get_download_queue().is_empty():
 		return FieldMapConstants.WIRE_FLOW_ACTIVE
 	if from_type == "storage" and not GameState.access.get_upload_queue().is_empty():
 		return FieldMapConstants.WIRE_FLOW_ACTIVE

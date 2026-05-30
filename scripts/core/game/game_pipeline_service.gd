@@ -181,9 +181,10 @@ func collect_money(collector_uid: String) -> GameOperationResult:
 
 
 func run_block_action(uid: String) -> GameOperationResult:
-	match _field.get_instance_type(uid):
-		"downloader":
-			return enqueue_download()
+	var type_id := _field.get_instance_type(uid)
+	if BlockDefs.is_downloader_type(type_id):
+		return enqueue_download()
+	match type_id:
 		"uploader":
 			return enqueue_upload()
 		"collector":
@@ -197,8 +198,9 @@ func enqueue_download() -> GameOperationResult:
 		return check
 	var chain := _wiring.get_file_chain()
 	var dl_uid: String = chain.get("downloader", "")
-	var file_type_id := FileDefs.pick_random_download_type(_rng)
-	if not FileDefs.is_downloadable_type(file_type_id):
+	var dl_type := _field.get_instance_type(dl_uid)
+	var file_type_id := BlockDefs.get_downloader_file_type(dl_type)
+	if file_type_id == "" or not FileDefs.is_downloadable_type(file_type_id):
 		return GameOperationResult.fail(GameOperationResult.Code.FILE_TYPE_UNSUPPORTED)
 	var dl_level := _field.get_instance_level(dl_uid)
 	var quality := 1.0 + float(dl_level) * GameConstants.QUALITY_PER_DOWNLOADER_LEVEL
