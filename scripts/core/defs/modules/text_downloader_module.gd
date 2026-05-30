@@ -1,5 +1,5 @@
 extends RefCounted
-## Text Downloader — скачивает текстовые файлы и хранит их внутри (до 100 шт.).
+## Text Downloader — скачивает текстовые файлы из сети и передаёт в Загрузчик.
 
 const TYPE_ID := "text_downloader"
 
@@ -9,9 +9,8 @@ static func build() -> Dictionary:
 		"name": "Text Downloader",
 		"icon": "📄",
 		"color": Color(0.0, 0.88, 1.0, 1.0),
-		"desc": "Скачивает текстовые файлы из сети и хранит до 100 шт. внутри модуля",
+		"desc": "Скачивает текстовые файлы из сети и передаёт в Загрузчик",
 		"file_type_id": "text",
-		"max_stored_files": 100,
 		"upgradable": false,
 		"cells_w": 5,
 		"cells_h": 3,

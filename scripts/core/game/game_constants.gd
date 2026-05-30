@@ -5,8 +5,8 @@ class_name GameConstants
 # Preload убирает циклическую зависимость class_name при _static_init
 const _BalanceConfig := preload("res://scripts/core/game/game_balance_config.gd")
 
-const PIPELINE_LABEL := "Сеть → Text Downloader → Аплоудер → Сеть"
-const MONEY_PIPELINE_LABEL := "Аплоудер → Коллектор"
+const PIPELINE_LABEL := "Сеть → Text Downloader → Загрузчик → Сеть"
+const MONEY_PIPELINE_LABEL := "Загрузчик → Коллектор → касса"
 const WIRING_HINT := "Круг = файлы и канал | Квадрат/ромб = деньги"
 
 const CONFIG_RESOURCE := "res://resources/game_balance.tres"

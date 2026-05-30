@@ -75,7 +75,7 @@ func get_message() -> String:
 static func message_for(err_code: Code) -> String:
 	match err_code:
 		Code.PIPELINE_NO_CHAIN:
-			return "Соедини сеть → загрузчик → аплоудер → сеть."
+			return "Соедини сеть → Text Downloader → Загрузчик → сеть."
 		Code.PIPELINE_NO_MONEY_CHAIN:
 			return "Соедини порт денег аплоудера с коллектором."
 		Code.PIPELINE_PHASE_BUSY:
@@ -85,7 +85,7 @@ static func message_for(err_code: Code) -> String:
 		Code.PIPELINE_UPLOAD_QUEUE_FULL:
 			return "Очередь выгрузки заполнена."
 		Code.PIPELINE_NO_STORAGE:
-			return "Загрузчик переполнен (лимит файлов)."
+			return "Загрузчик переполнен (лимит 100 файлов)."
 		Code.PIPELINE_NO_FILES:
 			return "В загрузчике нет файлов для выгрузки."
 		Code.PIPELINE_SAFE_EMPTY:

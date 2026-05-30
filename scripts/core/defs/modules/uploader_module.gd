@@ -1,15 +1,16 @@
 extends RefCounted
-## Аплоудер — выгрузка файлов в сеть, сейф дохода.
+## Загрузчик — принимает файлы, выгружает в сеть через канал, копит доход.
 
 const TYPE_ID := "uploader"
 
 
 static func build() -> Dictionary:
 	return {
-		"name": "Аплоудер",
+		"name": "Загрузчик",
 		"icon": "⬆",
 		"color": Color(0.25, 1.0, 0.55, 1.0),
-		"desc": "Отправляет файлы в сеть через канал; копит доход",
+		"desc": "Принимает файлы от Text Downloader, выгружает в сеть; доход копит в себе",
+		"max_stored_files": 100,
 		"cells_w": 5,
 		"cells_h": 3,
 		"unlocked_at_start": true,

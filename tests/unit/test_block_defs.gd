@@ -12,8 +12,10 @@ func run() -> Array[String]:
 		errors.append("text_downloader должен быть типом загрузчика")
 	if BlockDefs.get_downloader_file_type("text_downloader") != "text":
 		errors.append("text_downloader → file_type text")
-	if BlockDefs.max_stored_files("text_downloader") != 100:
-		errors.append("text_downloader → max_stored_files 100")
+	if BlockDefs.max_stored_files("uploader") != 100:
+		errors.append("uploader → max_stored_files 100")
+	if BlockDefs.max_stored_files("text_downloader") != 0:
+		errors.append("text_downloader не хранит файлы")
 	if BlockDefs.is_upgradeable("text_downloader"):
 		errors.append("text_downloader не должен улучшаться")
 	if not BlockDefs.is_allowed_wire("network", "net_out", "text_downloader", "net_in"):

@@ -19,7 +19,7 @@ var _wire_connections: Array[WireLink] = []
 var _phase: Phase = Phase.IDLE
 var _uploaded_files: int = 0
 var _download_queue: Array[FileTransferJob] = []
-var _downloader_files: Dictionary = {}
+var _module_files: Dictionary = {}
 var _upload_queue: Array[FileTransferJob] = []
 
 var _uid_counter: int = 0
@@ -44,7 +44,7 @@ func reset_to_initial() -> void:
 	_phase = Phase.IDLE
 	_uploaded_files = 0
 	_download_queue.clear()
-	_downloader_files.clear()
+	_module_files.clear()
 	_upload_queue.clear()
 	_uid_counter = 0
 
@@ -147,19 +147,22 @@ func get_download_queue() -> Array[FileTransferJob]:
 	return _download_queue
 
 
-func get_downloader_files(uid: String) -> Array[StoredFileEntry]:
-	if not _downloader_files.has(uid):
+func get_module_files(uid: String) -> Array[StoredFileEntry]:
+	if not _module_files.has(uid):
 		var bucket: Array[StoredFileEntry] = []
-		_downloader_files[uid] = bucket
-	var files: Array = _downloader_files[uid]
+		_module_files[uid] = bucket
+	var files: Array = _module_files[uid]
 	return files as Array[StoredFileEntry]
 
 
+func get_downloader_files(uid: String) -> Array[StoredFileEntry]:
+	return get_module_files(uid)
+
+
 func get_stored_files() -> Array[StoredFileEntry]:
-	## Устаревший доступ: файлы первого загрузчика на поле (для совместимости тестов).
 	for inst: BlockInstance in _placed_blocks:
-		if BlockDefs.is_downloader_type(inst.type_id):
-			return get_downloader_files(inst.uid)
+		if inst.type_id == "uploader":
+			return get_module_files(inst.uid)
 	var empty: Array[StoredFileEntry] = []
 	return empty
 
@@ -211,16 +214,16 @@ func export_save_dict() -> Dictionary:
 		"uploaded_files": _uploaded_files,
 		"uid_counter": _uid_counter,
 		"download_queue": downloads,
-		"downloader_files": _export_downloader_files(),
+		"module_files": _export_module_files(),
 		"upload_queue": uploads,
 	}
 
 
-func _export_downloader_files() -> Dictionary:
+func _export_module_files() -> Dictionary:
 	var out: Dictionary = {}
-	for uid: Variant in _downloader_files.keys():
+	for uid: Variant in _module_files.keys():
 		var files: Array = []
-		for entry: StoredFileEntry in _downloader_files[uid]:
+		for entry: StoredFileEntry in _module_files[uid]:
 			files.append(entry.to_dict())
 		out[str(uid)] = files
 	return out
@@ -268,15 +271,15 @@ func import_save_dict(payload: Dictionary) -> void:
 	for item: Variant in migrated.get("download_queue", []):
 		if item is Dictionary:
 			_download_queue.append(FileTransferJob.from_dict(item as Dictionary))
-	_downloader_files.clear()
-	var files_raw: Variant = migrated.get("downloader_files", {})
+	_module_files.clear()
+	var files_raw: Variant = migrated.get("module_files", migrated.get("downloader_files", {}))
 	if files_raw is Dictionary:
 		for uid: Variant in (files_raw as Dictionary).keys():
 			var bucket: Array[StoredFileEntry] = []
 			for item: Variant in (files_raw as Dictionary)[uid]:
 				if item is Dictionary:
 					bucket.append(StoredFileEntry.from_dict(item as Dictionary))
-			_downloader_files[str(uid)] = bucket
+			_module_files[str(uid)] = bucket
 	_upload_queue.clear()
 	for item: Variant in migrated.get("upload_queue", []):
 		if item is Dictionary:
@@ -301,6 +304,9 @@ static func _migrate_save_payload(payload: Dictionary) -> Dictionary:
 	if version < 5:
 		_migrate_v4_storage_into_downloader(out)
 		version = 5
+	if version < 6:
+		_migrate_v5_files_to_uploader(out)
+		version = 6
 	out["format_version"] = SaveConstants.FORMAT_VERSION
 	return out
 
@@ -610,5 +616,39 @@ static func _migrate_v4_storage_into_downloader(payload: Dictionary) -> void:
 				migrated_wires.append(new_link)
 
 	payload["wire_connections"] = migrated_wires
-	payload["downloader_files"] = downloader_files
+	payload["module_files"] = downloader_files
 	payload.erase("stored_files")
+	payload.erase("downloader_files")
+
+
+static func _migrate_v5_files_to_uploader(payload: Dictionary) -> void:
+	var files_raw: Variant = payload.get("module_files", payload.get("downloader_files", {}))
+	if not files_raw is Dictionary:
+		payload.erase("downloader_files")
+		return
+	var placed_types: Dictionary = {}
+	for item: Variant in payload.get("placed_blocks", []):
+		if not item is Dictionary:
+			continue
+		var block: Dictionary = item as Dictionary
+		placed_types[str(block.get("uid", ""))] = str(block.get("type_id", block.get("type", "")))
+	var uploader_uids: Array[String] = []
+	for uid: Variant in placed_types.keys():
+		if str(placed_types[uid]) == "uploader":
+			uploader_uids.append(str(uid))
+	var target_up := uploader_uids[0] if not uploader_uids.is_empty() else ""
+	var out_files: Dictionary = {}
+	for uid: Variant in (files_raw as Dictionary).keys():
+		var uid_str := str(uid)
+		var bucket: Array = (files_raw as Dictionary)[uid]
+		var type_id: String = str(placed_types.get(uid_str, ""))
+		if type_id == "uploader":
+			if not out_files.has(uid_str):
+				out_files[uid_str] = []
+			out_files[uid_str].append_array(bucket)
+		elif target_up != "":
+			if not out_files.has(target_up):
+				out_files[target_up] = []
+			out_files[target_up].append_array(bucket)
+	payload["module_files"] = out_files
+	payload.erase("downloader_files")

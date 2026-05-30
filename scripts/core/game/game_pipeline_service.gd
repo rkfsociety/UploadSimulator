@@ -131,8 +131,8 @@ func check_enqueue_download() -> GameOperationResult:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_CHAIN)
 	if _data.get_download_queue().size() >= GameConstants.MAX_QUEUE_JOBS:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_DOWNLOAD_QUEUE_FULL)
-	var dl_uid: String = str(chain.get("downloader", ""))
-	if not _storage.has_downloader_space(dl_uid, 1):
+	var up_uid: String = str(chain.get("uploader", ""))
+	if not _storage.has_module_space(up_uid, 1):
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_STORAGE)
 	return GameOperationResult.ok()
 
@@ -143,8 +143,8 @@ func check_enqueue_upload() -> GameOperationResult:
 	var chain := _wiring.get_file_chain()
 	if chain.is_empty():
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_CHAIN)
-	var dl_uid: String = str(chain.get("downloader", ""))
-	if _data.get_downloader_files(dl_uid).is_empty():
+	var up_uid: String = str(chain.get("uploader", ""))
+	if _data.get_module_files(up_uid).is_empty():
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_FILES)
 	if _data.get_upload_queue().size() >= GameConstants.MAX_QUEUE_JOBS:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_UPLOAD_QUEUE_FULL)
@@ -174,7 +174,7 @@ func collect_money(collector_uid: String) -> GameOperationResult:
 	_data.set_uploader_balance(0.0)
 	_data.add_money(payout)
 	var uploader_name: String = BlockDefs.TYPES.get(_field.get_instance_type(uploader_uid), {}).get(
-		"name", "Аплоудер"
+		"name", "Загрузчик"
 	)
 	_host.log_message.emit(
 		"Коллектор: $%.0f из %s → касса (баланс $%.0f)" % [payout, uploader_name, _data.get_money()]
@@ -227,12 +227,11 @@ func enqueue_upload() -> GameOperationResult:
 	if not check.is_ok():
 		return check
 	var chain := _wiring.get_file_chain()
-	var dl_uid: String = str(chain.get("downloader", ""))
-	var files := _data.get_downloader_files(dl_uid)
+	var up_uid: String = str(chain.get("uploader", ""))
+	var files := _data.get_module_files(up_uid)
 	if files.is_empty():
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_FILES)
 	var entry: StoredFileEntry = files.pop_front()
-	var up_uid: String = str(chain.get("uploader", ""))
 	var job := FileTransferJob.new()
 	job.quality = entry.quality
 	job.size_bytes = GameValueBounds.size_bytes(entry.size_bytes)
@@ -310,7 +309,7 @@ func apply_publish(job: FileTransferJob) -> void:
 	_data.set_uploader_balance(_data.get_uploader_balance() + revenue)
 	_data.set_phase(GameStateData.Phase.SETTLING)
 	_host.log_message.emit(
-		"Выгружен %s: +$%.1f в аплоудер, +◆%d"
+		"Выгружен %s: +$%.1f в загрузчик, +◆%d"
 		% [FileDefs.get_type_label(job.file_type_id), revenue, diamonds_granted]
 	)
 
@@ -330,8 +329,8 @@ func cancel_file_transfer_queues() -> void:
 
 func _try_store_completed_download(job: FileTransferJob) -> bool:
 	var chain := _wiring.get_file_chain()
-	var dl_uid: String = str(chain.get("downloader", ""))
-	if not _storage.can_store_in_downloader(dl_uid, 1):
+	var up_uid: String = str(chain.get("uploader", ""))
+	if up_uid == "" or not _storage.can_store_in_module(up_uid, 1):
 		return false
 	var stored := StoredFileEntry.new()
 	stored.title = job.title
@@ -339,14 +338,14 @@ func _try_store_completed_download(job: FileTransferJob) -> bool:
 	stored.quality = job.quality
 	stored.size_bytes = job.size_bytes
 	stored.apply_bounds()
-	_data.get_downloader_files(dl_uid).append(stored)
+	_data.get_module_files(up_uid).append(stored)
 	return true
 
 
 func _return_upload_queue_to_storage() -> void:
 	var chain := _wiring.get_file_chain()
-	var dl_uid: String = str(chain.get("downloader", ""))
-	if dl_uid == "":
+	var up_uid: String = str(chain.get("uploader", ""))
+	if up_uid == "":
 		_data.get_upload_queue().clear()
 		return
 	for job: FileTransferJob in _data.get_upload_queue():
@@ -356,7 +355,7 @@ func _return_upload_queue_to_storage() -> void:
 		entry.quality = job.quality
 		entry.size_bytes = job.size_bytes
 		entry.apply_bounds()
-		_data.get_downloader_files(dl_uid).append(entry)
+		_data.get_module_files(up_uid).append(entry)
 	_data.get_upload_queue().clear()
 
 
