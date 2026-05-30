@@ -61,7 +61,7 @@ Autoload `DebugOverlay` показывает FPS, кассу, фазы, очер
 | `wiring` | `game_state_wiring.gd` | соединения портов |
 | `storage` | `game_state_storage.gd` | ёмкость файлов в загрузчиках |
 | `pipeline` | `game_state_pipeline.gd` | скачивание, выгрузка, сбор денег |
-| `environment` | `game_state_environment.gd` | открытие типов модулей и улучшения среды за алмазы |
+| `environment` | `game_state_environment.gd` | открытие типов модулей и улучшения за алмазы |
 | `premium` | `game_state_premium.gd` | кошелёк алмазов ◆ |
 | `save` | `game_state_save.gd` | сохранение/загрузка снимка (`SaveBackend`, по умолчанию `FileSaveBackend`) |
 

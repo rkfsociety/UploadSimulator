@@ -1,6 +1,6 @@
 extends RefCounted
 class_name GameStateEnvironment
-## API улучшений среды (алмазы).
+## API улучшений (алмазы).
 
 var _svc: GameEnvironmentService
 

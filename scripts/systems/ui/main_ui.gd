@@ -1,5 +1,5 @@
 extends Control
-## HUD: касса $, алмазы ◆, магазин модулей и улучшений среды.
+## HUD: касса $, алмазы ◆, магазин модулей и улучшений.
 
 @onready var money_label: Label = %MoneyLabel
 @onready var diamonds_label: Label = %DiamondsLabel

@@ -1,6 +1,6 @@
 extends RefCounted
 class_name EnvironmentUpgradeDefs
-## Улучшения среды (сеть, диск): покупка за алмазы, не за кассу.
+## Улучшения (сеть, диск): покупка за алмазы, не за кассу.
 
 const UPGRADES := {
 	"net_download":

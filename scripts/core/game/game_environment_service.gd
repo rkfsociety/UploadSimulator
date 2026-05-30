@@ -1,6 +1,6 @@
 extends RefCounted
 class_name GameEnvironmentService
-## Улучшения среды и открытие новых типов модулей за алмазы.
+## Улучшения и открытие новых типов модулей за алмазы.
 
 var _data: GameStateData
 var _host: Node
