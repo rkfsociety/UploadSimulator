@@ -255,6 +255,14 @@ func get_diamond_pickup_count() -> int:
 	return _diamond_pickups.size()
 
 
+func purge_module_activity(uid: String) -> void:
+	_module_files.erase(uid)
+	for i in range(_wire_transfers.size() - 1, -1, -1):
+		var transfer: WireFileTransfer = _wire_transfers[i]
+		if transfer.from_uid == uid or transfer.to_uid == uid:
+			_wire_transfers.remove_at(i)
+
+
 func get_uid_counter() -> int:
 	return _uid_counter
 

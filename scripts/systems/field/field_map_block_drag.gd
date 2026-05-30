@@ -2,6 +2,8 @@ extends RefCounted
 class_name FieldMapBlockDrag
 ## Выделение и перетаскивание уже установленных модулей на карте.
 
+signal selection_changed(uid: String)
+
 var _map_content: Control
 var _camera: FieldMapCamera
 var _blocks: FieldMapBlocks
@@ -110,10 +112,7 @@ func handle_tap(local_pos: Vector2) -> void:
 	if _placement.get_selected_type() != "":
 		return
 	var uid := _pick_uid_at_screen(local_pos)
-	var changed := uid != _selected_uid
 	_set_selected(uid)
-	if uid != "" and changed:
-		GameState.log_message.emit("Удерживайте и перетащите модуль, чтобы переместить.")
 
 
 func sync_selection_visual() -> void:
@@ -127,6 +126,7 @@ func _set_selected(uid: String) -> void:
 		return
 	_selected_uid = uid
 	sync_selection_visual()
+	selection_changed.emit(uid)
 
 
 func _pick_uid_at_screen(local_pos: Vector2) -> String:

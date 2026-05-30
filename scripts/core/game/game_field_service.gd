@@ -4,11 +4,16 @@ class_name GameFieldService
 
 var _data: GameStateData
 var _host: Node
+var _wiring: GameWiringService = null
 
 
 func _init(data: GameStateData, host: Node) -> void:
 	_data = data
 	_host = host
+
+
+func bind_wiring(wiring: GameWiringService) -> void:
+	_wiring = wiring
 
 
 func make_uid() -> String:
@@ -181,6 +186,42 @@ func upgrade_instance(uid: String) -> GameOperationResult:
 	_replace_instance(inst)
 	var block_name: String = BlockDefs.TYPES.get(inst.type_id, {}).get("name", "")
 	_host.log_message.emit("%s улучшен до ур. %d" % [block_name, inst.level])
+	_notify_stats_and_field()
+	return GameOperationResult.ok()
+
+
+func can_remove_block(uid: String) -> bool:
+	return check_remove_block(uid).is_ok()
+
+
+func check_remove_block(uid: String) -> GameOperationResult:
+	var inst := get_instance(uid)
+	if not inst.is_valid():
+		return GameOperationResult.fail(GameOperationResult.Code.FIELD_INVALID_INSTANCE)
+	if _data.get_phase() == GameStateData.Phase.SETTLING:
+		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_PHASE_BUSY)
+	return GameOperationResult.ok()
+
+
+func remove_block(uid: String) -> GameOperationResult:
+	var check := check_remove_block(uid)
+	if not check.is_ok():
+		return check
+	var inst := get_instance(uid)
+	var type_id := inst.type_id
+	if _wiring != null:
+		_wiring.disconnect_all_for_module(uid)
+	_data.purge_module_activity(uid)
+	var blocks := _data.get_placed_blocks()
+	for i in range(blocks.size() - 1, -1, -1):
+		if blocks[i].uid == uid:
+			blocks.remove_at(i)
+			break
+	_data.add_block_stock(type_id, 1)
+	var block_name: String = BlockDefs.TYPES.get(type_id, {}).get("name", type_id)
+	_host.log_message.emit("«%s» снят с поля — снова в складе." % block_name)
+	if _host.has_signal("wire_transfers_changed"):
+		_host.wire_transfers_changed.emit()
 	_notify_stats_and_field()
 	return GameOperationResult.ok()
 

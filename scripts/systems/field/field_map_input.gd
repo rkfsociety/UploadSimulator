@@ -12,6 +12,7 @@ var _placement: FieldMapPlacement
 var _wiring: FieldMapWiring
 var _block_drag: RefCounted
 var _diamonds: FieldMapDiamonds
+var _block_menu: FieldMapBlockMenu = null
 
 var _drag_pan: bool = false
 var _drag_start := Vector2.ZERO
@@ -41,6 +42,10 @@ func _init(
 	_wiring = wiring
 	_block_drag = block_drag
 	_diamonds = diamonds
+
+
+func set_block_menu(menu: FieldMapBlockMenu) -> void:
+	_block_menu = menu
 
 
 func handle_gui_input(event: InputEvent) -> void:
@@ -298,6 +303,9 @@ func _is_over_hud(screen_pos: Vector2) -> bool:
 			var menu_rect := Rect2(menu.get_global_position(), menu.size)
 			if menu_rect.has_point(screen_pos):
 				return true
+	if _block_menu != null and _block_menu.is_open():
+		if _block_menu.get_panel_global_rect().has_point(screen_pos):
+			return true
 	var vp_size := _host.get_viewport().get_visible_rect().size
 	# Нижняя полоса: магазин $ по центру
 	if screen_pos.y >= vp_size.y - PlatformInfo.hud_bottom_strip_height():

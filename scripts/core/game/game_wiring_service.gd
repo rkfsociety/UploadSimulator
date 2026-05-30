@@ -158,6 +158,20 @@ func disconnect_ports(from_uid: String, from_port: String, to_uid: String, to_po
 	_notify_topology_changed()
 
 
+func disconnect_all_for_module(uid: String) -> void:
+	if uid == "":
+		return
+	var links := _data.get_wire_connections()
+	var removed := false
+	for i in range(links.size() - 1, -1, -1):
+		if links[i].from_uid == uid or links[i].to_uid == uid:
+			links.remove_at(i)
+			removed = true
+	if removed:
+		_host.wiring_changed.emit()
+		_notify_topology_changed()
+
+
 func _notify_topology_changed() -> void:
 	if _pipeline == null:
 		return

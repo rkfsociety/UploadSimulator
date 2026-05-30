@@ -50,6 +50,7 @@ func _ready() -> void:
 	_premium_svc = PremiumCurrencyService.new(self, _data)
 	_field_svc = GameFieldService.new(_data, self)
 	_wiring_svc = GameWiringService.new(_data, self, _field_svc)
+	_field_svc.bind_wiring(_wiring_svc)
 	_storage_svc = GameStorageService.new(_data, _field_svc)
 	_environment_svc = GameEnvironmentService.new(_data, self, _premium_svc)
 	_pipeline_svc = GamePipelineService.new(

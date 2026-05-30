@@ -19,6 +19,7 @@ var _wiring: FieldMapWiring
 var _diamonds: FieldMapDiamonds
 var _map_input: FieldMapInput
 var _block_drag: RefCounted
+var _block_menu: FieldMapBlockMenu
 
 
 func _ready() -> void:
@@ -45,7 +46,16 @@ func _ready() -> void:
 	map_content.add_child(diamonds_root)
 	_diamonds = FieldMapDiamonds.new(diamonds_root, _camera)
 	_block_drag = _BlockDragClass.new(map_content, _camera, _blocks, _placement)
+	var ui_layer := get_parent().get_node_or_null("UILayer") as Control
+	if ui_layer != null:
+		_block_menu = FieldMapBlockMenu.new(self, _camera)
+		MinimalUI.attach_theme(_block_menu)
+		ui_layer.add_child(_block_menu)
+		_block_drag.selection_changed.connect(_on_block_selection_changed)
+		_block_menu.remove_requested.connect(_on_block_remove_requested)
 	_map_input = FieldMapInput.new(self, _camera, _placement, _wiring, _block_drag, _diamonds)
+	if _block_menu != null:
+		_map_input.set_block_menu(_block_menu)
 	_map_input.placement_finished.connect(_on_placement_finished)
 
 	GameState.field_changed.connect(_on_field_changed)
@@ -81,6 +91,8 @@ func _process(_delta: float) -> void:
 	_blocks.update_visibility(vis)
 	_wiring.set_visible_rect(vis)
 	_diamonds.update_visibility(vis)
+	if _block_menu != null and _block_menu.is_open():
+		_block_menu.refresh_position()
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -133,7 +145,24 @@ func enter_placement_mode(type_id: String) -> void:
 func cancel_placement_mode() -> void:
 	_placement.set_selected_type("")
 	_wiring.clear_pending()
+	_block_drag.clear_selection()
 	placement_mode_changed.emit("")
+
+
+func _on_block_selection_changed(uid: String) -> void:
+	if _block_menu == null:
+		return
+	if uid == "":
+		_block_menu.hide_menu()
+	else:
+		_block_menu.show_for(uid)
+
+
+func _on_block_remove_requested(uid: String) -> void:
+	_block_drag.clear_selection()
+	if _block_menu != null:
+		_block_menu.hide_menu()
+	GameState.report_operation(GameState.field.remove_block(uid))
 
 
 ## Клетка сетки в центре текущего вида (для внешних вызовов).

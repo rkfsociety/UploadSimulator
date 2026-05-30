@@ -73,6 +73,18 @@ func relocate_block(uid: String, gx: int, gy: int) -> GameOperationResult:
 	return _svc.relocate_block(uid, gx, gy)
 
 
+func can_remove_block(uid: String) -> bool:
+	return _svc.can_remove_block(uid)
+
+
+func check_remove_block(uid: String) -> GameOperationResult:
+	return _svc.check_remove_block(uid)
+
+
+func remove_block(uid: String) -> GameOperationResult:
+	return _svc.remove_block(uid)
+
+
 func get_instance_upgrade_cost(uid: String) -> int:
 	return _svc.get_instance_upgrade_cost(uid)
 

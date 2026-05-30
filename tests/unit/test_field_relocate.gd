@@ -1,7 +1,7 @@
 extends RefCounted
 ## Перемещение установленного модуля на свободную клетку.
 
-var case_count := 2
+var case_count := 3
 
 
 func run() -> Array[String]:
@@ -9,6 +9,8 @@ func run() -> Array[String]:
 	var host := _TestHost.new()
 	var data := GameStateData.new()
 	var field := GameFieldService.new(data, host)
+	var wiring := GameWiringService.new(data, host, field)
+	field.bind_wiring(wiring)
 	data.add_block_stock("uploader", 1)
 	var place := field.place_block("uploader", 0, 0)
 	if not place.is_ok():
@@ -30,6 +32,12 @@ func run() -> Array[String]:
 		return errors
 	if field.can_relocate_block(uid, 24, 0):
 		errors.append("relocate в занятую клетку должен быть запрещён")
+	if not field.remove_block(uid).is_ok():
+		errors.append("remove_block uploader")
+	elif field.get_instance(uid).is_valid():
+		errors.append("remove: модуль всё ещё на поле")
+	elif field.get_block_stock("uploader") != 1:
+		errors.append("remove: модуль должен вернуться на склад")
 	return errors
 
 
@@ -38,6 +46,7 @@ class _TestHost:
 
 	signal log_message(text: String)
 	signal wiring_changed
+	signal wire_transfers_changed
 	signal field_changed
 	signal stats_changed
 	signal block_purchased(type_id: String)

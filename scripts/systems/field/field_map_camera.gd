@@ -25,6 +25,11 @@ func screen_to_world(screen: Vector2) -> Vector2:
 	return (screen - pan) / zoom
 
 
+## Мировые пиксели карты → координаты FieldMap на экране.
+func world_to_screen(world: Vector2) -> Vector2:
+	return world * zoom + pan
+
+
 ## Мировой прямоугольник, попадающий в текущий вид (с запасом по краям).
 func visible_world_rect() -> Rect2:
 	var p0 := screen_to_world(Vector2.ZERO)
