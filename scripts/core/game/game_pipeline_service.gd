@@ -134,8 +134,8 @@ func check_enqueue_download() -> GameOperationResult:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_CHAIN)
 	if _data.get_download_queue().size() >= GameConstants.MAX_QUEUE_JOBS:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_DOWNLOAD_QUEUE_FULL)
-	var up_uid: String = str(chain.get("uploader", ""))
-	if not _storage.has_module_space(up_uid, 1):
+	var dl_uid: String = str(chain.get("downloader", ""))
+	if not _storage.has_module_space(dl_uid, 1):
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_STORAGE)
 	return GameOperationResult.ok()
 
@@ -146,8 +146,8 @@ func check_enqueue_upload() -> GameOperationResult:
 	var chain := _wiring.get_file_chain()
 	if chain.is_empty():
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_CHAIN)
-	var up_uid: String = str(chain.get("uploader", ""))
-	if _data.get_module_files(up_uid).is_empty():
+	var dl_uid: String = str(chain.get("downloader", ""))
+	if _data.get_module_files(dl_uid).is_empty():
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_FILES)
 	if _has_active_upload_transfer():
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_PHASE_BUSY)
@@ -232,20 +232,21 @@ func enqueue_upload() -> GameOperationResult:
 	if not check.is_ok():
 		return check
 	var chain := _wiring.get_file_chain()
+	var dl_uid: String = str(chain.get("downloader", ""))
 	var up_uid: String = str(chain.get("uploader", ""))
 	var net_uid: String = str(chain.get("network", ""))
-	var files := _data.get_module_files(up_uid)
+	var files := _data.get_module_files(dl_uid)
 	if files.is_empty():
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_FILES)
 	var entry: StoredFileEntry = files.pop_front()
-	var up_speed := upload_speed_for(up_uid)
-	var duration := GameValueBounds.job_duration_from_bytes(entry.size_bytes, up_speed)
+	var speed := download_speed_for(dl_uid)
+	var duration := GameValueBounds.job_duration_from_bytes(entry.size_bytes, speed)
 	var transfer := WireFileTransfer.from_entry(
-		WireFileTransfer.Purpose.TO_NETWORK,
+		WireFileTransfer.Purpose.TO_UPLOADER,
+		dl_uid,
+		"file_out",
 		up_uid,
-		"net_out",
-		net_uid,
-		"net_in",
+		"file_in",
 		entry,
 		duration,
 	)
@@ -284,15 +285,14 @@ func _tick_download_queue(delta: float) -> void:
 		_host.blocks_progress_changed.emit()
 		return
 	queue.pop_front()
-	if not _start_transfer_to_uploader(job):
+	if not _try_store_completed_download(job):
 		queue.clear()
-		_clear_wire_transfers_to_uploader()
-		_host.log_message.emit("Загрузчик переполнен: очередь скачивания очищена.")
+		_host.log_message.emit("Text Downloader переполнен: очередь скачивания очищена.")
 		_host.queue_changed.emit()
 		_host.field_changed.emit()
 		_host.stats_changed.emit()
 		return
-	_notify_wire_transfers()
+	_host.field_changed.emit()
 	_host.stats_changed.emit()
 
 
@@ -320,10 +320,7 @@ func _tick_wire_transfers(delta: float) -> void:
 func _complete_wire_transfer(transfer: WireFileTransfer) -> void:
 	match transfer.purpose:
 		WireFileTransfer.Purpose.TO_UPLOADER:
-			if not _store_wire_transfer_file(transfer):
-				_host.log_message.emit("Загрузчик переполнен: файл потерян при передаче.")
-			else:
-				_host.field_changed.emit()
+			_start_network_upload_from_transit(transfer)
 		WireFileTransfer.Purpose.TO_NETWORK:
 			if _host.has_method("run_publish_pause"):
 				_host.run_publish_pause(transfer.to_job())
@@ -376,60 +373,60 @@ func cancel_file_transfer_queues() -> void:
 	_notify_wire_transfers()
 
 
-func _start_transfer_to_uploader(job: FileTransferJob) -> bool:
+func _try_store_completed_download(job: FileTransferJob) -> bool:
 	var chain := _wiring.get_file_chain()
 	var dl_uid: String = str(chain.get("downloader", ""))
-	var up_uid: String = str(chain.get("uploader", ""))
-	if dl_uid == "" or up_uid == "":
-		return false
-	if not _storage.has_module_space(up_uid, 1):
-		return false
-	var speed := download_speed_for(dl_uid)
-	var duration := GameValueBounds.job_duration_from_bytes(job.size_bytes, speed)
-	var transfer := WireFileTransfer.from_job(
-		WireFileTransfer.Purpose.TO_UPLOADER,
-		dl_uid,
-		"file_out",
-		up_uid,
-		"file_in",
-		job,
-	)
-	transfer.duration = duration
-	transfer.apply_bounds()
-	_data.get_wire_transfers().append(transfer)
-	return true
-
-
-func _store_wire_transfer_file(transfer: WireFileTransfer) -> bool:
-	var up_uid := transfer.to_uid
-	if up_uid == "" or not _storage.can_store_in_module(up_uid, 1):
+	if dl_uid == "" or not _storage.can_store_in_module(dl_uid, 1):
 		return false
 	var stored := StoredFileEntry.new()
-	stored.title = transfer.title
-	stored.file_type_id = transfer.file_type_id
-	stored.quality = transfer.quality
-	stored.size_bytes = transfer.size_bytes
+	stored.title = job.title
+	stored.file_type_id = job.file_type_id
+	stored.quality = job.quality
+	stored.size_bytes = job.size_bytes
 	stored.apply_bounds()
-	_data.get_module_files(up_uid).append(stored)
+	_data.get_module_files(dl_uid).append(stored)
 	return true
 
 
-func _clear_wire_transfers_to_uploader() -> void:
-	var transfers := _data.get_wire_transfers()
-	for i in range(transfers.size() - 1, -1, -1):
-		if transfers[i].purpose == WireFileTransfer.Purpose.TO_UPLOADER:
-			transfers.remove_at(i)
+func _start_network_upload_from_transit(transfer: WireFileTransfer) -> void:
+	var chain := _wiring.get_file_chain()
+	var up_uid: String = str(chain.get("uploader", ""))
+	var net_uid: String = str(chain.get("network", ""))
+	if up_uid == "" or net_uid == "":
+		return
+	var up_speed := upload_speed_for(up_uid)
+	var duration := GameValueBounds.job_duration_from_bytes(transfer.size_bytes, up_speed)
+	var entry := StoredFileEntry.new()
+	entry.title = transfer.title
+	entry.file_type_id = transfer.file_type_id
+	entry.quality = transfer.quality
+	entry.size_bytes = transfer.size_bytes
+	entry.apply_bounds()
+	var net_transfer := WireFileTransfer.from_entry(
+		WireFileTransfer.Purpose.TO_NETWORK,
+		up_uid,
+		"net_out",
+		net_uid,
+		"net_in",
+		entry,
+		duration,
+	)
+	_data.get_wire_transfers().append(net_transfer)
+	_notify_wire_transfers()
 
 
 func _return_upload_wire_transfers_to_storage() -> void:
 	var chain := _wiring.get_file_chain()
-	var up_uid: String = str(chain.get("uploader", ""))
-	if up_uid == "":
+	var dl_uid: String = str(chain.get("downloader", ""))
+	if dl_uid == "":
 		return
 	var transfers := _data.get_wire_transfers()
 	for i in range(transfers.size() - 1, -1, -1):
 		var transfer: WireFileTransfer = transfers[i]
-		if transfer.purpose != WireFileTransfer.Purpose.TO_NETWORK:
+		if (
+			transfer.purpose != WireFileTransfer.Purpose.TO_NETWORK
+			and transfer.purpose != WireFileTransfer.Purpose.TO_UPLOADER
+		):
 			continue
 		var entry := StoredFileEntry.new()
 		entry.title = transfer.title
@@ -437,33 +434,14 @@ func _return_upload_wire_transfers_to_storage() -> void:
 		entry.quality = transfer.quality
 		entry.size_bytes = transfer.size_bytes
 		entry.apply_bounds()
-		_data.get_module_files(up_uid).insert(0, entry)
+		_data.get_module_files(dl_uid).insert(0, entry)
 		transfers.remove_at(i)
-
-
-func _has_active_upload_transfer() -> bool:
-	var chain := _wiring.get_file_chain()
-	var up_uid: String = str(chain.get("uploader", ""))
-	if up_uid == "":
-		return false
-	return _data.find_upload_wire_transfer(up_uid) != null
-
-
-func _notify_wire_transfers() -> void:
-	_host.blocks_progress_changed.emit()
-	if _host.has_signal("wire_transfers_changed"):
-		_host.wire_transfers_changed.emit()
-	_host.field_changed.emit()
-
-
-func _try_store_completed_download(job: FileTransferJob) -> bool:
-	return _start_transfer_to_uploader(job)
 
 
 func _return_upload_queue_to_storage() -> void:
 	var chain := _wiring.get_file_chain()
-	var up_uid: String = str(chain.get("uploader", ""))
-	if up_uid == "":
+	var dl_uid: String = str(chain.get("downloader", ""))
+	if dl_uid == "":
 		_data.get_upload_queue().clear()
 		return
 	for job: FileTransferJob in _data.get_upload_queue():
@@ -473,8 +451,28 @@ func _return_upload_queue_to_storage() -> void:
 		entry.quality = job.quality
 		entry.size_bytes = job.size_bytes
 		entry.apply_bounds()
-		_data.get_module_files(up_uid).append(entry)
+		_data.get_module_files(dl_uid).append(entry)
 	_data.get_upload_queue().clear()
+
+
+func _has_active_upload_transfer() -> bool:
+	var chain := _wiring.get_file_chain()
+	var up_uid: String = str(chain.get("uploader", ""))
+	if up_uid == "":
+		return false
+	if _data.find_upload_wire_transfer(up_uid) != null:
+		return true
+	for transfer: WireFileTransfer in _data.get_wire_transfers():
+		if transfer.purpose == WireFileTransfer.Purpose.TO_UPLOADER:
+			return true
+	return false
+
+
+func _notify_wire_transfers() -> void:
+	_host.blocks_progress_changed.emit()
+	if _host.has_signal("wire_transfers_changed"):
+		_host.wire_transfers_changed.emit()
+	_host.field_changed.emit()
 
 
 func _network_transfer_speed(is_download: bool) -> float:

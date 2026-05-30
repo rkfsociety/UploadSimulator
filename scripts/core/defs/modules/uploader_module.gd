@@ -1,5 +1,5 @@
 extends RefCounted
-## Загрузчик — принимает файлы, выгружает в сеть через канал, копит доход.
+## Загрузчик — пропускает файлы в сеть, копит доход ($) в себе.
 
 const TYPE_ID := "uploader"
 
@@ -9,8 +9,7 @@ static func build() -> Dictionary:
 		"name": "Загрузчик",
 		"icon": "⬆",
 		"color": Color(0.25, 1.0, 0.55, 1.0),
-		"desc": "Принимает файлы от Text Downloader, выгружает в сеть; доход копит в себе",
-		"max_stored_files": 100,
+		"desc": "Выгружает файлы из Text Downloader в сеть; деньги хранит в себе",
 		"cells_w": 5,
 		"cells_h": 3,
 		"unlocked_at_start": true,

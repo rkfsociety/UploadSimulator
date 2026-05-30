@@ -224,10 +224,10 @@ static func _validate_type(type_id: String, type_def: Dictionary) -> void:
 			push_error(
 				"BlockDefs: загрузчик «%s» ссылается на неизвестный file_type_id «%s»." % [type_id, ft]
 			)
-	if stores_files(type_id) and type_id != "uploader":
-		push_error("BlockDefs: max_stored_files сейчас только у модуля «uploader».")
-	if type_id == "uploader" and max_stored_files(type_id) <= 0:
-		push_error("BlockDefs: uploader должен иметь max_stored_files > 0.")
+		if max_stored_files(type_id) <= 0:
+			push_error("BlockDefs: тип загрузчика «%s» должен иметь max_stored_files > 0." % type_id)
+	if stores_files(type_id) and not is_downloader_type(type_id):
+		push_error("BlockDefs: max_stored_files сейчас только у типов загрузчиков (Text Downloader и др.).")
 	if cells_w(type_id) < MIN_CELLS_W or cells_h(type_id) < MIN_CELLS_H:
 		push_error(
 			"BlockDefs: тип «%s» — размер %dx%d меньше минимума %dx%d клеток."

@@ -60,10 +60,10 @@ func _test_full_download_queue_drains(errors: Array[String]) -> void:
 		steps += 1
 	if not data.get_download_queue().is_empty() or not data.get_wire_transfers().is_empty():
 		errors.append("полная очередь: после тика очередь и провода должны опустеть")
-	var stored := data.get_module_files(uids.uploader).size()
+	var stored := data.get_module_files(uids.downloader).size()
 	if stored != GameConstants.MAX_QUEUE_JOBS:
 		errors.append(
-			"полная очередь: в загрузчике %d файлов, ожидалось %d" % [stored, GameConstants.MAX_QUEUE_JOBS]
+			"полная очередь: в Text Downloader %d файлов, ожидалось %d" % [stored, GameConstants.MAX_QUEUE_JOBS]
 		)
 	stack.host.free()
 
@@ -77,12 +77,12 @@ func _test_downloader_overflow_clears_pending_downloads(errors: Array[String]) -
 		errors.append("переполнение: цепочка")
 		stack.host.free()
 		return
-	var cap := BlockDefs.max_stored_files("uploader")
+	var cap := BlockDefs.max_stored_files("text_downloader")
 	for _i in cap:
 		var filler := StoredFileEntry.new()
 		filler.size_bytes = 1000.0
 		filler.apply_bounds()
-		data.get_module_files(uids.uploader).append(filler)
+		data.get_module_files(uids.downloader).append(filler)
 	var finishing := FileTransferJob.new()
 	finishing.size_bytes = 200.0
 	finishing.duration = 0.01
@@ -98,9 +98,9 @@ func _test_downloader_overflow_clears_pending_downloads(errors: Array[String]) -
 	pipeline._tick_download_queue(0.05)
 	pipeline._tick_wire_transfers(0.05)
 	if not data.get_download_queue().is_empty():
-		errors.append("переполнение загрузчика: очередь скачивания должна очиститься")
-	if data.get_module_files(uids.uploader).size() != cap:
-		errors.append("переполнение загрузчика: лишний файл не должен попасть внутрь")
+		errors.append("переполнение Text Downloader: очередь скачивания должна очиститься")
+	if data.get_module_files(uids.downloader).size() != cap:
+		errors.append("переполнение Text Downloader: лишний файл не должен попасть внутрь")
 	stack.host.free()
 
 

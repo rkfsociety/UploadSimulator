@@ -85,9 +85,9 @@ static func message_for(err_code: Code) -> String:
 		Code.PIPELINE_UPLOAD_QUEUE_FULL:
 			return "Очередь выгрузки заполнена."
 		Code.PIPELINE_NO_STORAGE:
-			return "Загрузчик переполнен (лимит 100 файлов)."
+			return "Text Downloader переполнен (лимит 100 файлов)."
 		Code.PIPELINE_NO_FILES:
-			return "В загрузчике нет файлов для выгрузки."
+			return "В Text Downloader нет файлов для выгрузки."
 		Code.PIPELINE_SAFE_EMPTY:
 			return "Сейф аплоудера пуст."
 		Code.PIPELINE_WRONG_MODULE:

@@ -44,10 +44,10 @@ static func from_instance(uid: String, type_id: String) -> PlacedBlockViewData:
 		var upload_transfer := GameState.access.get_wire_transfers()
 		var upload_active := false
 		for transfer: WireFileTransfer in upload_transfer:
-			if (
-				transfer.purpose == WireFileTransfer.Purpose.TO_NETWORK
-				and transfer.from_uid == up_uid
-			):
+			if transfer.purpose == WireFileTransfer.Purpose.TO_NETWORK and transfer.from_uid == up_uid:
+				upload_active = true
+				break
+			if transfer.purpose == WireFileTransfer.Purpose.TO_UPLOADER:
 				upload_active = true
 				break
 		data.network_upload_active = (

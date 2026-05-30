@@ -163,7 +163,7 @@ func get_downloader_files(uid: String) -> Array[StoredFileEntry]:
 
 func get_stored_files() -> Array[StoredFileEntry]:
 	for inst: BlockInstance in _placed_blocks:
-		if inst.type_id == "uploader":
+		if BlockDefs.is_downloader_type(inst.type_id):
 			return get_module_files(inst.uid)
 	var empty: Array[StoredFileEntry] = []
 	return empty
@@ -346,6 +346,9 @@ static func _migrate_save_payload(payload: Dictionary) -> Dictionary:
 	if version < 6:
 		_migrate_v5_files_to_uploader(out)
 		version = 6
+	if version < 7:
+		_migrate_v6_files_to_downloader(out)
+		version = 7
 	out["format_version"] = SaveConstants.FORMAT_VERSION
 	return out
 
@@ -691,3 +694,36 @@ static func _migrate_v5_files_to_uploader(payload: Dictionary) -> void:
 			out_files[target_up].append_array(bucket)
 	payload["module_files"] = out_files
 	payload.erase("downloader_files")
+
+
+static func _migrate_v6_files_to_downloader(payload: Dictionary) -> void:
+	var files_raw: Variant = payload.get("module_files", {})
+	if not files_raw is Dictionary:
+		return
+	var placed_types: Dictionary = {}
+	for item: Variant in payload.get("placed_blocks", []):
+		if not item is Dictionary:
+			continue
+		var block: Dictionary = item as Dictionary
+		placed_types[str(block.get("uid", ""))] = str(block.get("type_id", block.get("type", "")))
+	var downloader_uids: Array[String] = []
+	for uid: Variant in placed_types.keys():
+		if BlockDefs.is_downloader_type(str(placed_types[uid])):
+			downloader_uids.append(str(uid))
+	var target_dl := downloader_uids[0] if not downloader_uids.is_empty() else ""
+	var out_files: Dictionary = {}
+	for uid: Variant in (files_raw as Dictionary).keys():
+		var uid_str := str(uid)
+		var bucket: Array = (files_raw as Dictionary)[uid]
+		var type_id: String = str(placed_types.get(uid_str, ""))
+		if BlockDefs.is_downloader_type(type_id):
+			if not out_files.has(uid_str):
+				out_files[uid_str] = []
+			out_files[uid_str].append_array(bucket)
+		elif type_id == "uploader" and target_dl != "":
+			if not out_files.has(target_dl):
+				out_files[target_dl] = []
+			out_files[target_dl].append_array(bucket)
+		elif not out_files.has(uid_str):
+			out_files[uid_str] = bucket
+	payload["module_files"] = out_files

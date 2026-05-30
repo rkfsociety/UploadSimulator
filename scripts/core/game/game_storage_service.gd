@@ -1,6 +1,6 @@
 extends RefCounted
 class_name GameStorageService
-## Вместимость и занятость файлов в модулях (Загрузчик — до 100 шт.).
+## Вместимость файлов в Text Downloader (и других типах загрузчиков).
 
 var _data: GameStateData
 var _field: GameFieldService
@@ -21,7 +21,7 @@ func files_stored_in(uid: String) -> int:
 
 func get_module_used_files(uid: String, chain: Dictionary) -> int:
 	var used := files_stored_in(uid)
-	if chain.get("uploader", "") == uid:
+	if chain.get("downloader", "") == uid:
 		if not _data.get_download_queue().is_empty():
 			used += 1
 		used += _data.count_incoming_wire_transfers(uid)
@@ -54,9 +54,10 @@ func get_storage_capacity_files() -> float:
 
 func get_storage_used_files() -> int:
 	var total := 0
+	var chain := {"downloader": _primary_downloader_uid()}
 	for inst: BlockInstance in _data.get_placed_blocks():
 		if BlockDefs.stores_files(inst.type_id):
-			total += get_module_used_files(inst.uid, {"uploader": inst.uid})
+			total += get_module_used_files(inst.uid, chain)
 	return total
 
 
@@ -70,3 +71,10 @@ func has_storage_space(count: int = 1) -> bool:
 
 func get_storage_free_files() -> float:
 	return maxf(0.0, get_storage_capacity_files() - float(get_storage_used_files()))
+
+
+func _primary_downloader_uid() -> String:
+	for inst: BlockInstance in _data.get_placed_blocks():
+		if BlockDefs.is_downloader_type(inst.type_id):
+			return inst.uid
+	return ""

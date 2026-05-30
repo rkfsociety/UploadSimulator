@@ -39,14 +39,17 @@ func get_block_metric(uid: String) -> String:
 			return "↓ %s  ↑ %s" % [dl, ul]
 		_:
 			if BlockDefs.is_downloader_type(inst.type_id):
-				return FileDefs.get_type_label(BlockDefs.get_downloader_file_type(inst.type_id))
+				var cap := _storage.max_files_for(uid)
+				var used := _storage.get_module_used_files(uid, _wiring.get_file_chain())
+				return "Файлы: %d / %d · %s" % [
+					used,
+					cap,
+					FileDefs.get_type_label(BlockDefs.get_downloader_file_type(inst.type_id)),
+				]
 			match inst.type_id:
 				"uploader":
-					var cap := _storage.max_files_for(uid)
-					var used := _storage.get_module_used_files(uid, _wiring.get_file_chain())
-					return "Файлы: %d / %d · ↑ %s" % [
-						used,
-						cap,
+					return "Сейф $%.0f · ↑ %s" % [
+						_data.get_uploader_balance(),
 						ByteFormat.format_speed_bps(_pipeline.upload_speed_for(uid)),
 					]
 				"collector":
@@ -135,12 +138,14 @@ func _fill_network_display(target: Dictionary, uid: String, chain_file: Dictiona
 func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
 	target["action_visible"] = false
 	target["action_enabled"] = false
+	var cap := _storage.max_files_for(uid)
+	var used := _storage.get_module_used_files(uid, chain_file)
 	var queue := _data.get_download_queue()
 	if not queue.is_empty() and chain_file.get("downloader", "") == uid:
 		var job: FileTransferJob = queue[0]
 		target["status"] = (
-			"Качает: %s · %d%% → Загрузчик"
-			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0)]
+			"Качает: %s · %d%% · %d/%d"
+			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0), used, cap]
 		)
 		target["progress"] = job.progress
 		return
@@ -150,14 +155,16 @@ func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dicti
 			and transfer.from_uid == uid
 		):
 			target["status"] = (
-				"Передаёт %s · %d%% → Загрузчик"
-				% [FileDefs.get_type_label(transfer.file_type_id), int(transfer.progress * 100.0)]
+				"В сеть: %s · %d%% · %d/%d"
+				% [FileDefs.get_type_label(transfer.file_type_id), int(transfer.progress * 100.0), used, cap]
 			)
 			target["progress"] = transfer.progress
 			return
 	if _pipeline.can_download_at(uid):
 		var ft := FileDefs.get_type_label(BlockDefs.get_downloader_file_type(_field.get_instance_type(uid)))
-		target["status"] = "Качает %s → Загрузчик" % ft
+		target["status"] = "Качает %s · %d/%d" % [ft, used, cap]
+	elif not _data.get_module_files(uid).is_empty():
+		target["status"] = "Хранит %d/%d файлов" % [used, cap]
 	else:
 		target["status"] = _downloader_idle_hint(chain_file)
 
@@ -174,51 +181,51 @@ func _downloader_idle_hint(chain_file: Dictionary) -> String:
 func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
 	target["action_visible"] = false
 	target["action_enabled"] = false
-	var cap := _storage.max_files_for(uid)
-	var used := _storage.get_module_used_files(uid, chain_file)
+	var safe := _data.get_uploader_balance()
 	var upload_transfer := _data.find_upload_wire_transfer(uid)
 	if upload_transfer != null and chain_file.get("uploader", "") == uid:
 		target["status"] = (
-			"Грузит в сеть: %s · %d%% · %d/%d"
+			"Грузит в сеть: %s · %d%% · сейф $%.0f"
 			% [
 				FileDefs.get_type_label(upload_transfer.file_type_id),
 				int(upload_transfer.progress * 100.0),
-				used,
-				cap,
+				safe,
 			]
 		)
 		target["progress"] = upload_transfer.progress
 		return
+	for transfer: WireFileTransfer in _data.get_wire_transfers():
+		if (
+			transfer.purpose == WireFileTransfer.Purpose.TO_UPLOADER
+			and transfer.to_uid == uid
+		):
+			target["status"] = (
+				"Принимает %s · %d%% · сейф $%.0f"
+				% [FileDefs.get_type_label(transfer.file_type_id), int(transfer.progress * 100.0), safe]
+			)
+			target["progress"] = transfer.progress
+			return
 	var queue := _data.get_upload_queue()
 	if not queue.is_empty() and chain_file.get("uploader", "") == uid:
 		var job: FileTransferJob = queue[0]
 		target["status"] = (
-			"Грузит в сеть: %s · %d%% · %d/%d"
-			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0), used, cap]
+			"Грузит в сеть: %s · %d%% · сейф $%.0f"
+			% [FileDefs.get_type_label(job.file_type_id), int(job.progress * 100.0), safe]
 		)
 		target["progress"] = job.progress
 		return
 	if _pipeline.can_upload_at(uid):
-		target["status"] = "Выгружает в сеть · %d/%d" % [used, cap]
+		target["status"] = "Выгружает в сеть · сейф $%.0f" % safe
 		return
 	if chain_file.is_empty():
 		target["status"] = GameOperationResult.fail(
 			GameOperationResult.Code.PIPELINE_NO_CHAIN
 		).get_message()
 		return
-	if not _data.get_module_files(uid).is_empty():
-		var next: StoredFileEntry = _data.get_module_files(uid)[0]
-		target["status"] = "Ждёт выгрузки: %s · %d/%d" % [
-			FileDefs.get_type_label(next.file_type_id),
-			used,
-			cap,
-		]
-		return
-	var safe := _data.get_uploader_balance()
 	if safe >= GameConstants.MIN_COLLECT_BALANCE and not _wiring.get_money_chain().is_empty():
 		target["status"] = "Сейф $%.0f → коллектор" % safe
 	else:
-		target["status"] = "Ждёт файлы от Text Downloader"
+		target["status"] = "Ждёт файлы от Text Downloader · сейф $%.0f" % safe
 
 
 func _fill_collector_display(target: Dictionary, uid: String, chain_money: Dictionary) -> void:
