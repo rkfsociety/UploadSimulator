@@ -1,42 +1,8 @@
 extends RefCounted
 class_name EnvironmentUpgradeDefs
-## Улучшения (сеть, диск): покупка за алмазы, не за кассу.
+## Глобальные улучшения за алмазы (магазин ◆). Сейчас пусто — новые типы добавляются сюда.
 
-const UPGRADES := {
-	"net_download":
-	{
-		"name": "Канал скачивания",
-		"icon": "📡",
-		"desc": "+8% скорость скачивания на всех загрузчиках за уровень",
-		"diamond_cost_base": 2,
-		"diamond_cost_mult": 1.45,
-		"max_level": 10,
-		"effect_per_level": 0.08,
-		"effect_key": "download_speed",
-	},
-	"net_upload":
-	{
-		"name": "Канал выгрузки",
-		"icon": "📤",
-		"desc": "+8% скорость выгрузки на всех аплоудерах за уровень",
-		"diamond_cost_base": 2,
-		"diamond_cost_mult": 1.45,
-		"max_level": 10,
-		"effect_per_level": 0.08,
-		"effect_key": "upload_speed",
-	},
-	"disk_pool":
-	{
-		"name": "Кэш диска",
-		"icon": "💾",
-		"desc": "+10% ёмкость всех хранилищ за уровень",
-		"diamond_cost_base": 3,
-		"diamond_cost_mult": 1.5,
-		"max_level": 8,
-		"effect_per_level": 0.10,
-		"effect_key": "storage_capacity",
-	},
-}
+const UPGRADES := {}
 
 const _REQUIRED_KEYS: Array[String] = [
 	"name", "icon", "desc", "diamond_cost_base", "diamond_cost_mult", "max_level", "effect_per_level",

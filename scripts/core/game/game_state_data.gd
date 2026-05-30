@@ -89,7 +89,7 @@ func unlock_module_type(type_id: String) -> void:
 	_unlocked_module_types[type_id] = true
 
 
-# Множитель от улучшений (download_speed, upload_speed, storage_capacity)
+# Множитель от глобальных улучшений магазина ◆ (effect_key в EnvironmentUpgradeDefs)
 func get_env_multiplier(effect_key: String) -> float:
 	var mult := 1.0
 	for upgrade_id in EnvironmentUpgradeDefs.UPGRADES:

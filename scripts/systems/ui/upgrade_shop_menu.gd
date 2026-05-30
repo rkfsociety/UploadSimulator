@@ -1,5 +1,5 @@
 extends Control
-## Магазин ◆: открытие новых типов модулей и улучшения.
+## Магазин ◆: открытие новых типов модулей (и глобальные улучшения, если заданы в defs).
 
 signal closed
 
@@ -76,8 +76,7 @@ func _build_ui() -> void:
 
 	var hint := Label.new()
 	hint.text = (
-		'◆ алмазы: сначала откройте новый тип модуля здесь, затем купите его за $ в магазине корзины. '
-		+ 'Ниже — улучшения каналов и диска.'
+		"◆ алмазы: откройте новый тип модуля здесь, затем купите его за $ в магазине корзины."
 	)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_color_override("font_color", MinimalUI.TEXT_DIM)
@@ -140,8 +139,11 @@ func _append_module_unlock_section() -> void:
 
 
 func _append_env_upgrade_section() -> void:
+	var upgrade_ids := EnvironmentUpgradeDefs.get_upgrade_ids()
+	if upgrade_ids.is_empty():
+		return
 	_list.add_child(_make_section_title("Улучшения"))
-	for upgrade_id in EnvironmentUpgradeDefs.get_upgrade_ids():
+	for upgrade_id in upgrade_ids:
 		_list.add_child(_make_env_upgrade_row(upgrade_id))
 
 
