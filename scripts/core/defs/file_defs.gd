@@ -11,8 +11,8 @@ const TYPES := {
 		"name": "Текстовый файл",
 		"weight": 1.0,
 		# bytes_min/max синхронизируются из GameBalanceConfig (см. sync_limits_from_balance)
-		"bytes_min": 400.0,
-		"bytes_max": 3_200.0,
+		"bytes_min": 100.0,
+		"bytes_max": 100.0,
 	},
 	# Заготовки под будущие типы (пока не выпадают в pick_random_download_type)
 	"image":

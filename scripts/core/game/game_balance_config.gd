@@ -26,8 +26,8 @@ class_name GameBalanceConfig
 ## Размер «сырого» файла в условных МБ (для совместимости, если понадобится).
 @export var raw_file_legacy_mb: float = 18.0
 ## Диапазон размера текстового файла при скачивании (байт) — влияет на длительность и доход.
-@export var text_file_bytes_min: float = 400.0
-@export var text_file_bytes_max: float = 3_200.0
+@export var text_file_bytes_min: float = 100.0
+@export var text_file_bytes_max: float = 100.0
 ## Размер файла по умолчанию в хранилище (если не задан явно).
 @export var default_stored_file_bytes: float = 1_000.0
 
