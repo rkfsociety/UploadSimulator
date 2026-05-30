@@ -11,7 +11,7 @@ static func build() -> Dictionary:
 		"color": Color(0.12, 0.94, 0.78, 1.0),
 		"desc": "Канал в интернет; скорость скачивания и выгрузки растёт с уровнем",
 		"cells_w": 5,
-		"cells_h": 3,
+		"cells_h": 4,
 		"unlocked_at_start": true,
 		"diamond_unlock_cost": 0,
 		"shop_cost": 55,

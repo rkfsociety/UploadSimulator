@@ -64,7 +64,10 @@ func touch_target_px() -> int:
 
 
 func port_hit_size() -> int:
-	return maxi(PORT_VISUAL_PX, touch_target_px())
+	if prefers_touch_input():
+		return maxi(PORT_VISUAL_PX, touch_target_px())
+	# На ПК — компактная зона нажатия, чтобы порты не перекрывали текст модуля
+	return PORT_VISUAL_PX + 4
 
 
 func port_visual_size() -> int:

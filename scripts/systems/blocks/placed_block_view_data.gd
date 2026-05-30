@@ -53,9 +53,6 @@ static func from_instance(uid: String, type_id: String) -> PlacedBlockViewData:
 	data.action_enabled = bool(disp.get("action_enabled", false))
 	data.progress = float(disp.get("progress", -1.0))
 	var cost: int = GameState.field.get_instance_upgrade_cost(uid)
-	if type_id == "network":
-		data.upgrade_text = "$%d" % cost
-	else:
-		data.upgrade_text = "Улучшить → ур. %d · $%d" % [lvl + 1, cost]
+	data.upgrade_text = "Улучшить → ур. %d · $%d" % [lvl + 1, cost]
 	data.upgrade_enabled = GameState.field.can_upgrade_instance(uid)
 	return data

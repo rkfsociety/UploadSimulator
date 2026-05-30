@@ -124,9 +124,9 @@ func _fill_network_display(target: Dictionary, uid: String, chain_file: Dictiona
 		target["status"] = "Канал: выгрузка"
 		return
 	if in_chain:
-		target["status"] = "Канал подключён к загрузчику и аплоудеру"
+		target["status"] = "Канал готов"
 		return
-	target["status"] = "Подключите net_out → загрузчик и аплоудер → net_in"
+	target["status"] = "Подключите загрузчик и аплоудер"
 
 
 func _fill_downloader_display(target: Dictionary, uid: String, chain_file: Dictionary) -> void:
