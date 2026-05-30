@@ -501,7 +501,6 @@ func _notify_wire_transfers() -> void:
 	_host.blocks_progress_changed.emit()
 	if _host.has_signal("wire_transfers_changed"):
 		_host.wire_transfers_changed.emit()
-	_host.field_changed.emit()
 
 
 func _network_transfer_speed(is_download: bool) -> float:

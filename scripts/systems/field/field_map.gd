@@ -132,8 +132,9 @@ func get_view_center_cell() -> Vector2i:
 
 
 func _on_field_changed() -> void:
+	# Перенос модуля — не прерываем: relocate сбрасывает drag до emit field_changed.
 	if _block_drag.is_dragging():
-		_block_drag.cancel_drag()
+		return
 	# Снимок раскладки ДО пересборки: sync_from_state переставит узлы, поэтому
 	# сравнивать позиции после неё бесполезно (они уже совпадут с целевыми).
 	var prev_layout := _capture_block_layout()

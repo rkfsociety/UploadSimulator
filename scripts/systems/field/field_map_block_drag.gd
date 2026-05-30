@@ -50,10 +50,11 @@ func on_pointer_down(local_pos: Vector2) -> void:
 func try_begin_drag(local_pos: Vector2) -> bool:
 	if _placement.get_selected_type() != "":
 		return false
-	# Перетаскивание уже выделенного модуля переносит модуль, а не камеру.
-	# Пустое место или невыделенный модуль — панорама камеры.
-	if _press_uid == "" or _press_uid != _selected_uid:
+	# Модуль под курсором — перенос; пустое место — панорама камеры.
+	if _press_uid == "":
 		return false
+	if _press_uid != _selected_uid:
+		_set_selected(_press_uid)
 	_drag_uid = _press_uid
 	_dragging = true
 	_set_selected(_drag_uid)
@@ -84,16 +85,18 @@ func finish_drag(local_pos: Vector2) -> void:
 	if not _dragging:
 		return
 	update_drag(local_pos)
-	var drag_type := GameState.field.get_instance(_drag_uid).type_id
-	if (
-		_drag_uid != ""
-		and GridDefs.footprint_in_bounds(_hover_cell.x, _hover_cell.y, drag_type)
-		and GameState.field.can_relocate_block(_drag_uid, _hover_cell.x, _hover_cell.y)
-	):
-		GameState.field.relocate_block(_drag_uid, _hover_cell.x, _hover_cell.y)
+	var drag_uid := _drag_uid
+	var target_cell := _hover_cell
+	var drag_type := GameState.field.get_instance(drag_uid).type_id
 	_dragging = false
 	_drag_uid = ""
 	_hide_ghost()
+	if (
+		drag_uid != ""
+		and GridDefs.footprint_in_bounds(target_cell.x, target_cell.y, drag_type)
+		and GameState.field.can_relocate_block(drag_uid, target_cell.x, target_cell.y)
+	):
+		GameState.field.relocate_block(drag_uid, target_cell.x, target_cell.y)
 
 
 ## Сброс перетаскивания без переноса (например после field_changed).
@@ -110,7 +113,7 @@ func handle_tap(local_pos: Vector2) -> void:
 	var changed := uid != _selected_uid
 	_set_selected(uid)
 	if uid != "" and changed:
-		GameState.log_message.emit("Перетащите модуль, чтобы переместить.")
+		GameState.log_message.emit("Удерживайте и перетащите модуль, чтобы переместить.")
 
 
 func sync_selection_visual() -> void:

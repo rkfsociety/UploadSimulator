@@ -180,6 +180,7 @@ func _update_drag_state(local_pos: Vector2) -> void:
 		_drag_pan = true
 		if _block_drag.try_begin_drag(local_pos):
 			_drag_pan = false
+			_wiring.clear_pending()
 	if _block_drag.is_dragging():
 		_block_drag.update_drag(local_pos)
 		return
