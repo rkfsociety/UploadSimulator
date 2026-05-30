@@ -3,6 +3,7 @@ class_name WireRouteUtils
 ## Ортогональная трассировка проводов (горизонталь / вертикаль, изгибы 90°).
 
 const STUB_CELLS := 0.5
+const SAME_ROW_EPS := 4.0
 
 
 static func build_path(
@@ -78,16 +79,16 @@ static func _approach_to_port(center: Vector2, port_dir: ConnectionPort.Dir, stu
 
 
 static func _connect_orthogonal(a: Vector2, b: Vector2) -> Array[Vector2]:
-	var ax := _snap_grid(a.x)
-	var ay := _snap_grid(a.y)
-	var bx := _snap_grid(b.x)
-	var by := _snap_grid(b.y)
-	if is_zero_approx(ax - bx):
+	if is_zero_approx(a.x - b.x) or is_zero_approx(a.y - b.y):
 		return []
-	if is_zero_approx(ay - by):
-		return []
-	var mid_x := _snap_grid((ax + bx) * 0.5)
-	return [Vector2(mid_x, ay), Vector2(mid_x, by)]
+	# Слева направо: один изгиб 90° (горизонталь → вертикаль у входа).
+	if b.x >= a.x:
+		return [Vector2(b.x, a.y)]
+	# Справа налево: Z-образный канал с вертикалью по сетке между модулями.
+	var mid_x := _snap_grid((a.x + b.x) * 0.5)
+	if is_zero_approx(mid_x - a.x) or is_zero_approx(mid_x - b.x):
+		return [Vector2(b.x, a.y)]
+	return [Vector2(mid_x, a.y), Vector2(mid_x, b.y)]
 
 
 static func _snap_grid(v: float) -> float:
