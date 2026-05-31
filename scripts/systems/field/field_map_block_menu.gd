@@ -45,6 +45,7 @@ func show_for(uid: String) -> void:
 	_sell_btn.disabled = not GameState.field.can_remove_block(uid)
 	var refund := GameState.field.get_block_sell_value(uid)
 	_sell_btn.tooltip_text = "Продать за $%d" % refund
+	_update_position()
 	show()
 	move_to_front()
 
@@ -57,8 +58,18 @@ func hide_menu() -> void:
 
 
 func refresh_position() -> void:
-	# Кнопка закреплена якорем у правого края — пересчёт не нужен.
-	pass
+	if is_open():
+		_update_position()
+
+
+## Крестик у правого края, по центру вертикали. Явный размер/позиция —
+## чтобы get_panel_global_rect() давал точную маленькую область (а не весь экран).
+func _update_position() -> void:
+	if _sell_btn == null:
+		return
+	var side := float(PlatformInfo.touch_target_px())
+	var vs := _host.size
+	_sell_btn.position = Vector2(vs.x - side - EDGE_MARGIN, (vs.y - side) * 0.5)
 
 
 func _build_ui() -> void:
@@ -67,6 +78,7 @@ func _build_ui() -> void:
 	_sell_btn.mouse_filter = Control.MOUSE_FILTER_STOP
 	var side := float(PlatformInfo.touch_target_px())
 	_sell_btn.custom_minimum_size = Vector2(side, side)
+	_sell_btn.size = Vector2(side, side)
 	_sell_btn.add_theme_stylebox_override(
 		"normal", MinimalUI.neon_box(MinimalUI.bg_panel, DANGER_COLOR, true, 6, 8)
 	)
@@ -78,10 +90,6 @@ func _build_ui() -> void:
 	)
 	_sell_btn.add_theme_color_override("font_color", DANGER_COLOR)
 	_sell_btn.add_theme_font_size_override("font_size", 24)
-	_sell_btn.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	_sell_btn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_sell_btn.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_sell_btn.position = Vector2(-side - EDGE_MARGIN, -side * 0.5)
 	_sell_btn.pressed.connect(_on_sell_pressed)
 	add_child(_sell_btn)
 
