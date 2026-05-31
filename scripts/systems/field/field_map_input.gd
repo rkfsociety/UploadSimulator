@@ -262,7 +262,9 @@ func _update_pinch() -> void:
 		_camera.min_zoom(),
 		FieldMapConstants.ZOOM_MAX,
 	)
-	var map_point := (focal - _camera.pan) / _pinch_start_zoom
+	# Фокус фиксируем относительно ТЕКУЩЕГО состояния камеры (pan/zoom согласованы),
+	# иначе ошибка между _pinch_start_zoom и уже сдвинутым pan копится — камеру уносит.
+	var map_point := (focal - _camera.pan) / _camera.zoom
 	_camera.zoom = new_zoom
 	_camera.pan = focal - map_point * _camera.zoom
 	_camera.apply()
