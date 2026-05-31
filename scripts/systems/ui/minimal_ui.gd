@@ -304,34 +304,34 @@ static func apply_action_button(btn: Button) -> void:
 	btn.add_theme_stylebox_override("hover", t.get_stylebox("hover", &"action"))
 	btn.add_theme_stylebox_override("pressed", t.get_stylebox("pressed", &"action"))
 	btn.add_theme_stylebox_override("disabled", t.get_stylebox("disabled", &"action"))
-	btn.add_theme_color_override("font_color", TEXT)
-	btn.add_theme_color_override("font_disabled_color", TEXT_DIM)
+	btn.add_theme_color_override("font_color", text)
+	btn.add_theme_color_override("font_disabled_color", text_dim)
 	btn.add_theme_font_size_override("font_size", 14)
 
 
 static func apply_balance_label(lbl: Label, large: bool = true) -> void:
 	lbl.theme_type_variation = &"balance" if large else &"balance_small"
-	lbl.add_theme_color_override("font_color", NEON_CYAN)
+	lbl.add_theme_color_override("font_color", neon_cyan)
 	lbl.add_theme_font_size_override("font_size", 24 if large else 12)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 
 static func apply_dim_label(lbl: Label) -> void:
 	lbl.theme_type_variation = &"dim"
-	lbl.add_theme_color_override("font_color", NEON_GOLD)
+	lbl.add_theme_color_override("font_color", neon_gold)
 	lbl.add_theme_font_size_override("font_size", 12)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 
 static func apply_status_label(lbl: Label) -> void:
 	lbl.theme_type_variation = &"status"
-	lbl.add_theme_color_override("font_color", NEON_MAGENTA)
+	lbl.add_theme_color_override("font_color", neon_magenta)
 	lbl.modulate = Color(1, 1, 1, 1)
 
 
 static func apply_hint_label(lbl: Label) -> void:
 	lbl.theme_type_variation = &"hint"
-	lbl.add_theme_color_override("font_color", TEXT_DIM)
+	lbl.add_theme_color_override("font_color", text_dim)
 	lbl.modulate = colors().hint_modulate
 
 
@@ -369,7 +369,7 @@ static func block_panel_style() -> StyleBoxFlat:
 
 
 static func block_grid_style() -> StyleBoxFlat:
-	return block_neon_frame_style(NEON_CYAN)
+	return block_neon_frame_style(neon_cyan)
 
 
 static func block_neon_frame_style(accent: Color) -> StyleBoxFlat:
@@ -434,7 +434,7 @@ static func apply_block_upgrade_button(btn: Button, accent: Color) -> void:
 	btn.add_theme_color_override("font_color", accent)
 	btn.add_theme_color_override("font_hover_color", accent.lightened(0.2))
 	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
-	btn.add_theme_color_override("font_disabled_color", TEXT_DIM)
+	btn.add_theme_color_override("font_disabled_color", text_dim)
 	btn.add_theme_font_size_override("font_size", 12)
 
 
@@ -446,7 +446,7 @@ static func apply_shop_icon_button(btn: Button) -> void:
 	btn.custom_minimum_size = Vector2(side, side)
 	btn.theme_type_variation = &"shop_icon"
 	btn.add_theme_font_size_override("font_size", 28)
-	btn.add_theme_color_override("font_color", NEON_CYAN)
+	btn.add_theme_color_override("font_color", neon_cyan)
 
 
 static func cell_hover_style() -> StyleBoxFlat:
