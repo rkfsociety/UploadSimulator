@@ -181,3 +181,23 @@ jobs:
           files: build/UploadSimulator.apk
           draft: false
           prerelease: true
+
+      - name: Удалить старые релизы и теги (оставить только текущий)
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KEEP_TAG: android-apk-${{ github.run_number }}
+        run: |
+          # Удаляем все релизы android-apk-* кроме текущего (вместе с их тегами)
+          gh release list --limit 200 --json tagName --jq '.[].tagName' \
+            | grep '^android-apk-' | grep -vx "$KEEP_TAG" | while read -r tag; do
+              echo "Удаляю релиз $tag"
+              gh release delete "$tag" --cleanup-tag --yes || true
+            done
+          # Подчищаем теги-сироты android-apk-* без релиза
+          git ls-remote --tags origin 'android-apk-*' \
+            | awk '{print $2}' | sed 's#refs/tags/##' | grep -v '\^{}' \
+            | grep -vx "$KEEP_TAG" | while read -r tag; do
+              echo "Удаляю тег-сироту $tag"
+              git push origin --delete "$tag" || true
+            done
