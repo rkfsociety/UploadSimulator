@@ -110,7 +110,7 @@ jobs:
         run: ./actionlint -color
 
   android-apk:
-    name: Android APK (debug)
+    name: Android APK (release)
     runs-on: ubuntu-latest
     needs: godot
     steps:
@@ -132,10 +132,10 @@ jobs:
           use-dotnet: false
           include-templates: true
 
-      - name: Generate debug keystore
+      - name: Generate signing keystore
         run: |
           keytool -keyalg RSA -genkeypair -alias androiddebugkey \
-            -keypass android -keystore "$RUNNER_TEMP/debug.keystore" \
+            -keypass android -keystore "$RUNNER_TEMP/release.keystore" \
             -storepass android -dname "CN=Android Debug,O=Android,C=US" \
             -validity 9999 -deststoretype pkcs12
 
@@ -152,14 +152,14 @@ jobs:
       - name: Import project (headless)
         run: godot --headless --path . --import --quit-after 1
 
-      - name: Export Android APK (debug)
+      - name: Export Android APK (release)
         env:
-          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ runner.temp }}/debug.keystore
-          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
-          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+          GODOT_ANDROID_KEYSTORE_RELEASE_PATH: ${{ runner.temp }}/release.keystore
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: android
         run: |
           mkdir -p build
-          godot --headless --path . --export-debug "Android" build/UploadSimulator.apk
+          godot --headless --path . --export-release "Android" build/UploadSimulator.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -175,7 +175,7 @@ jobs:
           tag_name: android-apk-${{ github.run_number }}
           name: Android APK Build #${{ github.run_number }}
           body: |
-            Автоматическая сборка APK для Android
+            Автоматическая релизная сборка APK для Android (без debug-оверлея)
             - Commit: ${{ github.sha }}
             - Branch: ${{ github.ref_name }}
           files: build/UploadSimulator.apk
