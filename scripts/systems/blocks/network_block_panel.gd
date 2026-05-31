@@ -21,7 +21,7 @@ func _ready() -> void:
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status_label.add_theme_font_size_override("font_size", 10)
-	_status_label.add_theme_color_override("font_color", MinimalUI.TEXT_DIM)
+	_status_label.add_theme_color_override("font_color", MinimalUI.text_dim)
 	add_child(_status_label)
 
 
@@ -58,7 +58,7 @@ func _add_speed_row(is_download: bool) -> void:
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title.add_theme_font_size_override("font_size", 13)
-	title.add_theme_color_override("font_color", MinimalUI.TEXT)
+	title.add_theme_color_override("font_color", MinimalUI.text)
 
 	var value := Label.new()
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT

@@ -152,7 +152,7 @@ func _update_pending_wire() -> void:
 	_pending_segment["path"] = WireRouteUtils.trim_path_to_rects(
 		path, _rect_for(obstacles, _pending_out.instance_uid), Rect2()
 	)
-	_pending_segment["color"] = MinimalUI.NEON_CYAN
+	_pending_segment["color"] = MinimalUI.neon_cyan
 	_renderer.set_pending(_pending_segment)
 
 

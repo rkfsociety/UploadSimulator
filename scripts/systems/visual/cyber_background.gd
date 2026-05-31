@@ -3,7 +3,7 @@ extends ColorRect
 
 
 func _ready() -> void:
-	color = MinimalUI.BG_DARK
+	color = MinimalUI.bg_dark
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	queue_redraw()
 

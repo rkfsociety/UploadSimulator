@@ -36,7 +36,7 @@ func _ready() -> void:
 func _apply_cyber_theme() -> void:
 	MinimalUI.attach_theme(self)
 	MinimalUI.apply_balance_label(money_label)
-	diamonds_label.add_theme_color_override("font_color", MinimalUI.NEON_PURPLE)
+	diamonds_label.add_theme_color_override("font_color", MinimalUI.neon_purple)
 	diamonds_label.add_theme_font_size_override("font_size", 22)
 	MinimalUI.apply_shop_hud_button(shop_icon_btn, shop_icon_tex)
 	# Открытие по нажатию, не по отпусканию — иначе клик «съедает» только что показанный Dim

@@ -96,14 +96,16 @@ func _draw() -> void:
 static func draw_module_visual(canvas: CanvasItem, canvas_size: Vector2) -> void:
 	var center := canvas_size * 0.5
 	var r := 9.0
-	var accent := MinimalUI.NEON_CYAN
+	var accent := MinimalUI.neon_cyan
 	canvas.draw_circle(center, r + 2.0, Color(accent.r, accent.g, accent.b, 0.16))
 	canvas.draw_circle(center, r, Color(0.04, 0.07, 0.10, 0.95))
 	canvas.draw_arc(center, r, 0, TAU, 48, accent, 2.0)
 	canvas.draw_circle(center, 3.0, accent)
 
 
-static func draw_port_visual(canvas: CanvasItem, canvas_size: Vector2, p_kind: Kind, p_direction: Dir) -> void:
+static func draw_port_visual(
+	canvas: CanvasItem, canvas_size: Vector2, p_kind: Kind, p_direction: Dir
+) -> void:
 	var center := canvas_size * 0.5
 	var r := 9.0
 	var fill := _fill_color(p_kind, p_direction)
@@ -147,14 +149,14 @@ static func _fill_color(p_kind: Kind, p_direction: Dir) -> Color:
 
 static func _outline_color(p_kind: Kind) -> Color:
 	if p_kind == Kind.FILE:
-		return MinimalUI.NEON_CYAN
-	return MinimalUI.NEON_GOLD
+		return MinimalUI.neon_cyan
+	return MinimalUI.neon_gold
 
 
 static func _glow_color(p_kind: Kind) -> Color:
 	if p_kind == Kind.FILE:
-		return MinimalUI.NEON_CYAN
-	return MinimalUI.NEON_MAGENTA
+		return MinimalUI.neon_cyan
+	return MinimalUI.neon_magenta
 
 
 func _tooltip_text() -> String:

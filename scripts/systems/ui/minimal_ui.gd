@@ -17,52 +17,52 @@ static var _map_center_hud_icon: Texture2D
 
 
 # Короткие имена цветов (читают палитру из .tres)
-static var BG_DARK: Color:
+static var bg_dark: Color:
 	get:
 		return colors().bg_dark
 
 
-static var BG_PANEL: Color:
+static var bg_panel: Color:
 	get:
 		return colors().bg_panel
 
 
-static var NEON_CYAN: Color:
+static var neon_cyan: Color:
 	get:
 		return colors().neon_cyan
 
 
-static var NEON_MAGENTA: Color:
+static var neon_magenta: Color:
 	get:
 		return colors().neon_magenta
 
 
-static var NEON_PURPLE: Color:
+static var neon_purple: Color:
 	get:
 		return colors().neon_purple
 
 
-static var NEON_GOLD: Color:
+static var neon_gold: Color:
 	get:
 		return colors().neon_gold
 
 
-static var TEXT: Color:
+static var text: Color:
 	get:
 		return colors().text
 
 
-static var TEXT_DIM: Color:
+static var text_dim: Color:
 	get:
 		return colors().text_dim
 
 
-static var WIRE_FILE: Color:
+static var wire_file: Color:
 	get:
 		return colors().wire_file
 
 
-static var WIRE_MONEY: Color:
+static var wire_money: Color:
 	get:
 		return colors().wire_money
 
@@ -252,12 +252,15 @@ static func apply_icon_button(btn: Button) -> void:
 	btn.add_theme_stylebox_override("hover", t.get_stylebox("hover", &"icon"))
 	btn.add_theme_stylebox_override("pressed", t.get_stylebox("pressed", &"icon"))
 	btn.add_theme_stylebox_override("disabled", t.get_stylebox("disabled", &"icon"))
-	btn.add_theme_color_override("font_color", NEON_MAGENTA)
+	btn.add_theme_color_override("font_color", neon_magenta)
 	btn.add_theme_font_size_override("font_size", 20)
 
 
-static func apply_hud_icon_button(hit_btn: Button, icon_tex: TextureRect, texture: Texture2D) -> void:
-	# Иконка — TextureRect в сцене; Button — прозрачный слой клика (не дочерний узел Button)
+static func apply_hud_icon_button(
+	hit_btn: Button, icon_tex: TextureRect, texture: Texture2D
+) -> void:
+	# Иконка — TextureRect в сцене; Button — прозрачный слой клика
+	# (не дочерний узел Button)
 	var panel: PanelContainer = hit_btn.get_parent().get_parent() as PanelContainer
 	if panel == null:
 		panel = hit_btn.get_parent() as PanelContainer

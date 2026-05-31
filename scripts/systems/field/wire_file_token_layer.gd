@@ -70,7 +70,7 @@ func _draw_token(
 	if endpoints.is_empty():
 		return
 	var pos := WireRouteUtils.sample_path(endpoints, clampf(progress, 0.0, 1.0))
-	var fill := MinimalUI.WIRE_FILE
+	var fill := MinimalUI.wire_file
 	fill.a = 0.95
 	draw_circle(pos, TOKEN_RADIUS, fill)
 	draw_arc(pos, TOKEN_RADIUS, 0.0, TAU, 24, Color(1.0, 1.0, 1.0, 0.85), TOKEN_BORDER, true)

@@ -63,7 +63,7 @@ func _build_ui() -> void:
 	_title = Label.new()
 	_title.text = "Улучшения"
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_title.add_theme_color_override("font_color", MinimalUI.NEON_MAGENTA)
+	_title.add_theme_color_override("font_color", MinimalUI.neon_magenta)
 	_title.add_theme_font_size_override("font_size", 18)
 	header.add_child(_title)
 
@@ -79,7 +79,7 @@ func _build_ui() -> void:
 		"◆ алмазы: откройте новый тип модуля здесь, затем купите его за $ в магазине корзины."
 	)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.add_theme_color_override("font_color", MinimalUI.TEXT_DIM)
+	hint.add_theme_color_override("font_color", MinimalUI.text_dim)
 	hint.add_theme_font_size_override("font_size", 11)
 	vbox.add_child(hint)
 
@@ -130,7 +130,7 @@ func _append_module_unlock_section() -> void:
 		var empty := Label.new()
 		empty.text = "Пока все модули открыты. Новые типы добавятся сюда в обновлениях."
 		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		empty.add_theme_color_override("font_color", MinimalUI.TEXT_DIM)
+		empty.add_theme_color_override("font_color", MinimalUI.text_dim)
 		empty.add_theme_font_size_override("font_size", 11)
 		_list.add_child(empty)
 		return
@@ -176,7 +176,7 @@ func _on_reset_confirmed() -> void:
 func _make_section_title(text: String) -> Label:
 	var lbl := Label.new()
 	lbl.text = text
-	lbl.add_theme_color_override("font_color", MinimalUI.NEON_GOLD)
+	lbl.add_theme_color_override("font_color", MinimalUI.neon_gold)
 	lbl.add_theme_font_size_override("font_size", 13)
 	return lbl
 
@@ -210,7 +210,7 @@ func _make_env_upgrade_row(upgrade_id: String) -> Control:
 		cost,
 		not maxed and GameState.environment.can_buy_upgrade(upgrade_id),
 		_on_buy_upgrade.bind(upgrade_id),
-		MinimalUI.NEON_PURPLE,
+		MinimalUI.neon_purple,
 	)
 
 
@@ -226,7 +226,7 @@ func _make_row(
 ) -> Control:
 	var row := PanelContainer.new()
 	row.add_theme_stylebox_override(
-		"panel", MinimalUI.neon_box(MinimalUI.BG_PANEL, accent, false, 8, 6)
+		"panel", MinimalUI.neon_box(MinimalUI.bg_panel, accent, false, 8, 6)
 	)
 
 	var margin := MarginContainer.new()
@@ -257,7 +257,7 @@ func _make_row(
 	var desc := Label.new()
 	desc.text = desc_text
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_color_override("font_color", MinimalUI.TEXT_DIM)
+	desc.add_theme_color_override("font_color", MinimalUI.text_dim)
 	desc.add_theme_font_size_override("font_size", 11)
 	info.add_child(desc)
 

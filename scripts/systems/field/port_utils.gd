@@ -43,12 +43,12 @@ static func port_center_in_local(port: ConnectionPort, space: Control) -> Vector
 
 static func wire_color_for_port(port: ConnectionPort) -> Color:
 	if port.kind == ConnectionPort.Kind.MONEY:
-		return MinimalUI.WIRE_MONEY
-	return MinimalUI.WIRE_FILE
+		return MinimalUI.wire_money
+	return MinimalUI.wire_file
 
 
 static func wire_color_for_kind(kind: String) -> Color:
-	return MinimalUI.WIRE_MONEY if kind == "money" else MinimalUI.WIRE_FILE
+	return MinimalUI.wire_money if kind == "money" else MinimalUI.wire_file
 
 
 ## Подсветка центральных портов: выбранный источник и все модули, к которым его

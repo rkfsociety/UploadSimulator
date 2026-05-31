@@ -37,7 +37,7 @@ func _ready() -> void:
 func _style_panel() -> void:
 	MinimalUI.attach_theme(self)
 	panel.add_theme_stylebox_override("panel", MinimalUI.shop_panel_style())
-	shop_title.add_theme_color_override("font_color", MinimalUI.NEON_MAGENTA)
+	shop_title.add_theme_color_override("font_color", MinimalUI.neon_magenta)
 	shop_title.add_theme_font_size_override("font_size", 18)
 	MinimalUI.apply_action_button(close_btn)
 	close_btn.text = "×"
@@ -46,9 +46,9 @@ func _style_panel() -> void:
 
 
 func _style_detail() -> void:
-	detail_name.add_theme_color_override("font_color", MinimalUI.NEON_CYAN)
-	detail_desc.add_theme_color_override("font_color", MinimalUI.TEXT_DIM)
-	detail_stock.add_theme_color_override("font_color", MinimalUI.NEON_PURPLE)
+	detail_name.add_theme_color_override("font_color", MinimalUI.neon_cyan)
+	detail_desc.add_theme_color_override("font_color", MinimalUI.text_dim)
+	detail_stock.add_theme_color_override("font_color", MinimalUI.neon_purple)
 	MinimalUI.apply_action_button(buy_btn)
 	MinimalUI.apply_action_button(place_btn)
 
@@ -116,7 +116,7 @@ func _update_icon_selection() -> void:
 		if selected:
 			btn.add_theme_color_override("font_color", accent)
 		else:
-			btn.add_theme_color_override("font_color", MinimalUI.NEON_CYAN)
+			btn.add_theme_color_override("font_color", MinimalUI.neon_cyan)
 
 
 func _show_detail(type_id: String) -> void:
@@ -150,7 +150,7 @@ func _hide_detail() -> void:
 		btn.add_theme_stylebox_override("normal", MinimalUI.shop_icon_tile_style(accent, false))
 		btn.add_theme_stylebox_override("hover", MinimalUI.shop_icon_tile_style(accent, true))
 		btn.add_theme_stylebox_override("pressed", MinimalUI.shop_icon_tile_style(accent, true))
-		btn.add_theme_color_override("font_color", MinimalUI.NEON_CYAN)
+		btn.add_theme_color_override("font_color", MinimalUI.neon_cyan)
 
 
 func _on_buy_pressed() -> void:

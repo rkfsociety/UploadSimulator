@@ -37,7 +37,7 @@ func _init(
 ## Применяет снимок данных к узлам сцены (без обращения к GameState).
 func apply(data: PlacedBlockViewData) -> void:
 	var accent := data.accent
-	var upgrade_accent := MinimalUI.NEON_MAGENTA if data.use_network_panel else accent
+	var upgrade_accent := MinimalUI.neon_magenta if data.use_network_panel else accent
 	_main_panel.set_accent(accent)
 	_upgrade_panel.set_accent(upgrade_accent)
 	_title_label.text = data.title

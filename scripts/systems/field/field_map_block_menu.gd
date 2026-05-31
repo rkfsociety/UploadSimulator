@@ -67,7 +67,7 @@ func refresh_position() -> void:
 func _build_ui() -> void:
 	_panel = PanelContainer.new()
 	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	_panel.add_theme_stylebox_override("panel", MinimalUI.neon_box(MinimalUI.BG_PANEL, MinimalUI.NEON_CYAN, true, 10, 8))
+	_panel.add_theme_stylebox_override("panel", MinimalUI.neon_box(MinimalUI.bg_panel, MinimalUI.neon_cyan, true, 10, 8))
 	add_child(_panel)
 
 	var margin := MarginContainer.new()
@@ -82,14 +82,14 @@ func _build_ui() -> void:
 	margin.add_child(vbox)
 
 	_title = Label.new()
-	_title.add_theme_color_override("font_color", MinimalUI.TEXT)
+	_title.add_theme_color_override("font_color", MinimalUI.text)
 	_title.add_theme_font_size_override("font_size", 14)
 	vbox.add_child(_title)
 
 	_hint = Label.new()
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.custom_minimum_size.x = 180.0
-	_hint.add_theme_color_override("font_color", MinimalUI.TEXT_DIM)
+	_hint.add_theme_color_override("font_color", MinimalUI.text_dim)
 	_hint.add_theme_font_size_override("font_size", 11)
 	vbox.add_child(_hint)
 

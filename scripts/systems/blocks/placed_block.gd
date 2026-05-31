@@ -1,6 +1,7 @@
 extends Control
 class_name PlacedBlock
-## Модуль на поле: сцена placed_block.tscn, данные — PlacedBlockViewData, отрисовка — PlacedBlockView.
+## Модуль на поле: сцена placed_block.tscn, данные — PlacedBlockViewData,
+## отрисовка — PlacedBlockView.
 
 signal upgrade_requested(block: PlacedBlock)
 signal action_requested(block: PlacedBlock)
