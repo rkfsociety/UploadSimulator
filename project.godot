@@ -36,6 +36,7 @@ window/size/resizable=false
 window/size/maximize_disabled=true
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
+window/handheld/orientation="portrait"
 
 [gui]
 
