@@ -85,6 +85,14 @@ func remove_block(uid: String) -> GameOperationResult:
 	return _svc.remove_block(uid)
 
 
+func get_block_sell_value(uid: String) -> int:
+	return _svc.get_block_sell_value(uid)
+
+
+func sell_block(uid: String) -> GameOperationResult:
+	return _svc.sell_block(uid)
+
+
 func get_instance_upgrade_cost(uid: String) -> int:
 	return _svc.get_instance_upgrade_cost(uid)
 

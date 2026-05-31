@@ -249,6 +249,43 @@ func remove_block(uid: String) -> GameOperationResult:
 	return GameOperationResult.ok()
 
 
+## Сумма возврата при продаже: стоимость покупки + всё вложенное в улучшения.
+func get_block_sell_value(uid: String) -> int:
+	var inst := get_instance(uid)
+	if not inst.is_valid():
+		return 0
+	var def: Dictionary = BlockDefs.TYPES.get(inst.type_id, {})
+	var total: float = float(def.get("shop_cost", 0))
+	for lvl in range(1, inst.level):
+		total += float(GameBonus.upgrade_cost(inst.type_id, lvl))
+	return int(round(total))
+
+
+## Продажа модуля: убирает с поля и возвращает деньги (покупка + улучшения).
+func sell_block(uid: String) -> GameOperationResult:
+	var check := check_remove_block(uid)
+	if not check.is_ok():
+		return check
+	var inst := get_instance(uid)
+	var type_id := inst.type_id
+	var refund := get_block_sell_value(uid)
+	if _wiring != null:
+		_wiring.disconnect_all_for_module(uid)
+	_data.purge_module_activity(uid)
+	var blocks := _data.get_placed_blocks()
+	for i in range(blocks.size() - 1, -1, -1):
+		if blocks[i].uid == uid:
+			blocks.remove_at(i)
+			break
+	_data.add_money(float(refund))
+	var block_name: String = BlockDefs.TYPES.get(type_id, {}).get("name", type_id)
+	_host.log_message.emit("«%s» продан за $%d." % [block_name, refund])
+	if _host.has_signal("wire_transfers_changed"):
+		_host.wire_transfers_changed.emit()
+	_notify_stats_and_field()
+	return GameOperationResult.ok()
+
+
 func get_shop_block_types() -> Array[String]:
 	var keys: Array[String] = []
 	for k in BlockDefs.TYPES.keys():

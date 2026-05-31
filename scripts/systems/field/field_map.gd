@@ -52,7 +52,7 @@ func _ready() -> void:
 		MinimalUI.attach_theme(_block_menu)
 		ui_layer.add_child(_block_menu)
 		_block_drag.selection_changed.connect(_on_block_selection_changed)
-		_block_menu.remove_requested.connect(_on_block_remove_requested)
+		_block_menu.sell_requested.connect(_on_block_sell_requested)
 	_map_input = FieldMapInput.new(self, _camera, _placement, _wiring, _block_drag, _diamonds)
 	if _block_menu != null:
 		_map_input.set_block_menu(_block_menu)
@@ -158,11 +158,11 @@ func _on_block_selection_changed(uid: String) -> void:
 		_block_menu.show_for(uid)
 
 
-func _on_block_remove_requested(uid: String) -> void:
+func _on_block_sell_requested(uid: String) -> void:
 	_block_drag.clear_selection()
 	if _block_menu != null:
 		_block_menu.hide_menu()
-	GameState.report_operation(GameState.field.remove_block(uid))
+	GameState.report_operation(GameState.field.sell_block(uid))
 
 
 ## Клетка сетки в центре текущего вида (для внешних вызовов).
