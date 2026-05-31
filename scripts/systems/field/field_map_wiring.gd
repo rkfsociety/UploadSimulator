@@ -73,12 +73,15 @@ func update_positions() -> void:
 			continue
 		seg["from"] = PortUtils.port_center_in_local(from_p, _wires_root)
 		seg["to"] = PortUtils.port_center_in_local(to_p, _wires_root)
-		var path := WireRouteUtils.build_path(
-			seg["from"],
-			seg["to"],
-			ConnectionPort.Dir.OUT,
-			ConnectionPort.Dir.IN,
-			_obstacles_except(obstacles, [wire.from_uid, wire.to_uid]),
+		var path := (
+			WireRouteUtils
+			. build_path(
+				seg["from"],
+				seg["to"],
+				ConnectionPort.Dir.OUT,
+				ConnectionPort.Dir.IN,
+				_obstacles_except(obstacles, [wire.from_uid, wire.to_uid]),
+			)
 		)
 		# Обрезаем концы по краям модулей — линия «выходит» из края (перекрестие).
 		seg["path"] = WireRouteUtils.trim_path_to_rects(
@@ -141,12 +144,15 @@ func _update_pending_wire() -> void:
 	_pending_segment["from"] = from_pos
 	_pending_segment["to"] = to_pos
 	var obstacles := _gather_obstacle_rects()
-	var path := WireRouteUtils.build_path(
-		from_pos,
-		to_pos,
-		ConnectionPort.Dir.OUT,
-		ConnectionPort.Dir.IN,
-		_obstacles_except(obstacles, [_pending_out.instance_uid]),
+	var path := (
+		WireRouteUtils
+		. build_path(
+			from_pos,
+			to_pos,
+			ConnectionPort.Dir.OUT,
+			ConnectionPort.Dir.IN,
+			_obstacles_except(obstacles, [_pending_out.instance_uid]),
+		)
 	)
 	# Старт обрезаем по краю модуля-источника; конец (курсор) оставляем как есть.
 	_pending_segment["path"] = WireRouteUtils.trim_path_to_rects(
@@ -160,14 +166,18 @@ func _update_pending_wire() -> void:
 func _gather_obstacle_rects() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for inst: BlockInstance in GameState.access.get_placed_blocks():
-		out.append(
-			{
-				"uid": inst.uid,
-				"rect": Rect2(
-					GridDefs.cell_to_pixel(inst.gx, inst.gy),
-					GridDefs.block_pixel_size(inst.type_id),
-				),
-			}
+		(
+			out
+			. append(
+				{
+					"uid": inst.uid,
+					"rect":
+					Rect2(
+						GridDefs.cell_to_pixel(inst.gx, inst.gy),
+						GridDefs.block_pixel_size(inst.type_id),
+					),
+				}
+			)
 		)
 	return out
 

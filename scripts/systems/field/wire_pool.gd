@@ -2,7 +2,6 @@ extends RefCounted
 class_name WirePool
 ## Пул сегментов проводов (переиспользование при rebuild_wires).
 
-
 static var _segment_pool: Array[Dictionary] = []
 static var _link_pool: Array[WireLink] = []
 

@@ -2,7 +2,6 @@ extends RefCounted
 class_name GameStateSave
 ## API сохранений для autoload GameState.
 
-
 var _svc: GameSaveService
 
 

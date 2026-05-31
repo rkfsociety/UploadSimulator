@@ -2,7 +2,6 @@ extends RefCounted
 class_name GameSaveService
 ## Сервис сохранений: снимок состояния через SaveBackend.
 
-
 var _data: GameStateData
 var _premium: PremiumCurrencyService
 var _host: Node

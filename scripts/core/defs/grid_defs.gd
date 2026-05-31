@@ -30,10 +30,7 @@ static func cell_rect(gx: int, gy: int) -> Rect2:
 
 
 static func pixel_to_cell(world_px: Vector2) -> Vector2i:
-	return Vector2i(
-		floori(world_px.x / float(CELL_SIZE)),
-		floori(world_px.y / float(CELL_SIZE))
-	)
+	return Vector2i(floori(world_px.x / float(CELL_SIZE)), floori(world_px.y / float(CELL_SIZE)))
 
 
 static func snap_cell_from_world(world_px: Vector2) -> Vector2i:

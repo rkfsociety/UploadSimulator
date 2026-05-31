@@ -209,7 +209,10 @@ static func _validate_defs() -> void:
 	for type_id in TYPES:
 		if requires_diamond_unlock(type_id) and diamond_unlock_cost(type_id) <= 0:
 			push_error(
-				"BlockDefs: тип «%s» с unlocked_at_start=false нужен diamond_unlock_cost > 0." % type_id
+				(
+					"BlockDefs: тип «%s» с unlocked_at_start=false нужен diamond_unlock_cost > 0."
+					% type_id
+				)
 			)
 
 
@@ -220,22 +223,34 @@ static func _validate_type(type_id: String, type_def: Dictionary) -> void:
 	if is_upgradeable(type_id):
 		if not type_def.has("effect_per_level") and not type_def.has("capacity_files_per_level"):
 			push_error(
-				"BlockDefs: тип «%s» должен иметь effect_per_level или capacity_files_per_level." % type_id
+				(
+					"BlockDefs: тип «%s» должен иметь effect_per_level или capacity_files_per_level."
+					% type_id
+				)
 			)
 	if is_downloader_type(type_id):
 		var ft := get_downloader_file_type(type_id)
 		if ft == "" or not FileDefs.TYPES.has(ft):
 			push_error(
-				"BlockDefs: загрузчик «%s» ссылается на неизвестный file_type_id «%s»." % [type_id, ft]
+				(
+					"BlockDefs: загрузчик «%s» ссылается на неизвестный file_type_id «%s»."
+					% [type_id, ft]
+				)
 			)
 		if max_stored_files(type_id) <= 0:
-			push_error("BlockDefs: тип загрузчика «%s» должен иметь max_stored_files > 0." % type_id)
+			push_error(
+				"BlockDefs: тип загрузчика «%s» должен иметь max_stored_files > 0." % type_id
+			)
 	if stores_files(type_id) and not is_downloader_type(type_id):
-		push_error("BlockDefs: max_stored_files сейчас только у типов загрузчиков (Text Downloader и др.).")
+		push_error(
+			"BlockDefs: max_stored_files сейчас только у типов загрузчиков (Text Downloader и др.)."
+		)
 	if cells_w(type_id) < MIN_CELLS_W or cells_h(type_id) < MIN_CELLS_H:
 		push_error(
-			"BlockDefs: тип «%s» — размер %dx%d меньше минимума %dx%d клеток."
-			% [type_id, cells_w(type_id), cells_h(type_id), MIN_CELLS_W, MIN_CELLS_H]
+			(
+				"BlockDefs: тип «%s» — размер %dx%d меньше минимума %dx%d клеток."
+				% [type_id, cells_w(type_id), cells_h(type_id), MIN_CELLS_W, MIN_CELLS_H]
+			)
 		)
 	var ports: Dictionary = PORT_DEFS.get(type_id, {})
 	for port_id in ports:
@@ -268,8 +283,10 @@ static func _validate_wire_pair(pair: Array) -> void:
 	if resolved.is_empty():
 		push_error(
 			(
-				"BlockDefs: нет совместимых портов для соединения «%s» → «%s» "
-				+ "(нужен out и in с одинаковым kind)."
+				(
+					"BlockDefs: нет совместимых портов для соединения «%s» → «%s» "
+					+ "(нужен out и in с одинаковым kind)."
+				)
+				% [from_type, to_type]
 			)
-			% [from_type, to_type]
 		)

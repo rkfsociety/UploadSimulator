@@ -58,7 +58,9 @@ func _ready() -> void:
 	)
 	_wiring_svc.bind_pipeline(_pipeline_svc)
 	_save_svc = GameSaveService.new(_data, _premium_svc, self, FileSaveBackend.new())
-	_display_svc = GameDisplayService.new(_data, _field_svc, _wiring_svc, _storage_svc, _pipeline_svc)
+	_display_svc = GameDisplayService.new(
+		_data, _field_svc, _wiring_svc, _storage_svc, _pipeline_svc
+	)
 	access = GameStateAccess.new(_data)
 	field = GameStateField.new(_field_svc)
 	display = GameStateDisplay.new(_display_svc)

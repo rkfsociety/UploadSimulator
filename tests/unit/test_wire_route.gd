@@ -14,11 +14,14 @@ func run() -> Array[String]:
 
 
 func _test_same_row_is_horizontal(errors: Array[String]) -> void:
-	var path := WireRouteUtils.build_path(
-		Vector2(200, 96),
-		Vector2(500, 98),
-		ConnectionPort.Dir.OUT,
-		ConnectionPort.Dir.IN,
+	var path := (
+		WireRouteUtils
+		. build_path(
+			Vector2(200, 96),
+			Vector2(500, 98),
+			ConnectionPort.Dir.OUT,
+			ConnectionPort.Dir.IN,
+		)
 	)
 	if path.size() > 5:
 		errors.append("wire route: на одной высоте путь должен быть коротким (<=5 точек)")
@@ -32,11 +35,14 @@ func _test_same_row_is_horizontal(errors: Array[String]) -> void:
 
 
 func _test_axis_aligned(errors: Array[String]) -> void:
-	var path := WireRouteUtils.build_path(
-		Vector2(0, 0),
-		Vector2(256, 128),
-		ConnectionPort.Dir.OUT,
-		ConnectionPort.Dir.IN,
+	var path := (
+		WireRouteUtils
+		. build_path(
+			Vector2(0, 0),
+			Vector2(256, 128),
+			ConnectionPort.Dir.OUT,
+			ConnectionPort.Dir.IN,
+		)
 	)
 	if not WireRouteUtils.is_axis_aligned(path):
 		errors.append("wire route: все сегменты должны быть H/V")
@@ -45,12 +51,15 @@ func _test_axis_aligned(errors: Array[String]) -> void:
 func _test_avoids_obstacle(errors: Array[String]) -> void:
 	# Модуль ровно на прямой между портами — путь должен его обогнуть.
 	var obstacle := Rect2(Vector2(220, 32), Vector2(192, 192))
-	var path := WireRouteUtils.build_path(
-		Vector2(160, 128),
-		Vector2(480, 128),
-		ConnectionPort.Dir.OUT,
-		ConnectionPort.Dir.IN,
-		[obstacle] as Array[Rect2],
+	var path := (
+		WireRouteUtils
+		. build_path(
+			Vector2(160, 128),
+			Vector2(480, 128),
+			ConnectionPort.Dir.OUT,
+			ConnectionPort.Dir.IN,
+			[obstacle] as Array[Rect2],
+		)
 	)
 	if not WireRouteUtils.is_axis_aligned(path):
 		errors.append("wire route: обход должен оставаться ортогональным (H/V)")
@@ -66,23 +75,29 @@ func _test_no_obstacles_keeps_simple(errors: Array[String]) -> void:
 	var bare := WireRouteUtils.build_path(
 		Vector2(0, 0), Vector2(256, 128), ConnectionPort.Dir.OUT, ConnectionPort.Dir.IN
 	)
-	var with_empty := WireRouteUtils.build_path(
-		Vector2(0, 0),
-		Vector2(256, 128),
-		ConnectionPort.Dir.OUT,
-		ConnectionPort.Dir.IN,
-		[] as Array[Rect2],
+	var with_empty := (
+		WireRouteUtils
+		. build_path(
+			Vector2(0, 0),
+			Vector2(256, 128),
+			ConnectionPort.Dir.OUT,
+			ConnectionPort.Dir.IN,
+			[] as Array[Rect2],
+		)
 	)
 	if bare != with_empty:
 		errors.append("wire route: пустой список препятствий не должен менять маршрут")
 
 
 func _test_sample_endpoints(errors: Array[String]) -> void:
-	var path := WireRouteUtils.build_path(
-		Vector2(100, 50),
-		Vector2(400, 200),
-		ConnectionPort.Dir.OUT,
-		ConnectionPort.Dir.IN,
+	var path := (
+		WireRouteUtils
+		. build_path(
+			Vector2(100, 50),
+			Vector2(400, 200),
+			ConnectionPort.Dir.OUT,
+			ConnectionPort.Dir.IN,
+		)
 	)
 	var start := WireRouteUtils.sample_path(path, 0.0)
 	var end := WireRouteUtils.sample_path(path, 1.0)

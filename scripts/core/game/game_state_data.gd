@@ -329,9 +329,12 @@ func import_save_dict(payload: Dictionary) -> void:
 	set_money(float(migrated.get("money", _money)))
 	set_uploader_balance(
 		float(
-			migrated.get(
-				"uploader_balance",
-				migrated.get("network_balance", _uploader_balance),
+			(
+				migrated
+				. get(
+					"uploader_balance",
+					migrated.get("network_balance", _uploader_balance),
+				)
 			)
 		)
 	)

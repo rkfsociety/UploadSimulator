@@ -41,17 +41,23 @@ func get_block_metric(uid: String) -> String:
 			if BlockDefs.is_downloader_type(inst.type_id):
 				var cap := _storage.max_files_for(uid)
 				var used := _storage.get_module_used_files(uid, _wiring.get_download_chain())
-				return "Файлы: %d / %d · %s" % [
-					used,
-					cap,
-					FileDefs.get_type_label(BlockDefs.get_downloader_file_type(inst.type_id)),
-				]
+				return (
+					"Файлы: %d / %d · %s"
+					% [
+						used,
+						cap,
+						FileDefs.get_type_label(BlockDefs.get_downloader_file_type(inst.type_id)),
+					]
+				)
 			match inst.type_id:
 				"uploader":
-					return "Сейф $%.0f · ↑ %s" % [
-						_data.get_uploader_balance(),
-						ByteFormat.format_speed_bps(_pipeline.upload_speed_for(uid)),
-					]
+					return (
+						"Сейф $%.0f · ↑ %s"
+						% [
+							_data.get_uploader_balance(),
+							ByteFormat.format_speed_bps(_pipeline.upload_speed_for(uid)),
+						]
+					)
 				"collector":
 					return "Переводит сейф загрузчика в кассу"
 	return ""
@@ -137,7 +143,7 @@ func _fill_network_display(
 
 
 func _fill_downloader_display(
-	target: Dictionary, uid: String, chain_file: Dictionary, dl_chain: Dictionary
+	target: Dictionary, uid: String, _chain_file: Dictionary, dl_chain: Dictionary
 ) -> void:
 	target["action_visible"] = false
 	target["action_enabled"] = false
@@ -153,18 +159,22 @@ func _fill_downloader_display(
 		target["progress"] = job.progress
 		return
 	for transfer: WireFileTransfer in _data.get_wire_transfers():
-		if (
-			transfer.purpose == WireFileTransfer.Purpose.TO_UPLOADER
-			and transfer.from_uid == uid
-		):
+		if transfer.purpose == WireFileTransfer.Purpose.TO_UPLOADER and transfer.from_uid == uid:
 			target["status"] = (
 				"В сеть: %s · %d%% · %d/%d"
-				% [FileDefs.get_type_label(transfer.file_type_id), int(transfer.progress * 100.0), used, cap]
+				% [
+					FileDefs.get_type_label(transfer.file_type_id),
+					int(transfer.progress * 100.0),
+					used,
+					cap
+				]
 			)
 			target["progress"] = transfer.progress
 			return
 	if _pipeline.can_download_at(uid):
-		var ft := FileDefs.get_type_label(BlockDefs.get_downloader_file_type(_field.get_instance_type(uid)))
+		var ft := FileDefs.get_type_label(
+			BlockDefs.get_downloader_file_type(_field.get_instance_type(uid))
+		)
 		target["status"] = "Качает %s · %d/%d" % [ft, used, cap]
 	elif not _data.get_module_files(uid).is_empty():
 		target["status"] = "Хранит %d/%d · ждёт выгрузку" % [used, cap]
@@ -198,13 +208,14 @@ func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Diction
 		target["progress"] = upload_transfer.progress
 		return
 	for transfer: WireFileTransfer in _data.get_wire_transfers():
-		if (
-			transfer.purpose == WireFileTransfer.Purpose.TO_UPLOADER
-			and transfer.to_uid == uid
-		):
+		if transfer.purpose == WireFileTransfer.Purpose.TO_UPLOADER and transfer.to_uid == uid:
 			target["status"] = (
 				"Принимает %s · %d%% · сейф $%.0f"
-				% [FileDefs.get_type_label(transfer.file_type_id), int(transfer.progress * 100.0), safe]
+				% [
+					FileDefs.get_type_label(transfer.file_type_id),
+					int(transfer.progress * 100.0),
+					safe
+				]
 			)
 			target["progress"] = transfer.progress
 			return
@@ -221,9 +232,9 @@ func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Diction
 		target["status"] = "Выгружает в сеть · сейф $%.0f" % safe
 		return
 	if chain_file.is_empty():
-		target["status"] = GameOperationResult.fail(
-			GameOperationResult.Code.PIPELINE_NO_CHAIN
-		).get_message()
+		target["status"] = (
+			GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_CHAIN).get_message()
+		)
 		return
 	if safe >= GameConstants.MIN_COLLECT_BALANCE and not _wiring.get_money_chain().is_empty():
 		target["status"] = "Сейф $%.0f → коллектор" % safe
@@ -231,13 +242,13 @@ func _fill_uploader_display(target: Dictionary, uid: String, chain_file: Diction
 		target["status"] = "Ждёт файлы от Text Downloader · сейф $%.0f" % safe
 
 
-func _fill_collector_display(target: Dictionary, uid: String, chain_money: Dictionary) -> void:
+func _fill_collector_display(target: Dictionary, _uid: String, chain_money: Dictionary) -> void:
 	target["action_visible"] = false
 	target["action_enabled"] = false
 	if chain_money.is_empty():
-		target["status"] = GameOperationResult.fail(
-			GameOperationResult.Code.PIPELINE_NO_MONEY_CHAIN
-		).get_message()
+		target["status"] = (
+			GameOperationResult.fail(GameOperationResult.Code.PIPELINE_NO_MONEY_CHAIN).get_message()
+		)
 		return
 	var safe := _data.get_uploader_balance()
 	if safe < GameConstants.MIN_COLLECT_BALANCE:

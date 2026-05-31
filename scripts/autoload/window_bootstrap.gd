@@ -29,8 +29,7 @@ func _apply_desktop_window() -> void:
 	# Пропорционально уменьшаем, если 720×1280 не влезает (панель задач, малый монитор)
 	if target_w > max_w or target_h > max_h:
 		var scale: float = minf(
-			float(max_w) / float(DESIGN_SIZE.x),
-			float(max_h) / float(DESIGN_SIZE.y)
+			float(max_w) / float(DESIGN_SIZE.x), float(max_h) / float(DESIGN_SIZE.y)
 		)
 		target_w = maxi(1, int(floor(DESIGN_SIZE.x * scale)))
 		target_h = maxi(1, int(floor(DESIGN_SIZE.y * scale)))

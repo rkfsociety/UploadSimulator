@@ -2,7 +2,6 @@ extends RefCounted
 class_name BlockInstance
 ## Экземпляр модуля на поле (типизированная модель).
 
-
 var uid: String = ""
 var type_id: String = ""
 var gx: int = 0

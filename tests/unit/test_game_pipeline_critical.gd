@@ -93,7 +93,10 @@ func _test_full_download_queue_drains(errors: Array[String]) -> void:
 	var stored := data.get_module_files(uids.downloader).size()
 	if stored != GameConstants.MAX_QUEUE_JOBS:
 		errors.append(
-			"полная очередь: в Text Downloader %d файлов, ожидалось %d" % [stored, GameConstants.MAX_QUEUE_JOBS]
+			(
+				"полная очередь: в Text Downloader %d файлов, ожидалось %d"
+				% [stored, GameConstants.MAX_QUEUE_JOBS]
+			)
 		)
 	stack.host.free()
 

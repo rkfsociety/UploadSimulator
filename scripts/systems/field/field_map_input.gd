@@ -131,7 +131,7 @@ func _end_pointer(local_pos: Vector2) -> void:
 			_pointer_moved = false
 			_drag_pan = false
 			return
-		elif _placement.get_selected_type() != "":
+		if _placement.get_selected_type() != "":
 			var next_type: String = _placement.try_place_at_screen(local_pos)
 			_placement.set_selected_type(next_type)
 			placement_finished.emit(next_type)

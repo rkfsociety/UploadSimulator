@@ -50,12 +50,15 @@ func apply(data: PlacedBlockViewData) -> void:
 	if data.use_network_panel and _network_panel != null:
 		_network_panel.visible = true
 		_metric_label.visible = false
-		_network_panel.apply(
-			data.network_download_bps,
-			data.network_upload_bps,
-			data.network_download_active,
-			data.network_upload_active,
-			data.status,
+		(
+			_network_panel
+			. apply(
+				data.network_download_bps,
+				data.network_upload_bps,
+				data.network_download_active,
+				data.network_upload_active,
+				data.status,
+			)
 		)
 	else:
 		if _network_panel != null:

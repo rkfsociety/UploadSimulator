@@ -2,7 +2,6 @@ extends RefCounted
 class_name DiamondPickup
 ## Несобранный кристал ◆ на карте.
 
-
 var uid: String = ""
 var world_pos := Vector2.ZERO
 var amount: int = 1

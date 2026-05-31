@@ -48,7 +48,12 @@ static func _load_balance_config() -> Resource:
 		var user_cfg: Variant = ResourceLoader.load(USER_CONFIG_PATH)
 		if user_cfg != null and user_cfg.get_script() == _BalanceConfig:
 			return user_cfg as Resource
-		push_warning("GameConstants: %s не GameBalanceConfig, берём дефолт из репозитория." % USER_CONFIG_PATH)
+		push_warning(
+			(
+				"GameConstants: %s не GameBalanceConfig, берём дефолт из репозитория."
+				% USER_CONFIG_PATH
+			)
+		)
 	if ResourceLoader.exists(CONFIG_RESOURCE):
 		var base_cfg: Variant = load(CONFIG_RESOURCE)
 		if base_cfg != null and base_cfg.get_script() == _BalanceConfig:

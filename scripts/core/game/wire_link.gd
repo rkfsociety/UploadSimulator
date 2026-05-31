@@ -2,7 +2,6 @@ extends RefCounted
 class_name WireLink
 ## Соединение двух портов на поле (типизированная модель).
 
-
 var from_uid: String = ""
 var from_port: String = ""
 var to_uid: String = ""

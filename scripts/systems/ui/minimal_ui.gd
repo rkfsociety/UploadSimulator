@@ -15,52 +15,42 @@ static var _shop_hud_icon: Texture2D
 static var _upgrade_shop_hud_icon: Texture2D
 static var _map_center_hud_icon: Texture2D
 
-
 # Короткие имена цветов (читают палитру из .tres)
 static var bg_dark: Color:
 	get:
 		return colors().bg_dark
 
-
 static var bg_panel: Color:
 	get:
 		return colors().bg_panel
-
 
 static var neon_cyan: Color:
 	get:
 		return colors().neon_cyan
 
-
 static var neon_magenta: Color:
 	get:
 		return colors().neon_magenta
-
 
 static var neon_purple: Color:
 	get:
 		return colors().neon_purple
 
-
 static var neon_gold: Color:
 	get:
 		return colors().neon_gold
-
 
 static var text: Color:
 	get:
 		return colors().text
 
-
 static var text_dim: Color:
 	get:
 		return colors().text_dim
 
-
 static var wire_file: Color:
 	get:
 		return colors().wire_file
-
 
 static var wire_money: Color:
 	get:
@@ -133,6 +123,7 @@ static func flat_btn(normal: Color = Color(), border: Color = Color()) -> StyleB
 
 
 # --- Кэшированные пресеты (используются Theme и apply_*) ---
+
 
 static func cached_action_normal() -> StyleBoxFlat:
 	var c := colors()

@@ -5,7 +5,13 @@ class_name EnvironmentUpgradeDefs
 const UPGRADES := {}
 
 const _REQUIRED_KEYS: Array[String] = [
-	"name", "icon", "desc", "diamond_cost_base", "diamond_cost_mult", "max_level", "effect_per_level",
+	"name",
+	"icon",
+	"desc",
+	"diamond_cost_base",
+	"diamond_cost_mult",
+	"max_level",
+	"effect_per_level",
 	"effect_key"
 ]
 

@@ -76,7 +76,7 @@ func _build_ui() -> void:
 
 	var hint := Label.new()
 	hint.text = (
-		"◆ алмазы: откройте новый тип модуля здесь, затем купите его за $ в магазине корзины."
+		"◆ алмазы: откройте новый тип модуля здесь, " + "затем купите его за $ в магазине корзины."
 	)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_color_override("font_color", MinimalUI.text_dim)
@@ -149,16 +149,19 @@ func _append_env_upgrade_section() -> void:
 
 func _append_reset_section() -> void:
 	_list.add_child(_make_section_title("Сохранение"))
-	_list.add_child(
-		_make_row(
-			"⟲",
-			"Сбросить прогресс",
-			"Новая игра с нуля. Сохранение на диске будет удалено.",
-			"Сбросить",
-			0,
-			true,
-			_on_reset_pressed,
-			DANGER_COLOR,
+	(
+		_list
+		. add_child(
+			_make_row(
+				"⟲",
+				"Сбросить прогресс",
+				"Новая игра с нуля. Сохранение на диске будет удалено.",
+				"Сбросить",
+				0,
+				true,
+				_on_reset_pressed,
+				DANGER_COLOR,
+			)
 		)
 	)
 
@@ -187,7 +190,7 @@ func _make_module_unlock_row(type_id: String) -> Control:
 	return _make_row(
 		str(def.get("icon", "?")),
 		def.get("name", type_id),
-		'Откроет покупку в магазине $ - %s' % def.get("desc", ""),
+		"Откроет покупку в магазине $ - %s" % def.get("desc", ""),
 		"Открыть",
 		cost,
 		GameState.environment.can_unlock_module(type_id),

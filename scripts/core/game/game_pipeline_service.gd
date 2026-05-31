@@ -131,9 +131,12 @@ func check_collect_at(uid: String) -> GameOperationResult:
 func check_enqueue_download() -> GameOperationResult:
 	var chain := _wiring.get_download_chain()
 	if chain.is_empty():
-		return GameOperationResult.fail(
-			GameOperationResult.Code.PIPELINE_NO_CHAIN,
-			"Подключите Text Downloader к сети (net_out → net_in).",
+		return (
+			GameOperationResult
+			. fail(
+				GameOperationResult.Code.PIPELINE_NO_CHAIN,
+				"Подключите Text Downloader к сети (net_out → net_in).",
+			)
 		)
 	if _data.get_download_queue().size() >= GameConstants.MAX_QUEUE_JOBS:
 		return GameOperationResult.fail(GameOperationResult.Code.PIPELINE_DOWNLOAD_QUEUE_FULL)
@@ -242,14 +245,17 @@ func enqueue_upload() -> GameOperationResult:
 	var entry: StoredFileEntry = files.pop_front()
 	var speed := download_speed_for(dl_uid)
 	var duration := GameValueBounds.job_duration_from_bytes(entry.size_bytes, speed)
-	var transfer := WireFileTransfer.from_entry(
-		WireFileTransfer.Purpose.TO_UPLOADER,
-		dl_uid,
-		"file_out",
-		up_uid,
-		"file_in",
-		entry,
-		duration,
+	var transfer := (
+		WireFileTransfer
+		. from_entry(
+			WireFileTransfer.Purpose.TO_UPLOADER,
+			dl_uid,
+			"file_out",
+			up_uid,
+			"file_in",
+			entry,
+			duration,
+		)
 	)
 	_data.get_wire_transfers().append(transfer)
 	_notify_wire_transfers()
@@ -354,13 +360,14 @@ func apply_publish(job: FileTransferJob) -> void:
 	_data.set_phase(GameStateData.Phase.SETTLING)
 	if diamonds_spawned > 0:
 		_host.log_message.emit(
-			"Выгружен %s: +$%.1f в загрузчик, ◆%d на карте (нажмите, чтобы собрать)"
-			% [FileDefs.get_type_label(job.file_type_id), revenue, diamonds_spawned]
+			(
+				"Выгружен %s: +$%.1f в загрузчик, ◆%d на карте (нажмите, чтобы собрать)"
+				% [FileDefs.get_type_label(job.file_type_id), revenue, diamonds_spawned]
+			)
 		)
 	else:
 		_host.log_message.emit(
-			"Выгружен %s: +$%.1f в загрузчик"
-			% [FileDefs.get_type_label(job.file_type_id), revenue]
+			"Выгружен %s: +$%.1f в загрузчик" % [FileDefs.get_type_label(job.file_type_id), revenue]
 		)
 
 
@@ -422,14 +429,17 @@ func _start_network_upload_from_transit(transfer: WireFileTransfer) -> void:
 	entry.quality = transfer.quality
 	entry.size_bytes = transfer.size_bytes
 	entry.apply_bounds()
-	var net_transfer := WireFileTransfer.from_entry(
-		WireFileTransfer.Purpose.TO_NETWORK,
-		up_uid,
-		"net_out",
-		net_uid,
-		"net_in",
-		entry,
-		duration,
+	var net_transfer := (
+		WireFileTransfer
+		. from_entry(
+			WireFileTransfer.Purpose.TO_NETWORK,
+			up_uid,
+			"net_out",
+			net_uid,
+			"net_in",
+			entry,
+			duration,
+		)
 	)
 	_data.get_wire_transfers().append(net_transfer)
 	_notify_wire_transfers()

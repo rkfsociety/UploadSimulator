@@ -2,7 +2,6 @@ extends RefCounted
 class_name FieldMapDiamonds
 ## Визуальные кристаллы ◆ на карте и сбор по тапу.
 
-
 var _root: Control
 var _camera: FieldMapCamera
 var _nodes: Dictionary = {}

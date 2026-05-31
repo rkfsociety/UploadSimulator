@@ -18,9 +18,7 @@ func get_upgrade_level(upgrade_id: String) -> int:
 
 
 func diamond_cost(upgrade_id: String) -> int:
-	return EnvironmentUpgradeDefs.diamond_cost_for_level(
-		upgrade_id, get_upgrade_level(upgrade_id)
-	)
+	return EnvironmentUpgradeDefs.diamond_cost_for_level(upgrade_id, get_upgrade_level(upgrade_id))
 
 
 func can_buy_upgrade(upgrade_id: String) -> bool:
@@ -83,9 +81,7 @@ func unlock_module(type_id: String) -> GameOperationResult:
 		return GameOperationResult.fail(GameOperationResult.Code.ENV_INSUFFICIENT_DIAMONDS)
 	_data.unlock_module_type(type_id)
 	var name: String = BlockDefs.TYPES.get(type_id, {}).get("name", type_id)
-	_host.log_message.emit(
-		"Открыт модуль «%s» — теперь в магазине за $ (◆ −%d)" % [name, cost]
-	)
+	_host.log_message.emit("Открыт модуль «%s» — теперь в магазине за $ (◆ −%d)" % [name, cost])
 	_host.stats_changed.emit()
 	return GameOperationResult.ok()
 

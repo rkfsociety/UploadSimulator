@@ -3,9 +3,9 @@ class_name PremiumCurrencyService
 ## Единая точка заработка и трат алмазов (отдельно от кассы $ и сейфа аплоудера).
 
 enum Source {
-	UPLOAD, ## за выгрузку файла
-	QUEST, ## будущие квесты и награды
-	ADMIN, ## отладка / читы
+	UPLOAD,  ## за выгрузку файла
+	QUEST,  ## будущие квесты и награды
+	ADMIN,  ## отладка / читы
 }
 
 var _wallet: PremiumWallet
@@ -13,7 +13,9 @@ var _data: GameStateData
 var _host: Node
 
 
-func _init(host: Node, data: GameStateData, start_balance: int = GameConstants.START_DIAMONDS) -> void:
+func _init(
+	host: Node, data: GameStateData, start_balance: int = GameConstants.START_DIAMONDS
+) -> void:
 	_host = host
 	_data = data
 	_wallet = PremiumWallet.new(start_balance)

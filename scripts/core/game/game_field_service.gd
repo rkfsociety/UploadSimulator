@@ -56,10 +56,12 @@ func check_singleton_limit(type_id: String) -> GameOperationResult:
 	if owned_singleton_count(type_id) <= 0:
 		return GameOperationResult.ok()
 	var block_name: String = BlockDefs.TYPES.get(type_id, {}).get("name", type_id)
-	return GameOperationResult.fail(
-		GameOperationResult.Code.FIELD_SINGLETON_LIMIT,
-		"«%s» может быть только один — снимите с поля или поставьте со склада."
-		% block_name,
+	return (
+		GameOperationResult
+		. fail(
+			GameOperationResult.Code.FIELD_SINGLETON_LIMIT,
+			"«%s» может быть только один — снимите с поля или поставьте со склада." % block_name,
+		)
 	)
 
 
@@ -113,8 +115,7 @@ func check_place_block(type_id: String, gx: int, gy: int) -> GameOperationResult
 	if not GridDefs.footprint_in_bounds(gx, gy, type_id):
 		return GameOperationResult.fail(
 			GameOperationResult.Code.FIELD_OUT_OF_BOUNDS,
-			"За пределами карты (%d…%d)."
-			% [-GridDefs.GRID_HALF, GridDefs.GRID_HALF - 1]
+			"За пределами карты (%d…%d)." % [-GridDefs.GRID_HALF, GridDefs.GRID_HALF - 1]
 		)
 	for cell in GridDefs.block_footprint_cells(gx, gy, type_id):
 		if get_block_at(cell.x, cell.y).is_valid():
@@ -125,12 +126,7 @@ func check_place_block(type_id: String, gx: int, gy: int) -> GameOperationResult
 func get_block_at(gx: int, gy: int) -> BlockInstance:
 	for inst: BlockInstance in _data.get_placed_blocks():
 		var c := GridDefs.block_cells(inst.type_id)
-		if (
-			gx >= inst.gx
-			and gx < inst.gx + c.x
-			and gy >= inst.gy
-			and gy < inst.gy + c.y
-		):
+		if gx >= inst.gx and gx < inst.gx + c.x and gy >= inst.gy and gy < inst.gy + c.y:
 			return inst
 	return BlockInstance.new()
 
@@ -194,7 +190,9 @@ func check_upgrade_instance(uid: String) -> GameOperationResult:
 	if not inst.is_valid():
 		return GameOperationResult.fail(GameOperationResult.Code.FIELD_INVALID_INSTANCE)
 	if not BlockDefs.is_upgradeable(inst.type_id):
-		return GameOperationResult.fail(GameOperationResult.Code.FIELD_INVALID_MODULE, "Улучшение недоступно.")
+		return GameOperationResult.fail(
+			GameOperationResult.Code.FIELD_INVALID_MODULE, "Улучшение недоступно."
+		)
 	if _data.get_money() < float(get_instance_upgrade_cost(uid)):
 		return GameOperationResult.fail(GameOperationResult.Code.FIELD_INSUFFICIENT_MONEY)
 	return GameOperationResult.ok()

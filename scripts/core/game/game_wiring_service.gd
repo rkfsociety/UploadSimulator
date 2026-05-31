@@ -45,14 +45,18 @@ func resolve_module_connection(a_uid: String, b_uid: String) -> Dictionary:
 	var ab := BlockDefs.resolve_wire_ports(a_type, b_type)
 	if not ab.is_empty():
 		return {
-			"from_uid": a_uid, "from_port": ab["from_port"],
-			"to_uid": b_uid, "to_port": ab["to_port"],
+			"from_uid": a_uid,
+			"from_port": ab["from_port"],
+			"to_uid": b_uid,
+			"to_port": ab["to_port"],
 		}
 	var ba := BlockDefs.resolve_wire_ports(b_type, a_type)
 	if not ba.is_empty():
 		return {
-			"from_uid": b_uid, "from_port": ba["from_port"],
-			"to_uid": a_uid, "to_port": ba["to_port"],
+			"from_uid": b_uid,
+			"from_port": ba["from_port"],
+			"to_uid": a_uid,
+			"to_port": ba["to_port"],
 		}
 	return {}
 
@@ -90,8 +94,7 @@ func check_connect_ports(
 		return GameOperationResult.fail(GameOperationResult.Code.WIRING_INVALID_MODULE)
 	if not BlockDefs.is_allowed_wire(types[0], types[1], types[2], types[3]):
 		return GameOperationResult.fail(
-			GameOperationResult.Code.WIRING_TYPE_NOT_ALLOWED,
-			_connection_error(types[0], types[2])
+			GameOperationResult.Code.WIRING_TYPE_NOT_ALLOWED, _connection_error(types[0], types[2])
 		)
 	var from_def: Dictionary = BlockDefs.PORT_DEFS.get(types[0], {}).get(from_port, {})
 	var to_def: Dictionary = BlockDefs.PORT_DEFS.get(types[2], {}).get(to_port, {})

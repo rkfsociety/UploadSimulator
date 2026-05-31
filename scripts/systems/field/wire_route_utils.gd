@@ -172,7 +172,9 @@ static func _path_hits_obstacles(points: PackedVector2Array, obstacles: Array[Re
 
 
 ## A* по решётке полуклетки между точками выхода и входа (узлы попадают на сетку).
-static func _route_around(start: Vector2, goal: Vector2, obstacles: Array[Rect2]) -> PackedVector2Array:
+static func _route_around(
+	start: Vector2, goal: Vector2, obstacles: Array[Rect2]
+) -> PackedVector2Array:
 	var step := float(GridDefs.CELL_SIZE) * 0.5
 	var margin := step * float(_SEARCH_MARGIN_CELLS)
 	var region := Rect2(start.min(goal), (goal - start).abs())
@@ -286,7 +288,9 @@ static func _cell_pos(c: Vector2i, origin: Vector2, step: float) -> Vector2:
 	return origin + Vector2(float(c.x) * step, float(c.y) * step)
 
 
-static func _cell_blocked(c: Vector2i, origin: Vector2, step: float, obstacles: Array[Rect2]) -> bool:
+static func _cell_blocked(
+	c: Vector2i, origin: Vector2, step: float, obstacles: Array[Rect2]
+) -> bool:
 	var p := _cell_pos(c, origin, step)
 	for ob: Rect2 in obstacles:
 		if ob.grow(-_OBSTACLE_INSET).has_point(p):
@@ -312,7 +316,12 @@ static func _seg_hits_rect(a: Vector2, b: Vector2, r: Rect2) -> bool:
 	var t0 := 0.0
 	var t1 := 1.0
 	var p := [-d.x, d.x, -d.y, d.y]
-	var q := [a.x - r.position.x, r.position.x + r.size.x - a.x, a.y - r.position.y, r.position.y + r.size.y - a.y]
+	var q := [
+		a.x - r.position.x,
+		r.position.x + r.size.x - a.x,
+		a.y - r.position.y,
+		r.position.y + r.size.y - a.y
+	]
 	for i in range(4):
 		if is_zero_approx(p[i]):
 			if q[i] < 0.0:

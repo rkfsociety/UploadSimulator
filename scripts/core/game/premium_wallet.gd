@@ -2,7 +2,6 @@ extends RefCounted
 class_name PremiumWallet
 ## Хранилище баланса ◆: только число, без правил заработка и покупок.
 
-
 var _balance: int = 0
 
 

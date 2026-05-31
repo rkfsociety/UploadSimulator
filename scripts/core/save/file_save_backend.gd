@@ -19,8 +19,10 @@ func write_save(slot_id: String, payload: Dictionary) -> bool:
 	var file := FileAccess.open(_slot_path(slot_id), FileAccess.WRITE)
 	if file == null:
 		push_error(
-			"FileSaveBackend.write_save: не открыть %s (%d)"
-			% [_slot_path(slot_id), FileAccess.get_open_error()]
+			(
+				"FileSaveBackend.write_save: не открыть %s (%d)"
+				% [_slot_path(slot_id), FileAccess.get_open_error()]
+			)
 		)
 		return false
 	file.store_string(JSON.stringify(payload))

@@ -88,9 +88,7 @@ func update_visibility(visible_rect: Rect2) -> void:
 		if block.visible == show:
 			continue
 		block.visible = show
-		block.process_mode = (
-			Node.PROCESS_MODE_INHERIT if show else Node.PROCESS_MODE_DISABLED
-		)
+		block.process_mode = (Node.PROCESS_MODE_INHERIT if show else Node.PROCESS_MODE_DISABLED)
 
 
 func _on_upgrade_requested(block: PlacedBlock) -> void:

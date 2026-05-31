@@ -82,15 +82,18 @@ func _ready() -> void:
 		theme = get_block_theme()
 	UiFonts.apply_to_theme(theme, 16, 13, 11)
 	_apply_root_layout()
-	_view = PlacedBlockView.new(
-		_main_panel,
-		_upgrade_panel,
-		_title_label,
-		_metric_label,
-		_network_panel,
-		_progress_bar,
-		_action_btn,
-		_upgrade_btn,
+	_view = (
+		PlacedBlockView
+		. new(
+			_main_panel,
+			_upgrade_panel,
+			_title_label,
+			_metric_label,
+			_network_panel,
+			_progress_bar,
+			_action_btn,
+			_upgrade_btn,
+		)
 	)
 	_upgrade_btn.pressed.connect(func(): upgrade_requested.emit(self))
 	_action_btn.pressed.connect(func(): action_requested.emit(self))

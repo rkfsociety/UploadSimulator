@@ -2,7 +2,6 @@ extends RefCounted
 class_name UiFonts
 ## Векторные системные шрифты UI (без растровых .ttf в репозитории).
 
-
 static var _default: Font
 static var _bold: Font
 
@@ -23,7 +22,9 @@ static func default_font() -> Font:
 static func title_font() -> Font:
 	if _bold == null:
 		var f := SystemFont.new()
-		f.font_names = PackedStringArray(["Segoe UI Semibold", "Roboto Medium", "Noto Sans", "Arial", "sans-serif"])
+		f.font_names = PackedStringArray(
+			["Segoe UI Semibold", "Roboto Medium", "Noto Sans", "Arial", "sans-serif"]
+		)
 		f.font_weight = 600
 		f.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
 		f.hinting = TextServer.HINTING_LIGHT
@@ -32,7 +33,9 @@ static func title_font() -> Font:
 	return _bold
 
 
-static func apply_to_theme(theme: Theme, title_size: int, body_size: int, small_size: int) -> void:
+static func apply_to_theme(
+	theme: Theme, _title_size: int, body_size: int, _small_size: int
+) -> void:
 	var body := default_font()
 	var title := title_font()
 	theme.default_font = body

@@ -143,7 +143,9 @@ static func draw_port_visual(
 
 static func _fill_color(p_kind: Kind, p_direction: Dir) -> Color:
 	if p_kind == Kind.FILE:
-		return Color(0.0, 0.75, 0.95, 0.9) if p_direction == Dir.OUT else Color(0.0, 0.4, 0.55, 0.45)
+		return (
+			Color(0.0, 0.75, 0.95, 0.9) if p_direction == Dir.OUT else Color(0.0, 0.4, 0.55, 0.45)
+		)
 	return Color(1.0, 0.7, 0.1, 0.95) if p_direction == Dir.OUT else Color(0.6, 0.35, 0.05, 0.5)
 
 

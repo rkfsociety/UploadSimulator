@@ -1,7 +1,6 @@
 extends RefCounted
 ## Unit-тесты изолированной премиум-валюты (◆).
 
-
 var case_count := 5
 
 
@@ -13,8 +12,10 @@ func run() -> Array[String]:
 
 	if premium.get_balance() != GameConstants.START_DIAMONDS:
 		errors.append(
-			"стартовый баланс ◆ должен быть %d, получено %d"
-			% [GameConstants.START_DIAMONDS, premium.get_balance()]
+			(
+				"стартовый баланс ◆ должен быть %d, получено %d"
+				% [GameConstants.START_DIAMONDS, premium.get_balance()]
+			)
 		)
 
 	var spawned := premium.spawn_upload_pickup(Vector2(100.0, 50.0))

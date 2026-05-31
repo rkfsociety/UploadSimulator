@@ -75,23 +75,31 @@ func _build_stats_text() -> String:
 		return "[DEBUG] GameState недоступен"
 	var fps := Engine.get_frames_per_second()
 	var phase := GameState.access.get_phase()
-	var lines: PackedStringArray = PackedStringArray([
-		"[DEBUG] F3 — скрыть",
-		"FPS: %.0f" % fps,
-		"Касса: $%.0f | Аплоудер: $%.2f"
-		% [GameState.access.get_money(), GameState.access.get_uploader_balance()],
-		"Фаза: %s | %s" % [phase, GameState.pipeline.get_phase_label()],
-		"Очереди ↓%d ↑%d | Модули: %d | Провода: %d"
-		% [
-			GameState.access.get_download_queue().size(),
-			GameState.access.get_upload_queue().size(),
-			GameState.access.get_placed_blocks().size(),
-			GameState.access.get_wire_connections().size(),
-		],
-		"Диск: %d / %d файл."
-		% [
-			GameState.storage.get_storage_used_files(),
-			int(GameState.storage.get_storage_capacity_files()),
-		],
-	])
+	var lines: PackedStringArray = PackedStringArray(
+		[
+			"[DEBUG] F3 — скрыть",
+			"FPS: %.0f" % fps,
+			(
+				"Касса: $%.0f | Аплоудер: $%.2f"
+				% [GameState.access.get_money(), GameState.access.get_uploader_balance()]
+			),
+			"Фаза: %s | %s" % [phase, GameState.pipeline.get_phase_label()],
+			(
+				"Очереди ↓%d ↑%d | Модули: %d | Провода: %d"
+				% [
+					GameState.access.get_download_queue().size(),
+					GameState.access.get_upload_queue().size(),
+					GameState.access.get_placed_blocks().size(),
+					GameState.access.get_wire_connections().size(),
+				]
+			),
+			(
+				"Диск: %d / %d файл."
+				% [
+					GameState.storage.get_storage_used_files(),
+					int(GameState.storage.get_storage_capacity_files()),
+				]
+			),
+		]
+	)
 	return "\n".join(lines)

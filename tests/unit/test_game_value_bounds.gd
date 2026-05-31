@@ -28,9 +28,7 @@ func _test_speed_and_duration(errors: Array[String]) -> void:
 	if dur > GameConstants.MAX_TRANSFER_JOB_DURATION_SEC:
 		errors.append("job_duration: слишком много")
 	var from_zero_speed := GameValueBounds.job_duration_from_bytes(1000.0, 0.0)
-	var expected_zero := GameValueBounds.job_duration(
-		1000.0 / GameValueBounds.MIN_SPEED_BPS
-	)
+	var expected_zero := GameValueBounds.job_duration(1000.0 / GameValueBounds.MIN_SPEED_BPS)
 	if absf(from_zero_speed - expected_zero) > 0.001:
 		errors.append("job_duration_from_bytes: нулевая скорость → MIN_SPEED_BPS")
 	var huge := GameValueBounds.job_duration(999_999.0)

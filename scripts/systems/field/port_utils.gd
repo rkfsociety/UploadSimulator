@@ -12,7 +12,9 @@ static func gather_ports_from_nodes(nodes: Array, on_pressed: Callable) -> Array
 	return ports
 
 
-static func _gather_ports_recursive(node: Node, ports: Array[ConnectionPort], on_pressed: Callable) -> void:
+static func _gather_ports_recursive(
+	node: Node, ports: Array[ConnectionPort], on_pressed: Callable
+) -> void:
 	for child in node.get_children():
 		if child is ConnectionPort:
 			var port: ConnectionPort = child
@@ -70,9 +72,15 @@ static func wire_flow_speed(link: WireLink) -> float:
 	var from_type: String = GameState.field.get_instance_type(link.from_uid)
 	if from_type == "network" and not GameState.access.get_download_queue().is_empty():
 		return FieldMapConstants.WIRE_FLOW_ACTIVE
-	if BlockDefs.is_downloader_type(from_type) and not GameState.access.get_download_queue().is_empty():
+	if (
+		BlockDefs.is_downloader_type(from_type)
+		and not GameState.access.get_download_queue().is_empty()
+	):
 		return FieldMapConstants.WIRE_FLOW_ACTIVE
-	if BlockDefs.is_downloader_type(from_type) and not GameState.access.get_upload_queue().is_empty():
+	if (
+		BlockDefs.is_downloader_type(from_type)
+		and not GameState.access.get_upload_queue().is_empty()
+	):
 		return FieldMapConstants.WIRE_FLOW_ACTIVE
 	if from_type == "uploader" and not GameState.access.get_upload_queue().is_empty():
 		return FieldMapConstants.WIRE_FLOW_ACTIVE

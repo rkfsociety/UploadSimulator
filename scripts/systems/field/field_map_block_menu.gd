@@ -67,7 +67,9 @@ func refresh_position() -> void:
 func _build_ui() -> void:
 	_panel = PanelContainer.new()
 	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	_panel.add_theme_stylebox_override("panel", MinimalUI.neon_box(MinimalUI.bg_panel, MinimalUI.neon_cyan, true, 10, 8))
+	_panel.add_theme_stylebox_override(
+		"panel", MinimalUI.neon_box(MinimalUI.bg_panel, MinimalUI.neon_cyan, true, 10, 8)
+	)
 	add_child(_panel)
 
 	var margin := MarginContainer.new()

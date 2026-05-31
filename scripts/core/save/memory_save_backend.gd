@@ -2,7 +2,6 @@ extends SaveBackend
 class_name MemorySaveBackend
 ## In-memory бэкенд для тестов и отладки (не переживает перезапуск).
 
-
 var _slots: Dictionary = {}
 
 

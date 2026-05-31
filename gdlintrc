@@ -3,3 +3,9 @@ disable:
   - class-definitions-order
   - max-public-methods
   - max-returns
+
+# Имена под фактический стиль проекта:
+# - class-variable: snake_case ИЛИ SCREAMING_SNAKE (static var-константы из BalanceConfig/defs)
+# - load-constant: SCREAMING_SNAKE ИЛИ _PascalCase (приватные preload-алиасы типов)
+class-variable-name: '(_?[a-z][a-z0-9]*(_[a-z0-9]+)*)|([A-Z][A-Z0-9]*(_[A-Z0-9]+)*)'
+load-constant-name: '([A-Z][A-Z0-9]*(_[A-Z0-9]+)*)|(_?[A-Z][a-zA-Z0-9]*)'

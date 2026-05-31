@@ -51,7 +51,8 @@ func hide_preview() -> void:
 	hover_cell = Vector2i(-1, -1)
 
 
-## Пытается поставить модуль в клетку под экранной точкой. Возвращает новый type_id для режима (или "").
+## Пытается поставить модуль в клетку под экранной точкой.
+## Возвращает новый type_id для режима (или "").
 func try_place_at_screen(screen_pos: Vector2) -> String:
 	if _selected_type == "":
 		return ""
