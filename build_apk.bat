@@ -41,8 +41,8 @@ echo Exporting Android APK (debug)...
 "%GODOT_EXE%" --headless --path "%PROJECT_DIR%" --export-debug "Android" "%APK_PATH%"
 if errorlevel 1 (
 	echo.
-	echo ERROR: export failed. Check SDK/JDK/keystore paths in Godot editor settings:
-	echo   %%APPDATA%%\Godot\editor_settings-4.6.tres
+	echo ERROR: export failed. Check SDK/JDK/keystore paths in local editor settings:
+	echo   Godot\editor_data\editor_settings-4.6.tres
 	pause
 	exit /b 1
 )
