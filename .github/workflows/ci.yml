@@ -170,7 +170,7 @@ jobs:
 
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: android-apk-${{ github.run_number }}
           name: Android APK Build #${{ github.run_number }}
