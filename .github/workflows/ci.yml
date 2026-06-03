@@ -123,7 +123,7 @@ jobs:
           java-version: "17"
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Setup Godot 4.6.2 (with export templates)
         uses: chickensoft-games/setup-godot@v2
