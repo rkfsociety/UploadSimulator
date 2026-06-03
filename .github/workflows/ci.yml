@@ -162,7 +162,7 @@ jobs:
           godot --headless --path . --export-release "Android" build/UploadSimulator.apk
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: UploadSimulator-apk
           path: build/UploadSimulator.apk
